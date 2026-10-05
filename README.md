@@ -1,158 +1,145 @@
-# Speak2Mic — виртуальный аудиокабель для Windows 10/11
+# Speak2Mic — virtual audio cable for Windows 10/11
 
-Аналог Virtual Audio Cable: драйвер создаёт в системе пару аудиоустройств, соединённых «кабелем».
+Speak2Mic works like Virtual Audio Cable: its driver adds a pair of audio devices connected by a "cable".
 
-| Устройство | Тип | Что делает |
+| Device | Type | What it does |
 |---|---|---|
-| **Speak2Mic Speaker** | воспроизведение (линейный выход) | всё, что в него играют… |
-| **Speak2Mic Microphone** | запись (**микрофон**) | …слышно в этом микрофоне |
+| **Speak2Mic Speaker** | playback (line out) | everything played into it… |
+| **Speak2Mic Microphone** | recording (**microphone**) | …is heard on this microphone |
 
-Кабель один. Интерфейс программ — на 17 языках (по умолчанию — язык системы, иначе английский). В комплекте:
+There is one cable. The programs speak 17 languages (the Windows language by default, otherwise English).
 
-- **`app\Speak2Mic.exe`** — графическая панель управления:
-  - **качество сигнала:** пресеты (Голос / Стандарт / Высокое / Студия / Максимум) или ручной выбор частоты, разрядности, числа каналов и задержки; кнопка «Применить» перезапускает драйвер с новыми настройками;
-  - **индикация сигнала:** живые индикаторы уровня по каналам (дБFS, пиковое удержание) для входа и выхода кабеля и текущий формат потока;
-  - **каналы микрофона:** по умолчанию 1 (моно) во всех пресетах; можно выбрать 2, 4, 6, 8 или «Как у динамика». Если у микрофона меньше каналов, чем у динамика, кабель сводит звук (в моно — среднее левого и правого); если больше — моно-источник копируется во все каналы, остальные молчат. Формат по умолчанию задан в INF: динамик — 48 кГц, 16 бит, стерео; микрофон — 48 кГц, 16 бит, моно;
-  - **громкость микрофона:** ползунок под индикатором «Speak2Mic Microphone», 0–300% уровня сигнала: 100% = 0 дБ (сигнал кабеля без изменений), 200% ≈ +6 дБ, 300% ≈ +9,5 дБ; флажок «Без звука». Это громкость и отключение звука микрофона в Windows (у такого микрофона Windows показывает шкалу −96…+30 дБ, и её «100%» — это +30 дБ). Установщик и «Сбросить все настройки» ставят 100% и включают звук;
-  - **язык интерфейса:** список «Язык» в правом верхнем углу;
-  - **имена устройств:** «Speak2Mic Speaker» и «Speak2Mic Microphone» можно переименовать (как «Переименовать» в окне «Звук»; пустое поле — имя по умолчанию). Панель запоминает имена и возвращает их, если после переустановки Windows покажет устройства со стандартными именами;
-  - **экспорт и импорт настроек:** кнопки внизу окна сохраняют в `.ini` (UTF-16) и загружают качество сигнала, имена устройств, громкость микрофона и «Без звука»; язык в файл не входит. Импорт применяет всё сразу, при другом качестве сигнала устройство перезапускается, как при «Применить»;
-  - **«Сбросить все настройки»:** пресет «Стандарт», имена устройств по умолчанию, громкость микрофона 100% без отключения звука (язык не меняется).
+> **Important.** The driver is signed with a test certificate, so Windows must run in test signing mode (Secure Boot off). Install it in a virtual machine with a snapshot: a bug in a kernel driver means a blue screen.
 
-> **Важно.** Драйвер подписан тестовым сертификатом: нужен тестовый режим подписи Windows. Устанавливайте в виртуальной машине со снапшотом: ошибка в драйвере ядра приводит к синему экрану.
+## The control panel (`Speak2Mic.exe`)
 
-## Задача: звук внутри ВМ VMware → виртуальный микрофон
+- **Signal quality:** presets (Voice / Standard / High / Studio / Maximum) or sample rate, bit depth, channels and latency by hand. "Apply" restarts the driver with the new settings.
+- **Level meters:** live per-channel meters (dBFS, peak hold) for both ends of the cable, plus the format Windows actually uses.
+- **Microphone channels:** 1 (mono) by default in every preset; 2, 4, 6, 8 or "Same as the speaker" can be chosen. With fewer microphone channels than speaker channels the cable downmixes (mono = average of left and right); with more, a mono source is copied to every channel and the rest stay silent. The default formats are set in the INF: speaker 48 kHz, 16 bit, stereo; microphone 48 kHz, 16 bit, mono.
+- **Microphone volume:** a slider of 0–300 % signal level (100 % = 0 dB, the cable's signal unchanged; 200 % ≈ +6 dB; 300 % ≈ +9.5 dB) that snaps to 0, 100, 200 and 300 %, and a "Mute" box. This is the Windows volume of the microphone, applied by the driver's own volume node (−96…+9.56 dB), so Windows' "100 %" in the Sound control panel equals 300 % here. While the panel is open it puts the volume back when another program changes it and names that program in the event list.
+- **Test** plays Windows' test melody on every speaker channel in turn; **Play / Pause** plays mp3 files from the `mp3` folder next to the program in random order into the cable (pause remembers track and position; the button is disabled without mp3 files).
+- **Device names:** "Speak2Mic Speaker" and "Speak2Mic Microphone" can be renamed (an empty name means the default). The panel remembers them and restores them after a reinstallation.
+- **Export / import** of all settings except the language (`.ini`, UTF-16) and **Reset all settings** (preset "Standard", default names, 100 %, sound on).
+- **Event list** at the bottom with date and time, kept across sessions, with a button to clear it.
+- **Tray and autostart:** minimizing hides the panel in the notification area (volume protection and music keep running). The installer starts the panel with Windows, in the tray (`Speak2Mic.exe /t`); a box at the bottom of the panel turns this on and off.
 
-Внутри гостевой Windows:
+## Use case: sound inside a VMware VM → virtual microphone
 
-1. Параметры → Система → Звук: выберите устройство вывода **«Speak2Mic Speaker»**. Теперь весь звук идёт в микрофон «Speak2Mic Microphone».
-2. Чтобы звук было слышно, откройте Панель управления → Звук → вкладка «Запись» → «Speak2Mic Microphone» → Свойства → «Прослушать». Отметьте «Прослушивать с данного устройства» и выберите динамики VMware.
+Inside the Windows guest:
 
-Можно направить в кабель и одну программу: Параметры → Звук → «Микшер громкости» → для приложения выберите вывод «Speak2Mic Speaker».
+1. Settings → System → Sound: choose the output device **"Speak2Mic Speaker"**. All sound now goes into the microphone "Speak2Mic Microphone".
+2. To hear it as well: Control Panel → Sound → Recording → "Speak2Mic Microphone" → Properties → Listen → "Listen to this device", and pick the VMware speakers.
 
-## Качество сигнала
+A single program can be routed into the cable instead: Settings → Sound → Volume mixer → output "Speak2Mic Speaker" for that app.
 
-В `Speak2Mic.exe`, блок «Качество сигнала кабеля»:
+If a call program uses Speak2Mic Microphone, set Control Panel → Sound → Communications to "Do nothing": otherwise Windows turns down "other sounds", including what you play into the cable.
 
-| Пресет | Частота | Разрядность | Каналы |
+## Signal quality
+
+| Preset | Sample rate | Bits | Channels |
 |---|---|---|---|
-| Голос | 16 кГц | 16 бит | моно |
-| Стандарт | 48 кГц | 16 бит | стерео |
-| Высокое | 48 кГц | 24 бит | стерео |
-| Студия | 96 кГц | 24 бит | стерео |
-| Максимум | 192 кГц | 32 бит | стерео |
+| Voice | 16 kHz | 16 | mono |
+| Standard | 48 kHz | 16 | stereo |
+| High | 48 kHz | 24 | stereo |
+| Studio | 96 kHz | 24 | stereo |
+| Maximum | 192 kHz | 32 | stereo |
 
-Кнопка «Применить» (со щитом UAC) запросит права администратора, запишет настройки и перезапустит устройство. Открытые на кабеле потоки при этом прервутся, через 2–3 секунды панель заново подключит индикаторы.
+"Apply" (with the UAC shield) asks for administrator rights, writes the settings and restarts the device; streams open on the cable are interrupted for 2–3 seconds. Afterwards the panel sets the chosen format as the Windows "Default Format" of both devices (through `IPolicyConfig`, like the Sound control panel; Windows would keep the old one otherwise). The driver always accepts 16, 24 and 32 bit; if Windows refuses a 24/32-bit integer default format, the panel uses 16 bit at the same rate and says so. "Auto" means 24 bit. Updates and reinstallations keep the settings; "Remove" resets them to "Standard".
 
-После перезапуска устройства панель сама выставляет «Speak2Mic Speaker» и «Speak2Mic Microphone» выбранный формат как «Формат по умолчанию» Windows. Она делает это через тот же системный интерфейс (`IPolicyConfig`), что и окно «Звук»: без этого Windows оставила бы прежний формат. Драйвер отвечает на проверку форматов (`KSPROPERTY_PIN_PROPOSEDATAFORMAT`) по текущим настройкам. Драйвер всегда принимает 16, 24 и 32 бит. Выбранная разрядность ставится как формат по умолчанию, а если Windows её не примет (так бывает с 24/32-битным целочисленным форматом), панель ставит 16 бит на той же частоте и сообщает об этом. «Авто» означает 24 бита. Обновление и переустановка настройки сохраняют; «Удалить» сбрасывает их, и новая установка начинается с пресета «Стандарт». При фиксированной разрядности драйвер предлагает только её, и именно она становится форматом устройства по умолчанию. Строка под индикаторами показывает формат, в котором реально работает звуковой движок Windows для этого устройства.
-
-То же без интерфейса: `s2mctl.exe` (командная строка от администратора):
+Without the interface: `s2mctl.exe` (administrator command prompt):
 ```
-s2mctl status                                            # показать текущие
+s2mctl status
 s2mctl set --rate 48000 --bits 24 --latency 40
 ```
-По умолчанию действует пресет **«Стандарт»**: 48 кГц, 16 бит, стерео.
 
-| Параметр | По умолчанию | Смысл |
+| Setting | Default | Meaning |
 |---|---|---|
-| `SampleRate` | 48000 | частота кабеля (единственная, которую он поддерживает) |
-| `MicChannels` | 1 | каналов у «Speak2Mic Microphone»: 1–8, 0 — как у динамика |
-| `BitsPerSample` | 16 | 16, 24, 32 или 0 = любая из них |
-| `Channels` | 2 | максимум каналов, 1–8 |
-| `LatencyMs` | 30 | насколько «микрофон» отстаёт от «динамика»; увеличьте, если слышны щелчки |
+| `SampleRate` | 48000 | the cable's sample rate (the only one it supports) |
+| `Channels` | 2 | speaker channels, 1–8 |
+| `MicChannels` | 1 | microphone channels, 1–8; 0 = same as the speaker |
+| `BitsPerSample` | 16 | 16, 24, 32, or 0 = any of them |
+| `LatencyMs` | 30 | how far the microphone lags behind the speaker; raise it if you hear clicks |
 
-Значения хранятся в `HKLM\SYSTEM\CurrentControlSet\Services\Speak2Mic\Parameters` и читаются драйвером при запуске устройства.
+They live in `HKLM\SYSTEM\CurrentControlSet\Services\Speak2Mic\Parameters` and are read when the device starts.
 
-## Готовый пакет x64 + x86 (собран на Linux)
+## Installation (VMware VM)
 
-**`dist/Speak2Mic-Setup.exe`** — весь пакет в одном файле (~29 МБ): при запуске распаковывает себя во временную папку, запускает установщик нужной разрядности и после его закрытия удаляет временные файлы. Тот же пакет в распакованном виде — `dist/Speak2Mic/` (для разработки и тестов):
-- **`Speak2Mic-Setup.exe`** в корне — запускатель: определяет разрядность Windows и открывает `x64\Speak2Mic-Setup.exe` или `x86\Speak2Mic-Setup.exe`. Windows на ARM не поддерживается;
-- `x64\` и `x86\` — полный комплект каждой разрядности: графический установщик `Speak2Mic-Setup.exe` (проверяет тестовый режим и Secure Boot, включает/выключает тестовый режим, устанавливает и удаляет драйвер), панель `Speak2Mic.exe`, `s2minstall.exe` (консольный установщик), `s2mctl.exe`, `s2mautotest.exe`, драйвер `Speak2Mic.sys` с тестовой подписью, `Speak2Mic.inf`, `Speak2Mic.cat` и сертификаты. 32-битный установщик не может ставить драйвер в 64-битную Windows, поэтому комплектов два;
-- `mp3\` — музыка для кнопки «Играть»;
-- `uninstall.cmd` — удаление без окна (сам выбирает разрядность).
+1. Shut the VM down. VM → Settings → Options → Advanced: **clear "Enable UEFI Secure Boot"** (test signing does not work with it).
+2. Copy **`Speak2Mic-Setup.exe`** into the VM and run it. It picks the 64- or 32-bit installer, which asks for administrator rights and shows whether Secure Boot is off, whether test signing mode is on and whether the driver is installed.
+3. If test signing mode is off, click "Enable test mode", restart and run the installer again. The same button turns the mode off later; without it the driver does not load and the Speak2Mic devices disappear until the mode is back. "Install" stays disabled until Secure Boot is off and test mode is active.
+4. Optionally tick the desktop and Start menu shortcuts and click "Install". If Windows asks about the publisher, choose "Install this driver software anyway". The programs go to `C:\Program Files\Speak2Mic\`.
+5. "Speak2Mic Speaker" and "Speak2Mic Microphone" appear in the Sound settings and the installer opens the panel.
 
-`s2mdebug.exe` (отладка форматов) собирается, но в пакет не входит; `install.cmd` и `УСТАНОВКА.txt` / `INSTALL.txt` убраны. Установщик при обновлении удаляет из Program Files файлы, которых больше нет в пакете.
+Removal: `Speak2Mic-Setup.exe` → "Remove" (device, driver package, programs, shortcuts, autostart), or `uninstall.cmd` as administrator.
 
-Пересборка одной командой: `./package.sh`. Нужны clang, MinGW-w64, osslsigncode и openssl.
+The panel, `s2mctl`, `s2mdebug` and the autotest check at start that Secure Boot is off, test signing mode is on and the driver is installed, and refuse to work otherwise (the installers always run: they are what fixes it).
 
-Как собирается драйвер без WDK (`driver/mingw/`):
-- clang компилирует его с DDK-заголовками MinGW и флагом `-mno-red-zone`;
-- библиотеки импорта `portcls.sys`/`ntoskrnl.exe` генерируются из `.def`, а `CUnknown` (в WDK это `stdunk.lib`) реализован в `stdunk_impl.cpp`;
-- образ компонуется как нативный драйвер, `pefix.py` приводит заголовок PE к виду WDK-драйвера, `osslsigncode` подписывает его тестовым сертификатом (`driver/mingw/testcert/`, SHA-256).
+## Building (Linux)
 
-Каталог `Speak2Mic.cat` (подписанный список хэшей INF и SYS; без него Windows отказывает в установке с ошибкой `0xE000022F`) создаёт [LINBIT generate-cat-file](https://github.com/LINBIT/generate-cat-file) (`tools/generate-cat-file/`, GPLv2, используется только при сборке), подписывает `osslsigncode` тем же тестовым сертификатом.
+```
+./package.sh
+```
+needs clang, MinGW-w64 (x86_64 and i686), osslsigncode, openssl, make and Python 3. It builds the driver and the programs for x64 and x86 and assembles:
 
-## Сборка драйвера в WDK (альтернатива, на Windows)
+- **`dist/Speak2Mic-Setup.exe`** — the whole package in one file (~29 MB with music): it unpacks itself to a temporary folder, starts the installer for the right bitness and cleans up afterwards;
+- **`dist/Speak2Mic/`** — the same unpacked: a launcher `Speak2Mic-Setup.exe`, full `x64\` and `x86\` sets (installer, panel, `s2minstall.exe`, `s2mctl.exe`, `s2mautotest.exe`, test-signed `Speak2Mic.sys`, `Speak2Mic.inf`, `Speak2Mic.cat`, certificates), `mp3\` and `uninstall.cmd`. Windows on ARM is not supported.
 
-1. Установите **Visual Studio 2022** (рабочая нагрузка «Разработка классических приложений на C++») и **Windows Driver Kit (WDK)** той же версии, что и Windows SDK, вместе с расширением WDK для VS.
-2. Откройте `driver\Speak2Mic.vcxproj`, выберите `Release | x64`.
-3. Свойства проекта → Driver Signing → Sign Mode = **Test Sign** (тестовая подпись).
-4. Соберите (Build). В `driver\x64\Release\Speak2Mic\` появятся `Speak2Mic.sys`, `Speak2Mic.inf`, `Speak2Mic.cat` и сертификат `.cer`.
+Not in this repository (see `.gitignore`):
 
-Программы из `app\` готовы. Пересобрать их можно так:
-- на Windows: `app\build.cmd` из «x64 Native Tools Command Prompt for VS 2022»;
-- на Linux: `app/build.sh` (clang + MinGW-w64).
+- **Test signing keys** (`driver/mingw/testcert/`). `driver/mingw/build.sh` creates a new test root CA and signing certificate when they are missing. Keep them private: the installer trusts that root on every machine it installs on.
+- **mp3 files** for Play / Pause: put your own into `media/mp3/`.
+- **`infverif.exe`** for `check_inf.sh`: take it from the WDK NuGet package `microsoft.windows.wdk.x64` (`c/tools/<version>/x64/infverif.exe`) and put it into `tools/infverif/`; it runs under Wine.
 
-Если меняете имена устройств, правьте `gen.py` и запустите `python gen.py`. Он заново создаст `driver\pinnames.h` и `driver\Speak2Mic.inf`.
+How the driver is built without the WDK (`driver/mingw/`): clang compiles it against the MinGW DDK headers with `-mno-red-zone`; import libraries for `portcls.sys`/`ntoskrnl.exe` are generated from `.def` files and `CUnknown` (`stdunk.lib` in the WDK) is implemented in `stdunk_impl.cpp`; the image is linked as a native driver, `pefix.py` makes its PE header look like a WDK one and `osslsigncode` test-signs it (SHA-256). The catalog `Speak2Mic.cat` (signed hashes of the INF and SYS; without it Windows refuses the package with `0xE000022F`) is made by [LINBIT generate-cat-file](https://github.com/LINBIT/generate-cat-file) (`tools/generate-cat-file/`, GPLv2, build-time only).
 
-## Установка в ВМ VMware
+Other checks: `./check_syntax.sh` (driver sources against the MinGW DDK headers), `./check_inf.sh` (Microsoft InfVerif under Wine: basic, `/h` and `/w` modes).
 
-Драйвер подписан тестовым сертификатом, поэтому Windows нужно перевести в тестовый режим подписи.
+### Alternative: WDK on Windows
 
-1. Выключите ВМ. VM → Settings → Options → Advanced: **снимите «Enable UEFI Secure Boot»**. Если он включён, тестовый режим не работает.
-2. Скопируйте в ВМ и запустите **`Speak2Mic-Setup.exe`** (он сам выберет 64- или 32-битный установщик, тот попросит права администратора). В окне видно, включён ли тестовый режим, выключен ли Secure Boot и установлен ли драйвер.
-3. Если тестовый режим выключен, нажмите «Включить тестовый режим», перезагрузитесь и снова запустите установщик. Та же кнопка потом выключает режим («Выключить тестовый режим», затем перезагрузка); без тестового режима драйвер не загружается, и устройства Speak2Mic пропадают, пока режим не включат снова.
-4. При желании отметьте «Ярлык на рабочем столе» и «Ярлыки в меню «Пуск»» и нажмите «Установить». Если Windows спросит про издателя, выберите «Все равно установить этот драйвер». Программы копируются в `C:\Program Files\Speak2Mic\`. В меню «Пуск» появятся ярлыки «Speak2Mic», «Speak2Mic — установка и диагностика» и «Журналы Speak2Mic».
-5. В Параметрах звука появятся «Speak2Mic Speaker» и «Speak2Mic Microphone», установщик откроет `Speak2Mic.exe`.
+1. Visual Studio 2022 ("Desktop development with C++") and the Windows Driver Kit matching the Windows SDK, with the WDK extension.
+2. Open `driver\Speak2Mic.vcxproj`, `Release | x64`, Driver Signing → Sign Mode = **Test Sign**, Build.
+3. Programs: `app\build.cmd` from the "x64 Native Tools Command Prompt for VS 2022".
 
-Удаление: `Speak2Mic-Setup.exe` → «Удалить». Убирает устройство, пакет драйвера, программы из Program Files и ярлыки.
+Device names are generated: edit `gen.py` and run `python gen.py` (writes `driver\pinnames.h` and `driver\Speak2Mic.inf`).
 
-Удаление без окна: `uninstall.cmd` от имени администратора.
-Для драйвера, собранного в WDK, положите рядом с этими файлами `Speak2Mic.sys`, `.inf`, `.cer` из `driver\x64\Release\Speak2Mic\`.
+## How it works
 
-## Как это устроено
+- `driver\adapter.cpp` — entry point: registers four PortCls filters for the cable (WaveRT + Topology for playback, the same for recording) and the physical connections between them; reads the settings.
+- `driver\minwave.cpp` — WaveRT miniport. There is no hardware: the buffer position follows the performance counter at the cable's rate; on every position request of the Windows audio engine and every 5 ms by timer, "played" frames move from the playback buffer into the cable and "recorded" frames from the cable into the capture buffer.
+- `driver\cable.cpp` — a one-second ring buffer addressed by absolute frame number. The capture side reads `LatencyMs` behind "now"; where nothing was written it returns silence. 16/24/32-bit PCM on either end in any combination, channel up/downmix, and the microphone volume/mute gain.
+- `driver\mintopo.cpp` — topology: the playback end is a line out, the recording end a **microphone** with a volume node (−96…+9.5625 dB in 1/16 dB steps) and a mute node. The device names come from `MediaCategories` entries written by the INF.
+- `driver\Speak2Mic.rc` — icons and version information (resource 100: Device Manager icon; 101/102: the speaker and microphone icons in the Sound settings; drawn by `app/make_icon.py`).
+- `app\audio.cpp` — shared code: device list, default formats (`IPolicyConfig`), level meters, endpoint volume.
+- `app\s2mpanel.cpp` — the panel: plain Win32, high DPI; settings are applied by restarting itself elevated (`Speak2Mic.exe --apply …`) and restarting the device through SetupAPI.
 
-- `driver\adapter.cpp`: точка входа. Для кабеля регистрирует 4 фильтра PortCls (WaveRT + Topology для воспроизведения, то же для записи) и физические связи между ними. Читает настройки из реестра.
-- `driver\minwave.cpp`: минипорт WaveRT. Реального оборудования нет: позиция в аудиобуфере идёт по счётчику производительности (QPC) на частоте кабеля. При каждом запросе позиции от аудиодвижка Windows и по таймеру раз в 5 мс «проигранные» кадры забираются из буфера воспроизведения в кабель, а «записанные» кладутся из кабеля в буфер записи.
-- `driver\cable.cpp`: кольцевой буфер на 1 секунду, адресуемый абсолютным номером кадра. Запись читает на `LatencyMs` позади текущего момента. Где данных нет (ничего не играет), выдаётся тишина. 16/24/32-битный PCM на двух концах в любых сочетаниях; моно↔стерео преобразуется.
-- `driver\Speak2Mic.rc`: иконки и информация о версии драйвера. Ресурс 100 — иконка устройства в Диспетчере устройств (INF: `DEVPKEY_DrvPkg_Icon`). Ресурсы 101/102 — иконки «Speak2Mic Speaker» и «Speak2Mic Microphone» в Параметрах звука (INF: `PKEY_DeviceClass_IconPath` в ключе `EP\0` топологического фильтра). Все иконки рисует `app/make_icon.py`.
-- `driver\mintopo.cpp`: топология. Конец воспроизведения — линейный выход, конец записи — **микрофон**. Имена «Speak2Mic Speaker» / «Speak2Mic Microphone» Windows берёт из `MediaCategories` (прописываются в INF).
-- `app\audio.cpp`: общая часть программ: список устройств, формат по умолчанию (IPolicyConfig), индикаторы.
-  - Индикаторы: отдельный поток захватывает устройство (для «Input» в loopback) и считает пиковые уровни.
-- `app\s2mpanel.cpp`: интерфейс на чистом Win32 без зависимостей, с поддержкой высокого DPI. Изменения настроек применяет, перезапуская себя с правами администратора (`Speak2Mic.exe --apply …`); перезапуск устройства идёт через SetupAPI.
+## Limitations
 
-## Ограничения
+- Windows 10 2004 or later and Windows 11 (the driver uses `ExAllocatePool2`; the INF says 10.0.19041), x64 and x86.
+- Test signing mode is required. Running without it needs a Microsoft signature (EV certificate + attestation signing in the Partner Center).
+- One cable, one stream per end; in shared mode Windows mixes all applications anyway.
+- No resampling in the driver: the cable has one sample rate (chosen in the panel).
 
-- Только Windows 10 версии 2004 и новее, а также Windows 11 (драйвер использует `ExAllocatePool2`), x64/ARM64. Программы собраны под x64.
-- Нужен тестовый режим подписи. Для работы без него драйвер нужно подписывать у Microsoft (EV-сертификат + attestation signing).
-- Один кабель и один поток на каждый его конец. В общем режиме Windows сама смешивает звук всех приложений, так что обычно этого достаточно.
-- Нет float в эксклюзивном режиме и ресемплинга внутри драйвера: частота кабеля одна (выбирается в панели).
-- Пока устройств Speak2Mic нет, панель раз в 3 секунды проверяет, не появились ли они, и сама подключает индикаторы.
+## Logs and tools
 
-## Журналы
+- **Programs** write UTF-8 logs with timestamps to `C:\ProgramData\Speak2Mic\logs\` (`setup.log`, `panel.log`, `install.log`, `ctl.log`, `autotest.log`, `debug.log`; over 1 MB → `*.old.log`). Each starts with the program, its build and the Windows version.
+- **The driver** logs every step of its start and of its streams with NTSTATUS codes: in memory, to the kernel debugger (DebugView → Capture Kernel) and to `HKLM\SYSTEM\CurrentControlSet\Services\Speak2Mic\Parameters\DriverLog`.
+- **Diagnostics:** `Speak2Mic-Setup.exe` → "Diagnostics" or `s2minstall.exe diag` check the device (Device Manager problem code), the driver service and the Speak2Mic sound devices, and add the driver log and the Speak2Mic part of `setupapi.dev.log`.
+- **`s2mctl.exe`** — everything the panel does: `status`; `set [--preset voice|standard|high|studio|max] [--rate HZ] [--bits 0|16|24|32] [--channels N] [--mic-channels N] [--latency MS]` (administrator); `name [--speaker "NAME"] [--mic "NAME"]` (`default` = default name); `volume 0..300`; `mute on|off`; `reset` (administrator); `export FILE.ini` / `import FILE.ini` (import: administrator); `test [SECONDS]`. Exit codes: 0 ok, 1 failed, 2 bad arguments, 3 administrator rights needed, 4 cannot work (Secure Boot on, test mode off or driver missing).
+- **`s2mautotest.exe [minutes] [--seed N]`** (administrator, 10 minutes by default) closes the panel, saves the current state and exercises everything at random: random settings with device restarts, a tone through the cable on every speaker channel (arrival, clipping, dropouts, silence, latency), renaming, microphone volume and mute, default formats, stream open/close stress, the Test sound and the music player, leftover endpoint records and random `s2mctl` commands (including invalid ones and an export/import round trip). It restores everything at the end (also after Ctrl+C) and logs every check as PASS/FAIL/WARN; `--seed` repeats a run. It also logs outside volume changes, the audio sessions open on the microphone and the audio effects (APOs) on the devices.
+- **`s2mdebug.exe`** (built, not in the package) tests every 16/24/32-bit format on the Speak2Mic devices; `s2mdebug propose off|on` switches the driver's `KSPROPERTY_PIN_PROPOSEDATAFORMAT` handler.
 
-- **Программы.** `Speak2Mic-Setup.exe`, `Speak2Mic.exe`, `s2minstall.exe`, `s2mdebug.exe` пишут журналы в `C:\ProgramData\Speak2Mic\logs\` (`setup.log`, `panel.log`, `install.log`, `debug.log`). Формат — UTF-8 с отметками времени; при превышении 1 МБ файл уходит в `*.old.log`.
-- **Драйвер.** Записывает каждый шаг запуска (настройки, регистрацию фильтров, создание кабелей) и работы потоков (открытие, формат, состояния, буфер) с кодами NTSTATUS. Журнал хранится в памяти, выводится в отладчик ядра (DebugView → Capture Kernel) и сохраняется в `HKLM\SYSTEM\CurrentControlSet\Services\Speak2Mic\Parameters\DriverLog`. Итог запуска — там же, в значениях `StartStatus` и `CablesCreated`.
-- **Диагностика.** `Speak2Mic-Setup.exe` → «Диагностика» или `s2minstall.exe diag` проверяют состояние устройства (код проблемы Диспетчера устройств), службу драйвера и звуковые устройства Speak2Mic. В журнал они добавляют журнал драйвера и последнюю секцию `setupapi.dev.log` о Speak2Mic. После установки установщик сам запускает эту проверку.
-- **Командная строка (`s2mctl.exe`).** Всё, что делает панель: `status`; `set [--preset voice|standard|high|studio|max] [--rate Гц] [--bits 0|16|24|32] [--channels N] [--mic-channels N] [--latency мс]` (как «Применить», от администратора); `name [--speaker "ИМЯ"] [--mic "ИМЯ"]` (`default` — имя по умолчанию); `volume 0..300`; `mute on|off`; `reset` (от администратора); `export файл.ini` / `import файл.ini` (тот же формат, что у панели; импорт — от администратора); `test [секунды]`. Коды выхода: 0 — успех, 1 — ошибка, 2 — неверные параметры, 3 — нужны права администратора, 4 — работать нельзя (см. ниже). Вывод на английском, журнал `ctl.log`.
-- **Музыка (кнопка «Играть / Пауза» справа от «Проверка»).** Проигрывает в случайном порядке mp3-файлы из папки `mp3` рядом с программой (`C:\Program Files\Speak2Mic\mp3\`) на «Speak2Mic Speaker», то есть в микрофон. Список файлов перечитывается при каждой смене трека и каждом нажатии «Играть»: можно добавлять и удалять свои mp3. «Пауза» запоминает трек и позицию, «Играть» продолжает с того же места (если файл ещё на месте). Без mp3 в папке кнопка неактивна. Установщик копирует mp3 из пакета, при удалении папка `mp3` удаляется целиком.
-- **Трей.** Кнопка «Свернуть» прячет панель в область уведомлений (защита громкости и музыка продолжают работать); щелчок по значку возвращает окно, правая кнопка — «Открыть панель управления / Выход». `Speak2Mic.exe /t` запускает панель сразу в трее; повторный запуск без `/t` показывает уже работающую панель.
-- **Автозагрузка.** Установщик включает запуск панели вместе с Windows (сразу в трей: `Speak2Mic.exe /t`, запись `HKCU\…\Run\Speak2Mic`); флажок «Запускать панель управления вместе с Windows (в трее)» внизу панели включает и выключает его, выбор запоминается и при обновлении не меняется. Если при входе в Windows Speak2Mic не готов (тестовый режим и т.п.), панель из автозагрузки молча завершается. Удаление программы убирает автозагрузку.
-- **Проверка готовности.** Панель, `s2mctl.exe`, `s2mdebug.exe` и `s2mautotest.exe` при запуске проверяют, что Secure Boot выключен, тестовый режим подписи включён и драйвер Speak2Mic установлен. Если что-то не так, они сообщают, что именно, и не работают (панель предлагает открыть установщик; `s2mctl` и `s2mdebug` завершаются с кодом 4, автотест — с кодом 3). Установщики (`Speak2Mic-Setup.exe`, `s2minstall.exe`) работают всегда: ими это и исправляется.
-- **Автотест.** `s2mautotest.exe [минуты] [--seed N]` (от администратора, по умолчанию 10 минут) закрывает панель, запоминает текущее состояние и случайным образом гоняет всё: применение случайных настроек (частота, разрядность, каналы динамика и микрофона, задержка) с перезапуском устройства, сигнал через кабель по каждому каналу динамика (доходит ли до микрофона, нет ли перегрузки и провалов, тишина, задержка), переименование, громкость и «Без звука» микрофона, формат по умолчанию, открытие/закрытие потоков, «Проверку», рост числа старых звуковых записей, `s2mctl` со случайными командами (включая неверные параметры и экспорт/импорт туда-обратно). В конце всё возвращает (и после Ctrl+C). Журнал — `autotest.log`, каждая проверка PASS/FAIL/WARN; код выхода 1 при ошибках; `--seed` повторяет тот же прогон.
-- **Отладка форматов.** `s2mdebug.exe` (от администратора, панель закрыта) проверяет каждый формат 16/24/32 бит у устройств Speak2Mic: ответ Windows `IsFormatSupported`, реальное открытие потока, смену формата по умолчанию (прежний формат возвращается), показывает свойства устройств и журнал драйвера во время проверок. Отчёт — `debug.log`. `s2mdebug propose off|on` выключает/включает ответ драйвера на `KSPROPERTY_PIN_PROPOSEDATAFORMAT` (параметр `ProposeFormat`, по умолчанию 1) и перезапускает устройство.
+## Troubleshooting
 
-## Если что-то не так
+- **Code 52 in Device Manager (signature):** test signing mode is off or Secure Boot is on.
+- **"Device not found" in the panel:** Device Manager → Sound, video and game controllers → Speak2Mic: is it started? The panel picks it up by itself within seconds.
+- **The speaker meter moves, the microphone one does not:** "Speak2Mic Microphone" may be disabled or muted (Sound → Recording); the microphone meter also lags by `LatencyMs`.
+- **The microphone volume keeps jumping to the maximum:** another program adjusts it (call apps with automatic microphone gain, monitoring agents). The panel names it in the event list.
+- **Silence on the microphone in a VM** while the screen is off or the session is locked: Windows may hold back the sound of an inactive session; disable screen-off (`powercfg /change monitor-timeout-ac 0`).
+- **Clicks or dropouts:** raise the latency (50–100 ms), especially in a VM under host load.
+- **Blue screen:** roll the VM back to the snapshot and keep the dump (`C:\Windows\MEMORY.DMP` or `Minidump`).
 
-- **Код 52 в диспетчере устройств (подпись):** тестовый режим не включён или включён Secure Boot.
-- **В панели «Устройство не найдено»:** Диспетчер устройств → «Звуковые, игровые и видеоустройства» → Speak2Mic → проверьте, запущено ли устройство. Панель подхватит его сама в течение нескольких секунд.
-- **Индикатор «Speak2Mic Speaker» двигается, а «Speak2Mic Microphone» — нет:** проверьте, что микрофон «Speak2Mic Microphone» не отключён в Панель управления → Звук → «Запись». Кроме того, этот индикатор тоже отстаёт на `LatencyMs`.
-- **Щелчки или прерывания:** увеличьте задержку в панели (50–100 мс). В ВМ это помогает при нагрузке на хост.
-- **Синий экран:** в ВМ откатитесь на снапшот. Пришлите дамп (`C:\Windows\MEMORY.DMP` или `Minidump`), по нему можно найти ошибку.
+## Languages
 
-## Языки интерфейса
+Русский, English, українська, беларуская, Deutsch, français, español, italiano, português (Brasil), polski, Nederlands, Türkçe, Bahasa Indonesia, Tiếng Việt, 中文(简体), 日本語, 한국어. The default is the Windows display language, then the regional settings, otherwise English; the "Language" list in the top right corner of the panel and the installer changes it for all programs (`HKCU\Software\Speak2Mic\Language`); console programs take `--lang <code>`.
 
-Русский, English, українська, беларуская, Deutsch, français, español, italiano, português (Brasil), polski, Nederlands, Türkçe, Bahasa Indonesia, Tiếng Việt, 中文(简体), 日本語, 한국어. По умолчанию берётся язык системы: язык интерфейса Windows, затем региональные настройки (если он не из этих 17 — английский). Язык меняется списком «Язык» в правом верхнем углу панели или установщика. Выбор общий для всех программ: `HKCU\Software\Speak2Mic\Language`. У консольных программ есть ключ `--lang <код>`.
-
-Исходный текст в коде — русский, он же ключ перевода: `TR(L"…")`. Переводы лежат в `app\lang\<код>.txt` построчно, в том же порядке, что и `app\lang\keys.txt`. Первые 186 строк — интерфейс, остальные — технические строки диагностики: они есть только на русском и английском, другие языки показывают их по-английски. `python3 app/lang/gen_lang.py` собирает `app\lang_table.inc` и проверяет, что в каждом переводе те же `%`-подстановки, что в оригинале. Новый язык: добавьте строку в `LANGS` в `gen_lang.py` и файл перевода.
-
+The source strings in the code are Russian and serve as translation keys: `TR(L"…")`. Translations are line by line in `app\lang\<code>.txt`, in the order of `app\lang\keys.txt`. The first 247 lines are the interface; the rest are technical diagnostics in Russian and English only. `python3 app/lang/gen_lang.py` builds `app\lang_table.inc` and checks that every translation keeps the `%` conversions of its key. A new language: add it to `LANGS` in `gen_lang.py` and add its file.
