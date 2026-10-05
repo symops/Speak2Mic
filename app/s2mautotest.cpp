@@ -1143,6 +1143,10 @@ static void ActionMusic()
         Check(on > -60.0f, L"music reaches the microphone: peak %.1f dBFS > -60 (%ls)", on, name ? name + 1 : track);
         Check(Mp3Playing(), L"still playing after the measurement");
 
+        // The track may have ended during the measurement (a continued one near its end): the player then went on to
+        // the next one - that is the track Pause / Play must keep.
+        wcsncpy(track, Mp3LastFile(), MAX_PATH - 1);
+        track[MAX_PATH - 1] = 0;
         Mp3Pause();
         Check(!Mp3Playing(), L"paused");
         float off = level();
@@ -1151,7 +1155,7 @@ static void ActionMusic()
 
         Check(Mp3Play(g_spk.id, folder, nullptr, 0) && Mp3Playing(), L"playback continued");
         Sleep(300);
-        Check(_wcsicmp(Mp3LastFile(), track) == 0, L"continues the same track (%ls)", Mp3LastFile());
+        Check(_wcsicmp(Mp3LastFile(), track) == 0, L"continues the same track (%ls; paused: %ls)", Mp3LastFile(), track);
         float again = level();
         Check(again > -60.0f, L"music again after Play: peak %.1f dBFS > -60", again);
         Mp3Pause();
