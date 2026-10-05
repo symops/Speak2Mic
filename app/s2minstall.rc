@@ -1,3 +1,31 @@
 #include <winuser.h>
+#include <winver.h>
+#include "../driver/version.h"
 1 RT_MANIFEST "s2minstall.manifest"
 1 ICON "s2msetup.ico"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     S2M_VER_MAJOR, S2M_VER_MINOR, S2M_VER_BUILD, S2M_VER_REV
+PRODUCTVERSION  S2M_VER_MAJOR, S2M_VER_MINOR, S2M_VER_BUILD, S2M_VER_REV
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName",      S2M_AUTHOR
+            VALUE "LegalCopyright",   S2M_COPYRIGHT
+            VALUE "FileDescription",  "Speak2Mic console installer"
+            VALUE "FileVersion",      S2M_VER_STR
+            VALUE "InternalName",     "s2minstall"
+            VALUE "OriginalFilename", "s2minstall.exe"
+            VALUE "ProductName",      "Speak2Mic"
+            VALUE "ProductVersion",   S2M_VER_STR
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1200
+    END
+END

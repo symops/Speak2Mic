@@ -3,7 +3,7 @@
 # Wine on the packaged INF. Usage: ./check_inf.sh [mode ...]   modes: "" (basic), /u, /k, /h (WHQL signature
 # requirements - what a Microsoft signature needs), /w (Windows Driver, stricter). Default: basic, /h and /w.
 cd "$(dirname "$0")"
-INF=${INF:-dist/Speak2Mic-x64/Speak2Mic.inf}
+INF=${INF:-dist/Speak2Mic/x64/Speak2Mic.inf}
 command -v wine >/dev/null || { echo "wine is not installed (apt install wine)"; exit 2; }
 [ -f tools/infverif/infverif.exe ] || { echo "tools/infverif/infverif.exe is missing"; exit 2; }
 T=$(mktemp -d) && cp "$INF" "$T/Speak2Mic.inf" && cp tools/infverif/infverif.exe "$T/"

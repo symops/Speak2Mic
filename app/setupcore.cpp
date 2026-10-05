@@ -5,6 +5,7 @@
 #include "audiosvc.h"
 #include <devpropdef.h>
 #include "lang.h"
+#include "../driver/version.h"     // S2M_AUTHOR (the INF provider)
 #include <setupapi.h>
 #include <newdev.h>
 #include <wincrypt.h>
@@ -241,7 +242,8 @@ static int RemoveDriverPackages(SetupLog log, void* ctx, const wchar_t* keepInf 
         path[MAX_PATH - 1] = 0;
         GetPrivateProfileStringW(L"Strings", L"ProviderName", L"", provider, 64, path);
         GetPrivateProfileStringW(L"Speak2Mic_Device.NT.Services", L"AddService", L"", service, 64, path);
-        if (_wcsicmp(provider, L"Speak2Mic") != 0 || _wcsnicmp(service, L"Speak2Mic", 9) != 0)
+        // the provider is the author since 1.0.278 ("Speak2Mic" before); the service name identifies the package
+        if ((_wcsicmp(provider, L"Speak2Mic") != 0 && _wcsicmp(provider, L"" S2M_AUTHOR) != 0) || _wcsnicmp(service, L"Speak2Mic", 9) != 0)
         {
             continue;
         }

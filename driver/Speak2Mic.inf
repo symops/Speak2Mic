@@ -6,7 +6,7 @@ Signature="$WINDOWS NT$"
 Class=MEDIA
 ClassGuid={4d36e96c-e325-11ce-bfc1-08002be10318}
 Provider=%ProviderName%
-DriverVer=10/05/2026,1.0.278.1328
+DriverVer=10/05/2026,1.0.278.1432
 CatalogFile=Speak2Mic.cat
 PnpLockdown=1
 
@@ -120,8 +120,8 @@ HKR,Parameters,BitsPerSample,0x00010003,16
 HKR,Parameters,MicChannels,0x00010003,1
 
 [Strings]
-ProviderName="Speak2Mic"
-MfgName="Speak2Mic"
+ProviderName="Symo"
+MfgName="Symo"
 DeviceDesc="Speak2Mic"
 SvcDesc="Speak2Mic driver"
 DiskName="Speak2Mic disk"

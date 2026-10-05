@@ -20,7 +20,8 @@ BEGIN
     BEGIN
         BLOCK "041904B0"
         BEGIN
-            VALUE "CompanyName",      "Speak2Mic"
+            VALUE "CompanyName",      S2M_AUTHOR
+            VALUE "LegalCopyright",   S2M_COPYRIGHT
             VALUE "FileDescription",  "Speak2Mic control panel"
             VALUE "FileVersion",      S2M_VER_STR
             VALUE "InternalName",     "Speak2Mic"

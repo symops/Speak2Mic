@@ -143,3 +143,7 @@ Device names are generated: edit `gen.py` and run `python gen.py` (writes `drive
 Русский, English, українська, беларуская, Deutsch, français, español, italiano, português (Brasil), polski, Nederlands, Türkçe, Bahasa Indonesia, Tiếng Việt, 中文(简体), 日本語, 한국어. The default is the Windows display language, then the regional settings, otherwise English; the "Language" list in the top right corner of the panel and the installer changes it for all programs (`HKCU\Software\Speak2Mic\Language`); console programs take `--lang <code>`.
 
 The source strings in the code are Russian and serve as translation keys: `TR(L"…")`. Translations are line by line in `app\lang\<code>.txt`, in the order of `app\lang\keys.txt`. The first 247 lines are the interface; the rest are technical diagnostics in Russian and English only. `python3 app/lang/gen_lang.py` builds `app\lang_table.inc` and checks that every translation keeps the `%` conversions of its key. A new language: add it to `LANGS` in `gen_lang.py` and add its file.
+
+## Author
+
+Symo — symops@gmail.com

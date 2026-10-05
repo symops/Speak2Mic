@@ -378,9 +378,10 @@ static void CreateControls()
     Create(WC_COMBOBOXW, L"", CBS_DROPDOWNLIST | WS_TABSTOP | WS_VSCROLL, IDC_LANG);
     LangFillCombo(Ctl(IDC_LANG));
     Create(L"STATIC", TR(L"Виртуальный аудиокабель: звук динамиков → микрофон"), 0, IDC_SUBTITLE);
-    wchar_t ver[64];
-    _snwprintf(ver, 64, TR(L"Версия %ls"), L"" S2M_VER_STR);
-    ver[63] = 0;
+    wchar_t ver[200];
+    int n = _snwprintf(ver, 200, TR(L"Версия %ls"), L"" S2M_VER_STR);
+    if (n > 0 && n < 200) _snwprintf(ver + n, 200 - n, L"   ·   %ls, %ls", L"" S2M_AUTHOR, L"" S2M_EMAIL);
+    ver[199] = 0;
     Create(L"STATIC", ver, 0, IDC_VERSION);
     Create(L"BUTTON", TR(L"Состояние системы"), BS_GROUPBOX, IDC_GROUP);
     Create(L"STATIC", L"", SS_ENDELLIPSIS, IDC_ST_SECURE);   // a translation too long: "..." instead of a cut
