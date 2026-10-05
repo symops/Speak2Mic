@@ -79,7 +79,7 @@ The panel, `s2mctl`, `s2mdebug` and the autotest check at start that Secure Boot
 ```
 ./package.sh
 ```
-needs clang, MinGW-w64 (x86_64 and i686), osslsigncode, openssl, make and Python 3. It builds the driver and the programs for x64 and x86 and assembles:
+needs clang, MinGW-w64 for x86_64 and i686 (gcc, windres, dlltool), a host C compiler and make (for `tools/generate-cat-file`), osslsigncode, openssl, gcab and Python 3 (on Debian/Ubuntu: `clang mingw-w64 gcc make osslsigncode openssl gcab python3`). It builds the driver and the programs for x64 and x86 and assembles:
 
 - **`dist/Speak2Mic-Setup.exe`** — the whole package in one file (~29 MB with music): it unpacks itself to a temporary folder, starts the installer for the right bitness and cleans up afterwards;
 - **`dist/Speak2Mic/`** — the same unpacked: a launcher `Speak2Mic-Setup.exe`, full `x64\` and `x86\` sets (installer, panel, `s2minstall.exe`, `s2mctl.exe`, `s2mautotest.exe`, test-signed `Speak2Mic.sys`, `Speak2Mic.inf`, `Speak2Mic.cat`, certificates), `mp3\` and `uninstall.cmd`. Windows on ARM is not supported.
@@ -87,10 +87,11 @@ needs clang, MinGW-w64 (x86_64 and i686), osslsigncode, openssl, make and Python
 Not in this repository (see `.gitignore`):
 
 - **Test signing keys** (`driver/mingw/testcert/`). `driver/mingw/build.sh` creates a new test root CA and signing certificate when they are missing. Keep them private: the installer trusts that root on every machine it installs on.
-- **mp3 files** for Play / Pause: put your own into `media/mp3/`.
 - **`infverif.exe`** for `check_inf.sh`: take it from the WDK NuGet package `microsoft.windows.wdk.x64` (`c/tools/<version>/x64/infverif.exe`) and put it into `tools/infverif/`; it runs under Wine.
 
 How the driver is built without the WDK (`driver/mingw/`): clang compiles it against the MinGW DDK headers with `-mno-red-zone`; import libraries for `portcls.sys`/`ntoskrnl.exe` are generated from `.def` files and `CUnknown` (`stdunk.lib` in the WDK) is implemented in `stdunk_impl.cpp`; the image is linked as a native driver, `pefix.py` makes its PE header look like a WDK one and `osslsigncode` test-signs it (SHA-256). The catalog `Speak2Mic.cat` (signed hashes of the INF and SYS; without it Windows refuses the package with `0xE000022F`) is made by [LINBIT generate-cat-file](https://github.com/LINBIT/generate-cat-file) (`tools/generate-cat-file/`, GPLv2, build-time only).
+
+The music for Play / Pause is in `media/mp3/` (synthetic tracks made for this project); add or remove mp3 files there — without any the package still builds and the button is disabled.
 
 Other checks: `./check_syntax.sh` (driver sources against the MinGW DDK headers), `./check_inf.sh` (Microsoft InfVerif under Wine: basic, `/h` and `/w` modes).
 
@@ -121,7 +122,7 @@ Device names are generated: edit `gen.py` and run `python gen.py` (writes `drive
 
 ## Logs and tools
 
-- **Programs** write UTF-8 logs with timestamps to `C:\ProgramData\Speak2Mic\logs\` (`setup.log`, `panel.log`, `install.log`, `ctl.log`, `autotest.log`, `debug.log`; over 1 MB → `*.old.log`). Each starts with the program, its build and the Windows version.
+- **Programs** write UTF-8 logs with timestamps to `C:\ProgramData\Speak2Mic\logs\` (`setup.log`, `panel.log`, `install.log`, `ctl.log`, `autotest.log`, `debug.log`; over 1 MB → `*.old.log`); the panel's event list is kept in `events.log` (last 500 events). Each starts with the program, its build and the Windows version.
 - **The driver** logs every step of its start and of its streams with NTSTATUS codes: in memory, to the kernel debugger (DebugView → Capture Kernel) and to `HKLM\SYSTEM\CurrentControlSet\Services\Speak2Mic\Parameters\DriverLog`.
 - **Diagnostics:** `Speak2Mic-Setup.exe` → "Diagnostics" or `s2minstall.exe diag` check the device (Device Manager problem code), the driver service and the Speak2Mic sound devices, and add the driver log and the Speak2Mic part of `setupapi.dev.log`.
 - **`s2mctl.exe`** — everything the panel does: `status`; `set [--preset voice|standard|high|studio|max] [--rate HZ] [--bits 0|16|24|32] [--channels N] [--mic-channels N] [--latency MS]` (administrator); `name [--speaker "NAME"] [--mic "NAME"]` (`default` = default name); `volume 0..300`; `mute on|off`; `reset` (administrator); `export FILE.ini` / `import FILE.ini` (import: administrator); `test [SECONDS]`. Exit codes: 0 ok, 1 failed, 2 bad arguments, 3 administrator rights needed, 4 cannot work (Secure Boot on, test mode off or driver missing).

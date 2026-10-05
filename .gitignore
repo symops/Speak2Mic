@@ -19,8 +19,5 @@ driver/mingw/testcert/
 # Microsoft WDK InfVerif (not redistributable): put infverif.exe here yourself, see check_inf.sh
 tools/infverif/*.exe
 
-# Music for the "Play / Pause" button: put your own mp3 files here (not part of the repository)
-media/mp3/*.mp3
-
 # Python bytecode
 __pycache__/

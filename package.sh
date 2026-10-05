@@ -22,7 +22,8 @@ rm -rf dist
 mkdir -p $D/mp3
 cp app/x86/s2mlauncher.exe $D/Speak2Mic-Setup.exe
 cp scripts/uninstall.cmd $D/
-cp media/mp3/*.mp3 $D/mp3/
+# Music is optional (not in the repository): without mp3 files the panel's Play button is just disabled.
+for f in media/mp3/*.mp3; do [ -e "$f" ] && cp "$f" $D/mp3/; done
 make -s -C tools/generate-cat-file
 
 for ARCH in x64 x86; do
