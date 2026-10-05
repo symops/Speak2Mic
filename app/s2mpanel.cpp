@@ -1227,11 +1227,11 @@ static void OnPlayDone(HRESULT hr)
     if (FAILED(hr))
     {
         wchar_t t[160];
-        _snwprintf(t, 160, TR(L"Не удалось воспроизвести mp3 (0x%08lX)."), (unsigned long)hr);
+        _snwprintf(t, 160, TR(L"Не удалось воспроизвести музыкальный файл (0x%08lX)."), (unsigned long)hr);
         t[159] = 0;
         AddEvent(t);
     }
-    else if (hr == S_FALSE) AddEvent(TR(L"Музыка остановлена: в папке нет mp3-файлов."));
+    else if (hr == S_FALSE) AddEvent(TR(L"Музыка остановлена: в папке нет музыкальных файлов (mp3, wav, flac, ogg)."));
     UpdatePlayButton();
 }
 

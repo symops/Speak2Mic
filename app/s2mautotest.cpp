@@ -1111,10 +1111,10 @@ static void ActionMusic()
     Mp3DefaultFolder(folder);
     if (!Mp3FolderHasFiles(folder))
     {
-        Out(L"[music] skipped: no .mp3 files in %ls", folder);
+        Out(L"[music] skipped: no music files (mp3, wav, flac, ogg) in %ls", folder);
         return;
     }
-    Out(L"[music] random mp3 from %ls on the speaker", folder);
+    Out(L"[music] random music file from %ls on the speaker", folder);
 
     // A folder without mp3: nothing starts (the panel's button is disabled then).
     GetTempPathW(MAX_PATH, empty);

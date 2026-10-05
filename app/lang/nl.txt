@@ -227,13 +227,13 @@ Speak2Mic kan niet werken: het Speak2Mic-stuurprogramma is niet geïnstalleerd.\
 Het Speak2Mic-installatieprogramma nu openen?
 Afspelen
 Pauze
-Kan mp3 niet afspelen (0x%08lX).
+Het muziekbestand kan niet worden afgespeeld (0x%08lX).
 Geluidstest gestart.
 Geluidstest gestopt.
 Geluidstest voltooid.
 Muziek: afspelen (%ls).
 Muziek: pauze (%ls).
-Muziek gestopt: geen mp3-bestanden in de map.
+Muziek gestopt: de map bevat geen muziekbestanden (mp3, wav, flac, ogg).
 Muziek: volgend nummer (%ls).
 Speak2Mic ondersteunt Windows op ARM-processors niet.
 Installatieprogramma voor dit systeem niet gevonden: %ls\n\nPak het hele archief uit.

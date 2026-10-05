@@ -227,13 +227,13 @@ Speak2Mic không thể hoạt động: trình điều khiển Speak2Mic chưa đ
 Mở trình cài đặt Speak2Mic ngay bây giờ?
 Phát
 Tạm dừng
-Không phát được mp3 (0x%08lX).
+Không phát được tệp nhạc (0x%08lX).
 Đã bắt đầu kiểm tra âm thanh.
 Đã dừng kiểm tra âm thanh.
 Kiểm tra âm thanh đã xong.
 Nhạc: đang phát (%ls).
 Nhạc: tạm dừng (%ls).
-Nhạc đã dừng: thư mục không có tệp mp3.
+Đã dừng nhạc: thư mục không có tệp nhạc (mp3, wav, flac, ogg).
 Nhạc: bài tiếp theo (%ls).
 Speak2Mic không hỗ trợ Windows trên bộ xử lý ARM.
 Không tìm thấy trình cài đặt cho hệ thống này: %ls\n\nHãy giải nén toàn bộ tệp lưu trữ.

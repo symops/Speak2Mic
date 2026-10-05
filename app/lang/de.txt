@@ -227,13 +227,13 @@ Speak2Mic kann nicht arbeiten: der Speak2Mic-Treiber ist nicht installiert.\n\nS
 Speak2Mic-Installationsprogramm jetzt öffnen?
 Abspielen
 Pause
-MP3 konnte nicht abgespielt werden (0x%08lX).
+Die Musikdatei konnte nicht abgespielt werden (0x%08lX).
 Tontest gestartet.
 Tontest angehalten.
 Tontest beendet.
 Musik: Wiedergabe (%ls).
 Musik: Pause (%ls).
-Musik angehalten: keine MP3-Dateien im Ordner.
+Musik angehalten: Der Ordner enthält keine Musikdateien (mp3, wav, flac, ogg).
 Musik: nächster Titel (%ls).
 Speak2Mic unterstützt Windows auf ARM-Prozessoren nicht.
 Das Installationsprogramm für dieses System wurde nicht gefunden: %ls\n\nEntpacken Sie das ganze Archiv.

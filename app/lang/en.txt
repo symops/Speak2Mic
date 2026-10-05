@@ -227,13 +227,13 @@ Speak2Mic cannot work: the Speak2Mic driver is not installed.\n\nRun Speak2Mic-S
 Open the Speak2Mic installer now?
 Play
 Pause
-Could not play mp3 (0x%08lX).
+Could not play the music file (0x%08lX).
 Sound test started.
 Sound test stopped.
 Sound test finished.
 Music: playing (%ls).
 Music: paused (%ls).
-Music stopped: no mp3 files in the folder.
+Music stopped: the folder has no music files (mp3, wav, flac, ogg).
 Music: next track (%ls).
 Speak2Mic does not support Windows on ARM processors.
 The installer for this system was not found: %ls\n\nExtract the whole archive.

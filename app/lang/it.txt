@@ -227,13 +227,13 @@ Speak2Mic non può funzionare: il driver Speak2Mic non è installato.\n\nAvvia S
 Aprire ora il programma di installazione di Speak2Mic?
 Riproduci
 Pausa
-Impossibile riprodurre l'mp3 (0x%08lX).
+Impossibile riprodurre il file musicale (0x%08lX).
 Test audio avviato.
 Test audio interrotto.
 Test audio completato.
 Musica: in riproduzione (%ls).
 Musica: in pausa (%ls).
-Musica interrotta: nessun file mp3 nella cartella.
+Musica interrotta: la cartella non contiene file musicali (mp3, wav, flac, ogg).
 Musica: brano successivo (%ls).
 Speak2Mic non supporta Windows su processori ARM.
 Programma di installazione per questo sistema non trovato: %ls\n\nEstrai l'intero archivio.

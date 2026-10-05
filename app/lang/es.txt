@@ -227,13 +227,13 @@ Speak2Mic no puede funcionar: el controlador Speak2Mic no está instalado.\n\nEj
 ¿Abrir el instalador de Speak2Mic ahora?
 Reproducir
 Pausa
-No se pudo reproducir el mp3 (0x%08lX).
+No se pudo reproducir el archivo de música (0x%08lX).
 Prueba de sonido iniciada.
 Prueba de sonido detenida.
 Prueba de sonido finalizada.
 Música: reproduciendo (%ls).
 Música: pausa (%ls).
-Música detenida: no hay archivos mp3 en la carpeta.
+Música detenida: la carpeta no contiene archivos de música (mp3, wav, flac, ogg).
 Música: siguiente pista (%ls).
 Speak2Mic no es compatible con Windows en procesadores ARM.
 No se encontró el instalador para este sistema: %ls\n\nExtraiga el archivo completo.

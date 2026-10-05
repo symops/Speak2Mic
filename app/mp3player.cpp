@@ -10,6 +10,9 @@
 #include <stdlib.h>
 #include <bcrypt.h>
 #include <wchar.h>
+#include <stdio.h>
+#define STB_VORBIS_HEADER_ONLY
+#include "third_party/stb_vorbis.c"     // OGG Vorbis (Windows has no decoder for it); compiled in stbvorbis.c
 
 static HANDLE        g_thread;
 static volatile LONG g_stop;
@@ -36,11 +39,28 @@ static int RandomIndex(int n)
 
 static const GUID kSubtypeFloat = { 0x00000003, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 } };
 
-// The .mp3 files of the folder (names only), up to max.
+// Music files the player takes: Media Foundation decodes mp3, wav and flac; OGG Vorbis goes to stb_vorbis.
+static bool IsMusicFile(const wchar_t* name)
+{
+    const wchar_t* dot = wcsrchr(name, L'.');
+    if (!dot) return false;
+    static const wchar_t* kExt[] = { L".mp3", L".wav", L".flac", L".ogg", L".oga" };
+    for (const wchar_t* e : kExt)
+        if (_wcsicmp(dot, e) == 0) return true;
+    return false;
+}
+
+static bool IsOgg(const wchar_t* path)
+{
+    const wchar_t* dot = wcsrchr(path, L'.');
+    return dot && (_wcsicmp(dot, L".ogg") == 0 || _wcsicmp(dot, L".oga") == 0);
+}
+
+// The music files of the folder (names only), up to max.
 static int ListMp3(const wchar_t* folder, wchar_t (*names)[MAX_PATH], int max)
 {
     wchar_t pattern[MAX_PATH];
-    _snwprintf(pattern, MAX_PATH, L"%ls\\*.mp3", folder);
+    _snwprintf(pattern, MAX_PATH, L"%ls\\*", folder);
     pattern[MAX_PATH - 1] = 0;
     WIN32_FIND_DATAW fd;
     HANDLE h = FindFirstFileW(pattern, &fd);
@@ -48,7 +68,8 @@ static int ListMp3(const wchar_t* folder, wchar_t (*names)[MAX_PATH], int max)
     int n = 0;
     do
     {
-        if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && n < max) wcsncpy(names[n++], fd.cFileName, MAX_PATH - 1);
+        if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && IsMusicFile(fd.cFileName) && n < max)
+            wcsncpy(names[n++], fd.cFileName, MAX_PATH - 1);
     } while (FindNextFileW(h, &fd));
     FindClose(h);
     return n;
@@ -128,6 +149,124 @@ static void Store(BYTE* p, float v, int bytes, bool isFloat)
     else *(LONG*)p = s;
 }
 
+// One track being decoded to float samples: Media Foundation (mp3, wav, flac) or stb_vorbis (ogg).
+struct Decoder
+{
+    IMFSourceReader* mf;
+    stb_vorbis*      ogg;
+    UINT32           ch, rate;
+    LONGLONG         pos;           // position of the data returned last, 100-ns units
+    float*           tmp;           // decoded frames handed out by DecRead
+    size_t           tmpCap;        // floats
+};
+
+static HRESULT DecOpen(Decoder* d, const wchar_t* path, LONGLONG pos)
+{
+    ZeroMemory(d, sizeof(*d));
+    d->pos = pos;
+    if (IsOgg(path))
+    {
+        FILE* f = _wfopen(path, L"rb");
+        int err = 0;
+        d->ogg = f ? stb_vorbis_open_file(f, 1, &err, nullptr) : nullptr;     // closes f when freed
+        if (!d->ogg)
+        {
+            if (f) fclose(f);
+            return HRESULT_FROM_WIN32(ERROR_BAD_FORMAT);
+        }
+        stb_vorbis_info info = stb_vorbis_get_info(d->ogg);
+        d->ch = (UINT32)info.channels;
+        d->rate = info.sample_rate;
+        if (pos > 0) stb_vorbis_seek(d->ogg, (unsigned)(pos * d->rate / 10000000));
+        return d->ch && d->rate ? S_OK : E_UNEXPECTED;
+    }
+    IMFMediaType* type = nullptr;
+    HRESULT fr = MFCreateSourceReaderFromURL(path, nullptr, &d->mf);
+    if (SUCCEEDED(fr)) fr = d->mf->SetStreamSelection((DWORD)MF_SOURCE_READER_ALL_STREAMS, FALSE);
+    if (SUCCEEDED(fr)) fr = d->mf->SetStreamSelection((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, TRUE);
+    if (SUCCEEDED(fr)) fr = MFCreateMediaType(&type);
+    if (SUCCEEDED(fr)) fr = type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+    if (SUCCEEDED(fr)) fr = type->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
+    if (SUCCEEDED(fr)) fr = d->mf->SetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, type);
+    if (type) { type->Release(); type = nullptr; }
+    if (SUCCEEDED(fr)) fr = d->mf->GetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, &type);
+    if (SUCCEEDED(fr)) fr = type->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &d->ch);
+    if (SUCCEEDED(fr)) fr = type->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &d->rate);
+    if (type) type->Release();
+    if (SUCCEEDED(fr) && (d->ch == 0 || d->rate == 0)) fr = E_UNEXPECTED;
+    if (SUCCEEDED(fr) && pos > 0)
+    {
+        PROPVARIANT var;
+        PropVariantInit(&var);
+        var.vt = VT_I8;
+        var.hVal.QuadPart = pos;
+        d->mf->SetCurrentPosition(GUID_NULL, var);
+    }
+    return fr;
+}
+
+static bool DecGrow(Decoder* d, size_t floats)
+{
+    if (floats <= d->tmpCap) return true;
+    float* bigger = (float*)realloc(d->tmp, floats * sizeof(float));
+    if (!bigger) return false;
+    d->tmp = bigger;
+    d->tmpCap = floats;
+    return true;
+}
+
+// The next decoded frames (interleaved, d->ch channels): *frames = 0 with S_OK = end of the track.
+static HRESULT DecRead(Decoder* d, const float** data, size_t* frames)
+{
+    *frames = 0;
+    if (d->ogg)
+    {
+        const int chunk = 4096;
+        if (!DecGrow(d, (size_t)chunk * d->ch)) return E_OUTOFMEMORY;
+        d->pos = (LONGLONG)stb_vorbis_get_sample_offset(d->ogg) * 10000000 / d->rate;
+        int n = stb_vorbis_get_samples_float_interleaved(d->ogg, (int)d->ch, d->tmp, chunk * (int)d->ch);
+        *data = d->tmp;
+        *frames = n > 0 ? (size_t)n : 0;
+        return S_OK;
+    }
+    for (;;)
+    {
+        DWORD flags = 0;
+        LONGLONG ts = 0;
+        IMFSample* sample = nullptr;
+        if (FAILED(d->mf->ReadSample((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, 0, nullptr, &flags, &ts, &sample)) ||
+            (flags & MF_SOURCE_READERF_ENDOFSTREAM))
+        {
+            if (sample) sample->Release();
+            return S_OK;                                    // end (or unreadable from here on)
+        }
+        if (!sample) continue;
+        d->pos = ts;
+        IMFMediaBuffer* buf = nullptr;
+        BYTE* bytes = nullptr;
+        DWORD len = 0;
+        HRESULT hr = S_OK;
+        if (SUCCEEDED(sample->ConvertToContiguousBuffer(&buf)) && SUCCEEDED(buf->Lock(&bytes, nullptr, &len)))
+        {
+            size_t n = len / (sizeof(float) * d->ch);
+            if (DecGrow(d, n * d->ch)) memcpy(d->tmp, bytes, n * d->ch * sizeof(float)), *frames = n;
+            else hr = E_OUTOFMEMORY;
+            buf->Unlock();
+        }
+        if (buf) buf->Release();
+        sample->Release();
+        if (FAILED(hr) || *frames) { *data = d->tmp; return hr; }
+    }
+}
+
+static void DecClose(Decoder* d)
+{
+    if (d->mf) d->mf->Release();
+    if (d->ogg) stb_vorbis_close(d->ogg);
+    free(d->tmp);
+    ZeroMemory(d, sizeof(*d));
+}
+
 static DWORD WINAPI PlayThread(LPVOID)
 {
     bool com = SUCCEEDED(CoInitializeEx(nullptr, COINIT_MULTITHREADED));
@@ -181,34 +320,13 @@ static DWORD WINAPI PlayThread(LPVOID)
             result = S_FALSE;               // the folder has no .mp3 files (any more)
             break;
         }
-        IMFSourceReader* reader = nullptr;
-        IMFMediaType* type = nullptr;
-        UINT32 srcCh = 0, srcRate = 0;
-        HRESULT fr = MFCreateSourceReaderFromURL(path, nullptr, &reader);
-        if (SUCCEEDED(fr)) fr = reader->SetStreamSelection((DWORD)MF_SOURCE_READER_ALL_STREAMS, FALSE);
-        if (SUCCEEDED(fr)) fr = reader->SetStreamSelection((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, TRUE);
-        if (SUCCEEDED(fr)) fr = MFCreateMediaType(&type);
-        if (SUCCEEDED(fr)) fr = type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-        if (SUCCEEDED(fr)) fr = type->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
-        if (SUCCEEDED(fr)) fr = reader->SetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, type);
-        if (type) { type->Release(); type = nullptr; }
-        if (SUCCEEDED(fr)) fr = reader->GetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, &type);
-        if (SUCCEEDED(fr)) fr = type->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &srcCh);
-        if (SUCCEEDED(fr)) fr = type->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &srcRate);
-        if (type) type->Release();
-        if (SUCCEEDED(fr) && (srcCh == 0 || srcRate == 0)) fr = E_UNEXPECTED;
-        if (SUCCEEDED(fr) && pos > 0)
-        {
-            PROPVARIANT var;
-            PropVariantInit(&var);
-            var.vt = VT_I8;
-            var.hVal.QuadPart = pos;
-            reader->SetCurrentPosition(GUID_NULL, var);
-        }
+        Decoder dec;
+        HRESULT fr = DecOpen(&dec, path, pos);
+        UINT32 srcCh = dec.ch, srcRate = dec.rate;
         if (FAILED(fr))
         {
             AppLog(L"mp3: cannot play %ls (0x%08lX), skipping it", path, (unsigned long)fr);
-            if (reader) reader->Release();
+            DecClose(&dec);
             wcscpy(g_lastFile, path);
             Sleep(200);
             continue;
@@ -226,24 +344,16 @@ static DWORD WINAPI PlayThread(LPVOID)
             // Enough source for the next output frames?
             while (!eof && (size_t)t + 2 >= srcFrames)
             {
-                DWORD flags = 0;
-                LONGLONG ts = 0;
-                IMFSample* sample = nullptr;
-                if (FAILED(reader->ReadSample((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, 0, nullptr, &flags, &ts, &sample)) ||
-                    (flags & MF_SOURCE_READERF_ENDOFSTREAM))
+                const float* data = nullptr;
+                size_t frames = 0;
+                if (FAILED(hr = DecRead(&dec, &data, &frames))) break;
+                if (!frames)
                 {
                     eof = true;
-                    if (sample) sample->Release();
                     break;
                 }
-                if (!sample) continue;
-                trackPos = ts;
-                IMFMediaBuffer* buf = nullptr;
-                BYTE* data = nullptr;
-                DWORD len = 0;
-                if (SUCCEEDED(sample->ConvertToContiguousBuffer(&buf)) && SUCCEEDED(buf->Lock(&data, nullptr, &len)))
+                trackPos = dec.pos;
                 {
-                    size_t frames = len / (sizeof(float) * srcCh);
                     // Drop what was consumed, append the new frames.
                     size_t keep = (size_t)t < srcFrames ? srcFrames - (size_t)t : 0;
                     if (keep && (size_t)t) memmove(src, src + (size_t)t * srcCh, keep * srcCh * sizeof(float));
@@ -253,15 +363,12 @@ static DWORD WINAPI PlayThread(LPVOID)
                     {
                         srcCap = (srcFrames + frames) * 2;
                         float* bigger = (float*)realloc(src, srcCap * srcCh * sizeof(float));
-                        if (!bigger) { buf->Unlock(); buf->Release(); sample->Release(); hr = E_OUTOFMEMORY; break; }
+                        if (!bigger) { hr = E_OUTOFMEMORY; break; }
                         src = bigger;
                     }
                     memcpy(src + srcFrames * srcCh, data, frames * srcCh * sizeof(float));
                     srcFrames += frames;
-                    buf->Unlock();
                 }
-                if (buf) buf->Release();
-                sample->Release();
             }
             if (eof && (size_t)t + 1 >= srcFrames) break;       // track finished
 
@@ -296,7 +403,7 @@ static DWORD WINAPI PlayThread(LPVOID)
             wcscpy(g_resumeFile, path);         // Play continues here
             g_resumePos = trackPos;
         }
-        reader->Release();
+        DecClose(&dec);
     }
     if (FAILED(hr)) result = hr;
     if (client) client->Stop();

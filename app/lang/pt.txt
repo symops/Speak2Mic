@@ -227,13 +227,13 @@ O Speak2Mic não pode funcionar: o driver Speak2Mic não está instalado.\n\nExe
 Abrir o instalador do Speak2Mic agora?
 Tocar
 Pausar
-Não foi possível tocar o mp3 (0x%08lX).
+Não foi possível reproduzir o arquivo de música (0x%08lX).
 Teste de som iniciado.
 Teste de som interrompido.
 Teste de som concluído.
 Música: tocando (%ls).
 Música: pausada (%ls).
-Música parada: nenhum arquivo mp3 na pasta.
+Música parada: a pasta não tem arquivos de música (mp3, wav, flac, ogg).
 Música: próxima faixa (%ls).
 O Speak2Mic não oferece suporte ao Windows em processadores ARM.
 Instalador para este sistema não encontrado: %ls\n\nExtraia o arquivo inteiro.

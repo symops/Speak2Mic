@@ -227,13 +227,13 @@ Speak2Mic çalışamıyor: Speak2Mic sürücüsü yüklü değil.\n\nSpeak2Mic-S
 Speak2Mic kurulum programı şimdi açılsın mı?
 Çal
 Duraklat
-mp3 çalınamadı (0x%08lX).
+Müzik dosyası çalınamadı (0x%08lX).
 Ses testi başlatıldı.
 Ses testi durduruldu.
 Ses testi tamamlandı.
 Müzik: çalıyor (%ls).
 Müzik: duraklatıldı (%ls).
-Müzik durduruldu: klasörde mp3 dosyası yok.
+Müzik durduruldu: klasörde müzik dosyası yok (mp3, wav, flac, ogg).
 Müzik: sonraki parça (%ls).
 Speak2Mic, ARM işlemcilerdeki Windows'u desteklemez.
 Bu sistem için kurulum programı bulunamadı: %ls\n\nArşivin tamamını çıkarın.

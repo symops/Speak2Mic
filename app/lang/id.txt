@@ -227,13 +227,13 @@ Speak2Mic tidak dapat bekerja: driver Speak2Mic belum terpasang.\n\nJalankan Spe
 Buka penginstal Speak2Mic sekarang?
 Putar
 Jeda
-Tidak dapat memutar mp3 (0x%08lX).
+File musik tidak dapat diputar (0x%08lX).
 Tes suara dimulai.
 Tes suara dihentikan.
 Tes suara selesai.
 Musik: diputar (%ls).
 Musik: dijeda (%ls).
-Musik berhenti: tidak ada file mp3 di folder.
+Musik dihentikan: folder tidak berisi file musik (mp3, wav, flac, ogg).
 Musik: trek berikutnya (%ls).
 Speak2Mic tidak mendukung Windows pada prosesor ARM.
 Penginstal untuk sistem ini tidak ditemukan: %ls\n\nEkstrak seluruh arsip.

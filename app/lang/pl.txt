@@ -227,13 +227,13 @@ Speak2Mic nie może działać: sterownik Speak2Mic nie jest zainstalowany.\n\nUr
 Otworzyć teraz instalator Speak2Mic?
 Odtwórz
 Pauza
-Nie udało się odtworzyć mp3 (0x%08lX).
+Nie można odtworzyć pliku muzycznego (0x%08lX).
 Test dźwięku uruchomiony.
 Test dźwięku zatrzymany.
 Test dźwięku zakończony.
 Muzyka: odtwarzanie (%ls).
 Muzyka: pauza (%ls).
-Muzyka zatrzymana: brak plików mp3 w folderze.
+Muzyka zatrzymana: w folderze nie ma plików muzycznych (mp3, wav, flac, ogg).
 Muzyka: następny utwór (%ls).
 Speak2Mic nie obsługuje systemu Windows na procesorach ARM.
 Nie znaleziono instalatora dla tego systemu: %ls\n\nRozpakuj całe archiwum.

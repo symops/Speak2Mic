@@ -227,13 +227,13 @@ Speak2Mic ne peut pas fonctionner : le pilote Speak2Mic n'est pas installé.\n\n
 Ouvrir le programme d'installation de Speak2Mic maintenant ?
 Lire
 Pause
-Impossible de lire le mp3 (0x%08lX).
+Impossible de lire le fichier audio (0x%08lX).
 Test du son démarré.
 Test du son arrêté.
 Test du son terminé.
 Musique : lecture (%ls).
 Musique : pause (%ls).
-Musique arrêtée : aucun fichier mp3 dans le dossier.
+Musique arrêtée : le dossier ne contient aucun fichier audio (mp3, wav, flac, ogg).
 Musique : piste suivante (%ls).
 Speak2Mic ne prend pas en charge Windows sur processeurs ARM.
 Programme d'installation introuvable pour ce système : %ls\n\nExtrayez l'archive entière.
