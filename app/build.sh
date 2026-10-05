@@ -25,12 +25,10 @@ $CXX -c setupcore.cpp -o "$T/setupcore.o"
 $CXX -c setupfiles.cpp -o "$T/setupfiles.o"
 $CXX -c s2msetup.cpp -o "$T/s2msetup.o"
 $CXX -c devctl.cpp -o "$T/devctl.o"
-$CXX -c s2mdebug.cpp -o "$T/s2mdebug.o"
 $CXX -c s2mautotest.cpp -o "$T/s2mautotest.o"
 $CXX -c s2mctl.cpp -o "$T/s2mctl.o"
 $TRIPLE-windres s2mctl.rc -O coff -o "$T/s2mctl.res.o"
 $TRIPLE-windres s2mautotest.rc -O coff -o "$T/s2mautotest.res.o"
-$TRIPLE-windres s2mdebug.rc -O coff -o "$T/s2mdebug.res.o"
 $TRIPLE-windres s2msetup.rc -O coff -o "$T/s2msetup.res.o"
 $TRIPLE-windres s2minstall.rc -O coff -o "$T/s2minstall.res.o"
 $TRIPLE-gcc -municode -mwindows -static -s -o "$O/Speak2Mic.exe" "$T/s2mpanel.o" "$T/mp3player.o" "$T/audio.o" "$T/applog.o" "$T/lang.o" "$T/audiosvc.o" "$T/devctl.o" "$T/s2mpanel.res.o" \
@@ -38,8 +36,6 @@ $TRIPLE-gcc -municode -mwindows -static -s -o "$O/Speak2Mic.exe" "$T/s2mpanel.o"
 $TRIPLE-gcc -municode -static -s -o "$O/s2minstall.exe" "$T/s2minstall.o" "$T/audiosvc.o" "$T/devctl.o" "$T/setupcore.o" "$T/setupfiles.o" "$T/diag.o" "$T/ksprobe.o" "$T/applog.o" "$T/lang.o" "$T/s2minstall.res.o" -lwevtapi -lsetupapi -lnewdev -lcrypt32 -ladvapi32 -lole32 -lshell32 -luuid
 $TRIPLE-gcc -municode -mwindows -static -s -o "$O/Speak2Mic-Setup.exe" "$T/s2msetup.o" "$T/audiosvc.o" "$T/devctl.o" "$T/setupcore.o" "$T/setupfiles.o" "$T/diag.o" "$T/ksprobe.o" "$T/applog.o" "$T/lang.o" "$T/s2msetup.res.o" \
     -lsetupapi -lnewdev -lcrypt32 -lcomctl32 -lshell32 -lgdi32 -ladvapi32 -luser32 -lole32 -lwevtapi -luuid
-$TRIPLE-gcc -municode -static -s -o "$O/s2mdebug.exe" "$T/s2mdebug.o" "$T/audio.o" "$T/audiosvc.o" "$T/devctl.o" "$T/setupcore.o" "$T/setupfiles.o" "$T/diag.o" "$T/ksprobe.o" "$T/applog.o" "$T/lang.o" "$T/s2mdebug.res.o" \
-    -lwevtapi -lsetupapi -lnewdev -lcrypt32 -ladvapi32 -lole32 -lshell32 -luuid -lavrt -lpropsys
 $TRIPLE-gcc -municode -static -s -o "$O/s2mautotest.exe" "$T/s2mautotest.o" "$T/mp3player.o" "$T/audio.o" "$T/audiosvc.o" "$T/devctl.o" "$T/setupcore.o" "$T/setupfiles.o" "$T/diag.o" "$T/ksprobe.o" "$T/applog.o" "$T/lang.o" "$T/s2mautotest.res.o" \
     -lwevtapi -lsetupapi -lnewdev -lcrypt32 -ladvapi32 -lole32 -lshell32 -luuid -lavrt -lpropsys -lwtsapi32 -lmfplat -lmfreadwrite -lmfuuid -lbcrypt
 $TRIPLE-gcc -municode -static -s -o "$O/s2mctl.exe" "$T/s2mctl.o" "$T/audio.o" "$T/audiosvc.o" "$T/devctl.o" "$T/setupcore.o" "$T/setupfiles.o" "$T/diag.o" "$T/ksprobe.o" "$T/applog.o" "$T/lang.o" "$T/s2mctl.res.o" \
@@ -52,4 +48,4 @@ if [ "$ARCH" = x86 ]; then
         -lsetupapi -lshell32 -luser32 -ladvapi32 -lole32
 fi
 rm -rf "$T"
-echo "built ($ARCH, $O): Speak2Mic.exe Speak2Mic-Setup.exe s2minstall.exe s2mdebug.exe s2mautotest.exe s2mctl.exe"
+echo "built ($ARCH, $O): Speak2Mic.exe Speak2Mic-Setup.exe s2minstall.exe s2mautotest.exe s2mctl.exe"

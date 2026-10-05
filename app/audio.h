@@ -100,7 +100,7 @@ struct EndpointVolumeInfo
 };
 bool GetEndpointVolumeInfo(const wchar_t* deviceId, EndpointVolumeInfo* info);
 
-// Lower-level helpers (used by s2mdebug). `valid` = valid bits (extensible only).
+// Lower-level helpers. `valid` = valid bits (extensible only).
 void MakeWaveFormat(WAVEFORMATEXTENSIBLE* f, DWORD rate, WORD container, WORD valid, WORD channels, bool isFloat,
                     bool extensible);
 void DescribeWaveFormat(const WAVEFORMATEX* f, wchar_t* out, size_t len);

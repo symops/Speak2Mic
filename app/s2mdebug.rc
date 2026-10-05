@@ -1,3 +1,0 @@
-#include <winuser.h>
-1 RT_MANIFEST "s2mdebug.manifest"
-1 ICON "s2mpanel.ico"

@@ -291,7 +291,6 @@ FAILED
 The Speak2Mic sound devices are present.
 The Speak2Mic sound devices did NOT appear within 15 s.
 Speak2Mic — format debugging
-Usage: s2mdebug [formats | level | sounds | propose on|off] [--lang ru|en]
 Close the Speak2Mic control panel and programs that use Speak2Mic Speaker/Mic: otherwise the exclusive
 stream open test will report "device in use".
 ==== diagnostics ====

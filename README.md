@@ -72,7 +72,7 @@ They live in `HKLM\SYSTEM\CurrentControlSet\Services\Speak2Mic\Parameters` and a
 
 Removal: `Speak2Mic-Setup.exe` → "Remove" (device, driver package, programs, shortcuts, autostart), or `uninstall.cmd` as administrator.
 
-The panel, `s2mctl`, `s2mdebug` and the autotest check at start that Secure Boot is off, test signing mode is on and the driver is installed, and refuse to work otherwise (the installers always run: they are what fixes it).
+The panel, `s2mctl` and the autotest check at start that Secure Boot is off, test signing mode is on and the driver is installed, and refuse to work otherwise (the installers always run: they are what fixes it).
 
 ## Building (Linux)
 
@@ -122,12 +122,11 @@ Device names are generated: edit `gen.py` and run `python gen.py` (writes `drive
 
 ## Logs and tools
 
-- **Programs** write UTF-8 logs with timestamps to `C:\ProgramData\Speak2Mic\logs\` (`setup.log`, `panel.log`, `install.log`, `ctl.log`, `autotest.log`, `debug.log`; over 1 MB → `*.old.log`); the panel's event list is kept in `events.log` (last 500 events). Each starts with the program, its build and the Windows version.
+- **Programs** write UTF-8 logs with timestamps to `C:\ProgramData\Speak2Mic\logs\` (`setup.log`, `panel.log`, `install.log`, `ctl.log`, `autotest.log`; over 1 MB → `*.old.log`); the panel's event list is kept in `events.log` (last 500 events). Each starts with the program, its build and the Windows version.
 - **The driver** logs every step of its start and of its streams with NTSTATUS codes: in memory, to the kernel debugger (DebugView → Capture Kernel) and to `HKLM\SYSTEM\CurrentControlSet\Services\Speak2Mic\Parameters\DriverLog`.
 - **Diagnostics:** `Speak2Mic-Setup.exe` → "Diagnostics" or `s2minstall.exe diag` check the device (Device Manager problem code), the driver service and the Speak2Mic sound devices, and add the driver log and the Speak2Mic part of `setupapi.dev.log`.
 - **`s2mctl.exe`** — everything the panel does: `status`; `set [--preset voice|standard|high|studio|max] [--rate HZ] [--bits 0|16|24|32] [--channels N] [--mic-channels N] [--latency MS]` (administrator); `name [--speaker "NAME"] [--mic "NAME"]` (`default` = default name); `volume 0..300`; `mute on|off`; `reset` (administrator); `export FILE.ini` / `import FILE.ini` (import: administrator); `test [SECONDS]`. Exit codes: 0 ok, 1 failed, 2 bad arguments, 3 administrator rights needed, 4 cannot work (Secure Boot on, test mode off or driver missing).
 - **`s2mautotest.exe [minutes] [--seed N]`** (administrator, 10 minutes by default) closes the panel, saves the current state and exercises everything at random: random settings with device restarts, a tone through the cable on every speaker channel (arrival, clipping, dropouts, silence, latency), renaming, microphone volume and mute, default formats, stream open/close stress, the Test sound and the music player, leftover endpoint records and random `s2mctl` commands (including invalid ones and an export/import round trip). It restores everything at the end (also after Ctrl+C) and logs every check as PASS/FAIL/WARN; `--seed` repeats a run. It also logs outside volume changes, the audio sessions open on the microphone and the audio effects (APOs) on the devices.
-- **`s2mdebug.exe`** (built, not in the package) tests every 16/24/32-bit format on the Speak2Mic devices; `s2mdebug propose off|on` switches the driver's `KSPROPERTY_PIN_PROPOSEDATAFORMAT` handler.
 
 ## Troubleshooting
 

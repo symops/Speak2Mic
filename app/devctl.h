@@ -1,4 +1,4 @@
-// Speak2Mic device control shared by the panel, the installer and s2mdebug: driver settings in the
+// Speak2Mic device control shared by the panel, the installer, s2mctl and the autotest: driver settings in the
 // registry and the device restart that makes the driver re-read them. Needs administrator rights.
 #pragma once
 
@@ -44,7 +44,7 @@ void S2mLogEndpointNodes();
 
 // What the Speak2Mic programs need before they can do anything: the driver is test-signed, so Windows loads it only
 // in test signing mode, which needs Secure Boot off; and the driver (its device) must be installed. The panel,
-// s2mctl, s2mdebug and the autotest show the matching notice and refuse to run; the installers do not (they are what
+// s2mctl and the autotest show the matching notice and refuse to run; the installers do not (they are what
 // fixes it). With a Microsoft-signed driver only S2mNotReadyDriver would remain.
 enum S2mNotReady { S2mReadyOk = 0, S2mNotReadySecureBoot, S2mNotReadyTestMode, S2mNotReadyDriver };
 bool S2mSecureBootEnabled();        // UEFI Secure Boot on

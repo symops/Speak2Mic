@@ -3,5 +3,5 @@
 #define S2M_VER_MAJOR 1
 #define S2M_VER_MINOR 0
 #define S2M_VER_BUILD 278
-#define S2M_VER_REV   1157
-#define S2M_VER_STR   "1.0.278.1157"
+#define S2M_VER_REV   1182
+#define S2M_VER_STR   "1.0.278.1182"

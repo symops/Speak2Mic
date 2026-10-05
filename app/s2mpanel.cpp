@@ -2027,7 +2027,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             static int tick;
             if (++tick % 15 == 0) SyncMicVolume();      // ~0.5 s: follow changes made in Sound settings
             // Reconnect a meter whose capture ended: Windows invalidates the streams when the device format
-            // changes (s2mdebug, Sound settings, another program) or the driver restarts. ~2 s between tries.
+            // changes (Sound settings, another program) or the driver restarts. ~2 s between tries.
             // After 5 failed tries in a row every ~10 s, so a really broken device does not flood panel.log.
             static int reconnects, wait;
             bool ended = (g_inFound && g_meterIn.Ended()) || (g_outFound && g_meterOut.Ended());

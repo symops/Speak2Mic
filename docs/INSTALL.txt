@@ -45,7 +45,7 @@ Speak2Mic (x64) — виртуальный кабель: "Speak2Mic Speaker" (в
    - По умолчанию — язык системы (Windows или региональные настройки), если он среди 17 языков,
      иначе английский. Выбранный вручную язык запоминается. Сменить: список "Язык" в
      правом верхнем углу Speak2Mic.exe или Speak2Mic-Setup.exe; программа перезапустится.
-     Консольные s2minstall.exe и s2mdebug.exe: ключ --lang ru|en|uk|be|de|...
+     Консольный s2minstall.exe: ключ --lang ru|en|uk|be|de|...
 
 7. Удаление
    - Speak2Mic-Setup.exe -> "Удалить" (или uninstall.cmd от имени администратора). Удаляются драйвер,
@@ -53,7 +53,7 @@ Speak2Mic (x64) — виртуальный кабель: "Speak2Mic Speaker" (в
 
 Журналы
    - Все программы пишут журнал в C:\ProgramData\Speak2Mic\logs\ (setup.log, panel.log,
-     install.log, debug.log). Драйвер ведёт свой журнал в реестре; Speak2Mic-Setup.exe -> "Диагностика" добавляет его
+     install.log, ctl.log, autotest.log). Драйвер ведёт свой журнал в реестре; Speak2Mic-Setup.exe -> "Диагностика" добавляет его
      в setup.log вместе с состоянием устройства и фрагментом C:\Windows\INF\setupapi.dev.log.
    - Если что-то не работает: Speak2Mic-Setup.exe -> "Диагностика" -> "Открыть журнал" и пришлите setup.log.
 

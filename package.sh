@@ -32,7 +32,6 @@ for ARCH in x64 x86; do
     if [ $ARCH = x64 ]; then DRVOUT=driver/mingw/out; APP=app; MODEL=NTamd64; OSATTR=_v100_X64
     else DRVOUT=driver/mingw/out-x86; APP=app/x86; MODEL=NTx86; OSATTR=_v100; fi
     cp $DRVOUT/Speak2Mic.sys $DRVOUT/Speak2Mic.cer $DRVOUT/Speak2Mic-Publisher.cer $A/
-    # s2mdebug.exe (format debugging) is built but not shipped.
     cp $APP/Speak2Mic.exe $APP/Speak2Mic-Setup.exe $APP/s2minstall.exe $APP/s2mautotest.exe $APP/s2mctl.exe $A/
     cp scripts/uninstall.cmd $A/
 

@@ -43,7 +43,7 @@ Install it in a virtual machine and take a snapshot first.
    - The system language by default (Windows display language or regional format) if it is one of the
      17 languages, English otherwise. A language chosen by hand is kept. Change it with the
      "Language" list in the top right corner of Speak2Mic.exe or Speak2Mic-Setup.exe; the program restarts.
-     Console s2minstall.exe and s2mdebug.exe: --lang ru|en|uk|be|de|...
+     Console s2minstall.exe: --lang ru|en|uk|be|de|...
 
 7. Removal
    - Speak2Mic-Setup.exe -> "Remove" (or uninstall.cmd as administrator). The driver, the programs in
@@ -51,11 +51,10 @@ Install it in a virtual machine and take a snapshot first.
 
 Logs
    - All programs write logs to C:\ProgramData\Speak2Mic\logs\ (setup.log, panel.log,
-     install.log, debug.log). The driver keeps its own log in the registry; Speak2Mic-Setup.exe ->
+     install.log, ctl.log, autotest.log). The driver keeps its own log in the registry; Speak2Mic-Setup.exe ->
      "Diagnostics" adds it to setup.log together with the device state and part of
      C:\Windows\INF\setupapi.dev.log.
    - If something does not work: Speak2Mic-Setup.exe -> "Diagnostics" -> "Open log" and send setup.log.
-   - Format problems: close Speak2Mic.exe and run s2mdebug.exe as administrator, then send debug.log.
 
 Troubleshooting
    - Code 52 in Device Manager: test mode is off or Secure Boot is on.
