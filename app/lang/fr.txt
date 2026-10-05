@@ -1,0 +1,247 @@
+l'interface système de réglage du format est indisponible
+Windows n'a pas accepté le format (0x%08lX) ; le format précédent est conservé
+Windows n'a pas accepté le format (0x%08lX)
+Périphérique introuvable
+Connexion…
+Accès au périphérique impossible (0x%08lX)
+%lu Hz · %u bits%ls · %u can.
+Périphérique déconnecté
+Erreur de capture
+le périphérique n'est pas configuré
+le périphérique n'a pas pu démarrer (le pilote a renvoyé une erreur au démarrage)
+le pilote doit être réinstallé
+le périphérique est désactivé
+le périphérique est absent
+le pilote n'est pas installé
+Windows n'a pas pu charger le pilote du périphérique
+erreur dans DriverEntry du pilote
+le pilote ne s'est pas chargé (endommagé ou incompatible)
+le pilote a signalé une erreur du périphérique
+le périphérique n'est pas connecté actuellement
+le pilote est bloqué par une stratégie
+Windows n'a pas pu vérifier la signature du pilote (activez le mode test)
+voir le code dans le Gestionnaire de périphériques
+actif
+désactivé
+absent
+débranché
+  périphérique audio « %ls » : %ls
+Pilote en cours : version %ls, dans le paquet : %ls.
+ATTENTION : la version du pilote en cours n'est pas celle du paquet. Cliquez sur « Réinstaller » ou redémarrez l'ordinateur.
+Pilote en cours : version %ls.
+Le service du pilote Speak2Mic n'est pas enregistré.
+Service du pilote : %ls.
+démarré
+arrêté
+en cours de démarrage/arrêt
+Mode de signature de test : %ls ; Secure Boot : %ls.
+activé
+désactivé
+Périphérique ROOT\\Speak2Mic introuvable : le pilote n'est pas installé.
+Le périphérique n'est pas démarré : code %lu — %ls.
+Le périphérique Speak2Mic est démarré.
+Les périphériques audio Speak2Mic ne sont pas actifs. « Désactivé » : activez-les dans Son (mmsys.cpl) ; « absent » : redémarrez les services audio de Windows ou l'ordinateur.
+Le pilote fonctionne, mais Windows n'a pas créé les périphériques audio Speak2Mic.
+Installation de Speak2Mic
+Suppression de la version précédente…
+\nJournal détaillé : %ls\n
+Speak2Mic est installé (périphériques : %d)\n
+Speak2Mic n'est pas installé\n
+Mode de signature de test : %ls\n
+Personnalisé
+Voix — 16 kHz · 16 bits · mono
+Standard — 48 kHz · 16 bits · stéréo
+Élevée — 48 kHz · 24 bits · stéréo
+Studio — 96 kHz · 24 bits · stéréo
+Maximum — 192 kHz · 32 bits · stéréo
+Auto (16–32)
+16 bits
+24 bits
+32 bits
+1 (mono)
+2 (stéréo)
+4 (quadri)
+Qualité du signal du câble
+Préréglage :
+Fréquence :
+Résolution :
+Canaux :
+Latence, ms :
+Appliquer
+Niveau du signal
+%lu Hz
+Le pilote Speak2Mic n'est pas installé : impossible d'appliquer les réglages.
+%lu bits
+16–32 bits
+Pilote actuel : %lu Hz · %ls · jusqu'à %lu can. · latence %lu ms
+%ls — lecture (les programmes y envoient le son)
+%ls — microphone (ce que les programmes d'enregistrement entendent)
+Périphérique introuvable : le pilote n'est pas installé ou redémarre.
+pas de signal
+%.1f dB
+Le format par défaut n'a pas été défini sur tous les périphériques Speak2Mic : %ls
+Les périphériques Speak2Mic ne sont pas revenus après le redémarrage : le format par défaut n'a pas été défini.
+Réglages appliqués : %lu Hz, %lu can. Windows n'a pas accepté %u bits, le format par défaut est 16 bits.
+Réglages appliqués : format par défaut %lu Hz, %u bits, %lu can.
+Application des réglages, le périphérique redémarre…
+Droits d'administrateur requis : la demande a été refusée.
+Le pilote Speak2Mic n'est pas installé.
+Réglages enregistrés, mais le périphérique Speak2Mic est introuvable : ils s'appliqueront après son installation.
+Réglages enregistrés. Windows n'a pas pu redémarrer le périphérique à chaud : redémarrez l'ordinateur.
+Réglages enregistrés, mais le périphérique n'a pas pu redémarrer : redémarrez l'ordinateur.
+Définition du format par défaut des périphériques Speak2Mic…
+Speak2Mic — panneau de configuration
+— Installation de Speak2Mic —
+Arrêt du service Windows Audio pendant l'installation…
+Le service Windows Audio est démarré.
+Vérification : attente du démarrage du périphérique et des périphériques audio…
+Les périphériques audio ne sont pas apparus : redémarrage des services audio de Windows…
+— Diagnostic —
+— Suppression de Speak2Mic —
+— Activation du mode de signature de test —
+✔  Le mode de signature de test est activé
+✖  Le mode de signature de test est désactivé
+✔  Secure Boot est désactivé
+✖  Secure Boot est activé
+•  Le pilote Speak2Mic n'est pas installé
+✔  Le pilote Speak2Mic est installé
+✔  Le pilote Speak2Mic est installé, version %ls (identique au programme d'installation)
+✔  Le pilote Speak2Mic est installé, version %ls ; le programme d'installation contient %ls
+Réinstaller
+Installer
+Câble audio virtuel : son des haut-parleurs → microphone
+État du système
+Activer le mode test
+Supprimer
+Lancer Speak2Mic après l'installation
+Raccourci sur le Bureau
+Raccourcis dans le menu Démarrer
+Diagnostic
+Ouvrir le journal
+Fermer
+Des fichiers du pilote manquent à côté du programme d'installation (Speak2Mic.inf/.sys/.cat/.cer, Speak2Mic-Publisher.cer). Extrayez toute l'archive.
+Désactivez d'abord Secure Boot : avec lui, Windows ne charge pas les pilotes signés pour test.
+Cliquez sur « Activer le mode test », redémarrez l'ordinateur et relancez le programme d'installation.
+Speak2Mic est déjà installé. Vous pouvez le réinstaller ou le supprimer.
+Prêt pour l'installation. Cliquez sur « Installer ».
+Redémarrez l'ordinateur pour terminer l'installation.
+Le pilote est installé, mais les périphériques audio Speak2Mic ne fonctionnent pas : voir la cause ci-dessus.
+Journal détaillé : %ls (bouton « Ouvrir le journal »). Envoyez-le au développeur.
+Terminé : « Speak2Mic Speaker » et « Speak2Mic Microphone » sont dans les paramètres audio.
+Le mode test sera actif après un redémarrage.\n\nRedémarrer l'ordinateur maintenant ?
+L'opération a échoué : voir les détails ci-dessus.
+Supprimer le pilote Speak2Mic et ses périphériques ?
+le paquet du pilote n'a pas de catalogue signé (.cat)
+Windows n'a pas pu ajouter le paquet au magasin de pilotes
+aucun pilote correspondant dans l'INF
+le fichier n'a pas de signature numérique
+le certificat de signature n'est pas approuvé (certificat racine non installé)
+le certificat ne peut pas être utilisé à cette fin
+la signature est endommagée ou le fichier a été modifié après signature
+le certificat a expiré ou n'est pas encore valide (vérifiez l'horloge)
+Erreur : %ls (0x%08lX) : %ls. Détails : C:\\Windows\\INF\\setupapi.dev.log
+Erreur : %ls (0x%08lX) %ls
+certificat introuvable
+impossible de lire le certificat
+Les certificats de test Speak2Mic ont été ajoutés aux magasins approuvés (autorité racine et éditeur).
+Erreur : fichier introuvable : %ls
+impossible de lire la classe du périphérique dans l'INF
+impossible de créer le périphérique
+Périphérique %ls créé.
+Installation du pilote… Si Windows vous interroge sur l'éditeur, choisissez « Installer ce pilote quand même ».
+impossible d'installer le pilote
+Installation annulée dans la fenêtre d'avertissement du pilote.
+Le pilote est installé. Un redémarrage est nécessaire.
+Le pilote est installé.
+Paquet de pilote %ls supprimé du magasin de pilotes.
+Réglages du pilote réinitialisés (après l'installation : préréglage « Standard »).
+impossible de supprimer le périphérique
+Périphériques supprimés : %d.
+Speak2Mic n'était pas installé.
+impossible de lancer bcdedit
+Erreur : bcdedit s'est terminé avec le code %lu. Si Secure Boot est activé, désactivez-le d'abord.
+Le mode de signature de test est activé. Redémarrez l'ordinateur et relancez l'installation.
+Speak2Mic — installation et diagnostic.lnk
+Journaux Speak2Mic.lnk
+Erreur : impossible de déterminer le dossier Program Files.
+Les programmes sont déjà dans %ls.
+Erreur : %ls est utilisé : fermez Speak2Mic puis réessayez.
+Erreur de copie de %ls (code %lu).
+Programmes installés dans %ls.
+Speak2Mic — le son des haut-parleurs dans un microphone virtuel
+Raccourci créé sur le Bureau.
+Impossible de créer le raccourci sur le Bureau.
+Panneau de configuration Speak2Mic
+Installer, réinstaller, supprimer et diagnostiquer Speak2Mic
+Dossier des journaux Speak2Mic
+Raccourcis créés dans le menu Démarrer (dossier Speak2Mic).
+Tous les raccourcis du menu Démarrer n'ont pas pu être créés.
+Raccourcis supprimés.
+Impossible de supprimer %ls (code %lu) : fermez Speak2Mic.
+Raccourcis et programmes supprimés ; le dossier %ls sera supprimé à la fermeture du programme d'installation.
+Raccourcis et programmes supprimés de %ls.
+Langue :
+Version %ls
+Installation de Speak2Mic %ls
+Noms des périphériques
+Haut-parleur :
+Microphone :
+Renommer
+Noms modifiés.
+Impossible de renommer (0x%08lX).
+Réinitialiser tout
+Réinitialiser tous les réglages de Speak2Mic ?\n\nQualité du signal : préréglage « Standard » ; noms des périphériques : par défaut.
+Tous les réglages ont été réinitialisés.
+Volume du micro :
+Muet
+Exporter les réglages…
+Importer les réglages…
+Fichiers de réglages Speak2Mic (*.ini)
+Réglages enregistrés dans %ls
+Impossible d'enregistrer les réglages (code %lu).
+Réglages chargés depuis %ls
+Ce fichier ne ressemble pas à des réglages Speak2Mic.
+Mettre à jour
+Canaux du micro :
+Comme le haut-parleur
+Tester
+Arrêter
+Échec du test du son (0x%08lX).
+Réglages de qualité du signal conservés pour la nouvelle version.
+Anciens périphériques audio Speak2Mic supprimés : %d.
+Ouvrir le mélangeur de volume
+Effacer le journal des événements
+Panneau de configuration Speak2Mic démarré, version %ls
+Le journal des événements a été effacé.
+Désactiver le mode test
+— Désactivation du mode de signature de test —
+Le mode de signature de test sera désactivé après le redémarrage de l'ordinateur.
+Le mode test sera désactivé après un redémarrage.\n\nRedémarrer l'ordinateur maintenant ?
+Sans le mode test, le pilote Speak2Mic ne se chargera pas : les périphériques audio Speak2Mic disparaîtront jusqu'à ce que le mode soit réactivé.\n\nDésactiver le mode test ?
+✔  Le mode de signature de test est activé (jusqu'au redémarrage)
+✖  Le mode de signature de test est désactivé (jusqu'au redémarrage)
+Erreur : bcdedit s'est terminé avec le code %lu.
+Speak2Mic ne peut pas fonctionner : Secure Boot est activé, et le pilote Speak2Mic signé en mode test ne se charge pas avec lui.\n\nDésactivez Secure Boot dans les paramètres UEFI (VMware : VM → Settings → Options → Advanced), puis lancez Speak2Mic-Setup.exe.
+Speak2Mic ne peut pas fonctionner : le mode de signature de test de Windows est désactivé, et le pilote Speak2Mic ne se charge pas sans lui.\n\nLancez Speak2Mic-Setup.exe, cliquez sur « Activer le mode test » et redémarrez l'ordinateur.
+Speak2Mic ne peut pas fonctionner : le pilote Speak2Mic n'est pas installé.\n\nLancez Speak2Mic-Setup.exe et cliquez sur « Installer ».
+Ouvrir le programme d'installation de Speak2Mic maintenant ?
+Lire
+Pause
+Impossible de lire le mp3 (0x%08lX).
+Test du son démarré.
+Test du son arrêté.
+Test du son terminé.
+Musique : lecture (%ls).
+Musique : pause (%ls).
+Musique arrêtée : aucun fichier mp3 dans le dossier.
+Musique : piste suivante (%ls).
+Speak2Mic ne prend pas en charge Windows sur processeurs ARM.
+Programme d'installation introuvable pour ce système : %ls\n\nExtrayez l'archive entière.
+Un autre programme a modifié le volume du microphone (%d %%) : rétabli à %d %% (fois : %d).
+Le volume du microphone a été modifié par %ls (%d %%) : rétabli à %d %% (fois : %d).
+Impossible d'extraire le programme d'installation dans un dossier temporaire.
+Ouvrir le panneau de configuration
+Quitter
+Démarrer le panneau de configuration avec Windows (dans la zone de notification)
+Démarrage automatique du panneau activé.
+Démarrage automatique du panneau désactivé.

@@ -1,0 +1,7 @@
+LIBRARY portcls.sys
+EXPORTS
+PcAddAdapterDevice
+PcInitializeAdapterDriver
+PcNewPort
+PcRegisterPhysicalConnection
+PcRegisterSubdevice

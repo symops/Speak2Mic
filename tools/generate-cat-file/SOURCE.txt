@@ -1,0 +1,1 @@
+Vendored from https://github.com/LINBIT/generate-cat-file (commit 65ebf4d, GPLv2, build-time tool only).

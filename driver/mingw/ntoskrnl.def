@@ -1,0 +1,25 @@
+; Every ntoskrnl.exe export the driver uses (one import library, one import descriptor).
+LIBRARY ntoskrnl.exe
+EXPORTS
+ExAllocatePool2
+ExAllocateTimer
+ExCancelTimer
+ExDeleteTimer
+ExFreePool
+ExFreePoolWithTag
+ExSetTimer
+KeAcquireSpinLockRaiseToDpc
+KeBugCheckEx
+KeQueryPerformanceCounter
+KeReleaseSpinLock
+RtlQueryRegistryValues
+memcpy
+memmove
+memset
+KeQuerySystemTimePrecise
+ExSystemTimeToLocalTime
+RtlTimeToTimeFields
+RtlWriteRegistryValue
+DbgPrintEx
+_snprintf
+_vsnprintf

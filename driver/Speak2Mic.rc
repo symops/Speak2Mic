@@ -1,0 +1,37 @@
+// Resources of Speak2Mic.sys: icons (device icon via DEVPKEY_DrvPkg_Icon, endpoint icons via
+// PKEY_DeviceClass_IconPath in the INF)
+// and version information (file properties, Device Manager "Driver" tab).
+#include <winver.h>
+#include "version.h"
+
+100 ICON "Speak2Mic.ico"   // device (Device Manager)
+101 ICON "Speaker.ico"     // "Speak2Mic Speaker" endpoint (Sound settings)
+102 ICON "Mic.ico"         // "Speak2Mic Microphone" endpoint (Sound settings)
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     S2M_VER_MAJOR,S2M_VER_MINOR,S2M_VER_BUILD,S2M_VER_REV
+PRODUCTVERSION  S2M_VER_MAJOR,S2M_VER_MINOR,S2M_VER_BUILD,S2M_VER_REV
+FILEFLAGSMASK   0x3fL
+FILEFLAGS       0x0L
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_DRV
+FILESUBTYPE     VFT2_DRV_SOUND
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "041904b0"
+        BEGIN
+            VALUE "CompanyName",      "Speak2Mic"
+            VALUE "FileDescription",  "Speak2Mic — виртуальный аудиокабель (динамик → микрофон)"
+            VALUE "FileVersion",      S2M_VER_STR
+            VALUE "InternalName",     "Speak2Mic.sys"
+            VALUE "OriginalFilename", "Speak2Mic.sys"
+            VALUE "ProductName",      "Speak2Mic"
+            VALUE "ProductVersion",   S2M_VER_STR
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x419, 1200
+    END
+END

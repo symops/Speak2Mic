@@ -1,0 +1,247 @@
+format ayarları için sistem arabirimi kullanılamıyor
+Windows biçimi kabul etmedi (0x%08lX); önceki biçim korundu
+Windows biçimi kabul etmedi (0x%08lX)
+Aygıt bulunamadı
+Bağlanıyor…
+Aygıta erişilemiyor (0x%08lX)
+%lu Hz · %u bit%ls · %u kan.
+Aygıt bağlantısı kesildi
+Kayıt hatası
+aygıt yapılandırılmamış
+aygıt başlatılamadı (sürücü başlangıçta hata döndürdü)
+sürücünün yeniden yüklenmesi gerekiyor
+aygıt devre dışı
+aygıt mevcut değil
+sürücü yüklü değil
+Windows aygıtın sürücüsünü yükleyemedi
+sürücünün DriverEntry işlevinde hata
+sürücü yüklenmedi (bozuk veya uyumsuz)
+sürücü bir aygıt hatası bildirdi
+aygıt şu anda bağlı değil
+sürücü bir ilke tarafından engellendi
+Windows sürücü imzasını doğrulayamadı (test modunu açın)
+Aygıt Yöneticisi'ndeki koda bakın
+etkin
+devre dışı
+mevcut değil
+bağlı değil
+  ses aygıtı “%ls”: %ls
+Çalışan sürücü sürümü %ls, pakette: %ls.
+DİKKAT: çalışan sürücü paketteki sürüm değil. “Yeniden yükle”ye tıklayın veya bilgisayarı yeniden başlatın.
+Çalışan sürücü sürümü %ls.
+Speak2Mic sürücü hizmeti kayıtlı değil.
+Sürücü hizmeti: %ls.
+çalışıyor
+durduruldu
+başlatılıyor/durduruluyor
+Test imzalama modu: %ls; Secure Boot: %ls.
+açık
+kapalı
+ROOT\\Speak2Mic aygıtı bulunamadı: sürücü yüklü değil.
+Aygıt başlatılmadı: kod %lu — %ls.
+Speak2Mic aygıtı başlatıldı.
+Speak2Mic ses aygıtları etkin değil. “Devre dışı”: Ses (mmsys.cpl) içinde etkinleştirin; “mevcut değil”: Windows ses hizmetlerini veya bilgisayarı yeniden başlatın.
+Sürücü çalışıyor, ancak Windows Speak2Mic ses aygıtlarını oluşturmadı.
+Speak2Mic Kurulumu
+Önceki sürüm kaldırılıyor…
+\nAyrıntılı günlük: %ls\n
+Speak2Mic yüklü (aygıt sayısı: %d)\n
+Speak2Mic yüklü değil\n
+Test imzalama modu: %ls\n
+Özel
+Ses — 16 kHz · 16 bit · mono
+Standart — 48 kHz · 16 bit · stereo
+Yüksek — 48 kHz · 24 bit · stereo
+Stüdyo — 96 kHz · 24 bit · stereo
+Maksimum — 192 kHz · 32 bit · stereo
+Otomatik (16–32)
+16 bit
+24 bit
+32 bit
+1 (mono)
+2 (stereo)
+4 (dörtlü)
+Kablo sinyal kalitesi
+Hazır ayar:
+Örnekleme:
+Bit derinliği:
+Kanallar:
+Gecikme, ms:
+Uygula
+Sinyal seviyesi
+%lu Hz
+Speak2Mic sürücüsü yüklü değil: ayarlar uygulanamaz.
+%lu bit
+16–32 bit
+Şu an sürücüde: %lu Hz · %ls · en çok %lu kan. · gecikme %lu ms
+%ls — kayıttan yürütme (programlar buraya çalar)
+%ls — mikrofon (kayıt programları bunu duyar)
+Aygıt bulunamadı: sürücü yüklü değil veya yeniden başlıyor.
+sinyal yok
+%.1f dB
+Varsayılan biçim tüm Speak2Mic aygıtlarında ayarlanamadı: %ls
+Speak2Mic aygıtları yeniden başlatmadan sonra geri gelmedi: varsayılan biçim ayarlanmadı.
+Ayarlar uygulandı: %lu Hz, %lu kan. Windows %u biti kabul etmedi, varsayılan biçim 16 bit.
+Ayarlar uygulandı: varsayılan biçim %lu Hz, %u bit, %lu kan.
+Ayarlar uygulanıyor, aygıt yeniden başlıyor…
+Yönetici hakları gerekli: istek reddedildi.
+Speak2Mic sürücüsü yüklü değil.
+Ayarlar kaydedildi, ancak Speak2Mic aygıtı bulunamadı: aygıt yüklendikten sonra geçerli olacak.
+Ayarlar kaydedildi. Windows aygıtı çalışırken yeniden başlatamadı: bilgisayarı yeniden başlatın.
+Ayarlar kaydedildi, ancak aygıt yeniden başlatılamadı: bilgisayarı yeniden başlatın.
+Speak2Mic aygıtlarının varsayılan biçimi ayarlanıyor…
+Speak2Mic — denetim masası
+— Speak2Mic yükleniyor —
+Kurulum süresince Windows Audio hizmeti durduruluyor…
+Windows Audio hizmeti başlatıldı.
+Denetim: aygıtın ve ses aygıtlarının başlaması bekleniyor…
+Ses aygıtları görünmedi: Windows ses hizmetleri yeniden başlatılıyor…
+— Tanılama —
+— Speak2Mic kaldırılıyor —
+— Test imzalama modu açılıyor —
+✔  Test imzalama modu açık
+✖  Test imzalama modu kapalı
+✔  Secure Boot kapalı
+✖  Secure Boot açık
+•  Speak2Mic sürücüsü yüklü değil
+✔  Speak2Mic sürücüsü yüklü
+✔  Speak2Mic sürücüsü yüklü, sürüm %ls (kurulum programıyla aynı)
+✔  Speak2Mic sürücüsü yüklü, sürüm %ls; kurulum programında %ls
+Yeniden yükle
+Yükle
+Sanal ses kablosu: hoparlör sesi → mikrofon
+Sistem durumu
+Test modunu aç
+Kaldır
+Kurulumdan sonra Speak2Mic'i başlat
+Masaüstü kısayolu
+Başlat menüsü kısayolları
+Tanılama
+Günlüğü aç
+Kapat
+Kurulum programının yanında sürücü dosyaları eksik (Speak2Mic.inf/.sys/.cat/.cer, Speak2Mic-Publisher.cer). Arşivin tamamını çıkarın.
+Önce Secure Boot'u kapatın: açıkken Windows test imzalı sürücüleri yüklemez.
+“Test modunu aç”a tıklayın, bilgisayarı yeniden başlatın ve kurulum programını tekrar çalıştırın.
+Speak2Mic zaten yüklü. Yeniden yükleyebilir veya kaldırabilirsiniz.
+Kuruluma hazır. “Yükle”ye tıklayın.
+Kurulumu tamamlamak için bilgisayarı yeniden başlatın.
+Sürücü yüklendi, ancak Speak2Mic ses aygıtları çalışmıyor: nedeni yukarıda.
+Ayrıntılı günlük: %ls (“Günlüğü aç” düğmesi). Lütfen geliştiriciye gönderin.
+Tamam: “Speak2Mic Speaker” ve “Speak2Mic Microphone” ses ayarlarında görünüyor.
+Test modu yeniden başlatmadan sonra etkinleşir.\n\nBilgisayar şimdi yeniden başlatılsın mı?
+İşlem başarısız oldu: ayrıntılar yukarıda.
+Speak2Mic sürücüsü ve aygıtları kaldırılsın mı?
+sürücü paketinde imzalı katalog (.cat) yok
+Windows paketi sürücü deposuna ekleyemedi
+INF içinde uygun sürücü bulunamadı
+dosyanın dijital imzası yok
+imza sertifikası güvenilir değil (kök sertifika yüklü değil)
+sertifika bu amaçla kullanılamaz
+imza bozuk veya dosya imzalandıktan sonra değiştirilmiş
+sertifikanın süresi dolmuş veya henüz geçerli değil (saati kontrol edin)
+Hata: %ls (0x%08lX): %ls. Ayrıntılar: C:\\Windows\\INF\\setupapi.dev.log
+Hata: %ls (0x%08lX) %ls
+sertifika bulunamadı
+sertifika okunamadı
+Speak2Mic test sertifikaları güvenilenlere eklendi (kök CA ve yayımcı).
+Hata: dosya bulunamadı: %ls
+aygıt sınıfı INF'den okunamadı
+aygıt oluşturulamadı
+%ls aygıtı oluşturuldu.
+Sürücü yükleniyor… Windows yayımcıyı sorarsa “Bu sürücü yazılımını yine de yükle”yi seçin.
+sürücü yüklenemedi
+Kurulum sürücü uyarı penceresinde iptal edildi.
+Sürücü yüklendi. Yeniden başlatma gerekiyor.
+Sürücü yüklendi.
+%ls sürücü paketi sürücü deposundan kaldırıldı.
+Sürücü ayarları sıfırlandı (kurulumdan sonra: “Standart” hazır ayarı).
+aygıt kaldırılamadı
+Kaldırılan aygıt sayısı: %d.
+Speak2Mic yüklü değildi.
+bcdedit çalıştırılamadı
+Hata: bcdedit %lu koduyla sonlandı. Secure Boot açıksa önce kapatın.
+Test imzalama modu açık. Bilgisayarı yeniden başlatın ve kurulumu tekrar çalıştırın.
+Speak2Mic — kurulum ve tanılama.lnk
+Speak2Mic günlükleri.lnk
+Hata: Program Files klasörü belirlenemedi.
+Programlar zaten %ls içinde.
+Hata: %ls kullanımda: Speak2Mic'i kapatıp yeniden deneyin.
+%ls kopyalanırken hata (kod %lu).
+Programlar %ls konumuna yüklendi.
+Speak2Mic — hoparlör sesini sanal mikrofona aktarır
+Masaüstü kısayolu oluşturuldu.
+Masaüstü kısayolu oluşturulamadı.
+Speak2Mic denetim masası
+Speak2Mic'i yükle, yeniden yükle, kaldır ve tanıla
+Speak2Mic günlük klasörü
+Başlat menüsü kısayolları oluşturuldu (Speak2Mic klasörü).
+Başlat menüsü kısayollarının hepsi oluşturulamadı.
+Kısayollar kaldırıldı.
+%ls silinemedi (kod %lu): Speak2Mic'i kapatın.
+Kısayollar ve programlar kaldırıldı; %ls klasörü kurulum programı kapanınca silinecek.
+Kısayollar ve programlar %ls konumundan kaldırıldı.
+Dil:
+Sürüm %ls
+Speak2Mic Kurulumu %ls
+Aygıt adları
+Hoparlör:
+Mikrofon:
+Yeniden adlandır
+Adlar değiştirildi.
+Yeniden adlandırılamadı (0x%08lX).
+Tümünü sıfırla
+Tüm Speak2Mic ayarları varsayılana sıfırlansın mı?\n\nSinyal kalitesi: “Standart” hazır ayarı; aygıt adları: varsayılan.
+Tüm ayarlar varsayılana sıfırlandı.
+Mikrofon ses düzeyi:
+Sessiz
+Ayarları dışa aktar…
+Ayarları içe aktar…
+Speak2Mic ayar dosyaları (*.ini)
+Ayarlar %ls dosyasına kaydedildi
+Ayarlar kaydedilemedi (kod %lu).
+Ayarlar %ls dosyasından yüklendi
+Dosya Speak2Mic ayarlarına benzemiyor.
+Güncelle
+Mikrofon kanalları:
+Hoparlörle aynı
+Test et
+Durdur
+Ses testi başarısız (0x%08lX).
+Sinyal kalitesi ayarları yeni sürüm için korundu.
+Kaldırılan eski Speak2Mic ses aygıtı sayısı: %d.
+Ses karıştırıcısını aç
+Olay günlüğünü temizle
+Speak2Mic denetim masası başlatıldı, sürüm %ls
+Olay günlüğü temizlendi.
+Test modunu kapat
+— Test imzalama modu kapatılıyor —
+Test imzalama modu bilgisayar yeniden başlatıldıktan sonra kapalı olacak.
+Test modu yeniden başlatmadan sonra kapanır.\n\nBilgisayar şimdi yeniden başlatılsın mı?
+Test modu olmadan Speak2Mic sürücüsü yüklenmez: mod yeniden açılana kadar Speak2Mic ses aygıtları kaybolur.\n\nTest modu kapatılsın mı?
+✔  Test imzalama modu açık (yeniden başlatmaya kadar)
+✖  Test imzalama modu kapalı (yeniden başlatmaya kadar)
+Hata: bcdedit %lu koduyla sonlandı.
+Speak2Mic çalışamıyor: Secure Boot açık ve test imzalı Speak2Mic sürücüsü bununla yüklenmiyor.\n\nUEFI ayarlarında Secure Boot'u kapatın (VMware: VM → Settings → Options → Advanced), ardından Speak2Mic-Setup.exe dosyasını çalıştırın.
+Speak2Mic çalışamıyor: Windows test imzalama modu kapalı ve o olmadan Speak2Mic sürücüsü yüklenmiyor.\n\nSpeak2Mic-Setup.exe dosyasını çalıştırın, "Test modunu aç" düğmesine tıklayın ve bilgisayarı yeniden başlatın.
+Speak2Mic çalışamıyor: Speak2Mic sürücüsü yüklü değil.\n\nSpeak2Mic-Setup.exe dosyasını çalıştırın ve "Yükle" düğmesine tıklayın.
+Speak2Mic kurulum programı şimdi açılsın mı?
+Çal
+Duraklat
+mp3 çalınamadı (0x%08lX).
+Ses testi başlatıldı.
+Ses testi durduruldu.
+Ses testi tamamlandı.
+Müzik: çalıyor (%ls).
+Müzik: duraklatıldı (%ls).
+Müzik durduruldu: klasörde mp3 dosyası yok.
+Müzik: sonraki parça (%ls).
+Speak2Mic, ARM işlemcilerdeki Windows'u desteklemez.
+Bu sistem için kurulum programı bulunamadı: %ls\n\nArşivin tamamını çıkarın.
+Başka bir program mikrofon ses düzeyini değiştirdi (%d %%): %d %% düzeyine geri alındı (kez: %d).
+Mikrofon ses düzeyini %ls değiştirdi (%d %%): %d %% düzeyine geri alındı (kez: %d).
+Kurulum programı geçici bir klasöre çıkarılamadı.
+Denetim masasını aç
+Çıkış
+Denetim masasını Windows ile başlat (sistem tepsisinde)
+Denetim masasının otomatik başlatılması açık.
+Denetim masasının otomatik başlatılması kapalı.

@@ -1,0 +1,247 @@
+antarmuka sistem untuk pengaturan format tidak tersedia
+Windows tidak menerima format (0x%08lX); format sebelumnya dipertahankan
+Windows tidak menerima format (0x%08lX)
+Perangkat tidak ditemukan
+Menghubungkan…
+Tidak ada akses ke perangkat (0x%08lX)
+%lu Hz · %u bit%ls · %u sal.
+Perangkat terputus
+Kesalahan perekaman
+perangkat belum dikonfigurasi
+perangkat gagal dimulai (driver mengembalikan kesalahan saat mulai)
+driver perlu diinstal ulang
+perangkat dinonaktifkan
+perangkat tidak ada
+driver belum diinstal
+Windows tidak dapat memuat driver perangkat
+kesalahan di DriverEntry driver
+driver tidak dimuat (rusak atau tidak kompatibel)
+driver melaporkan kesalahan perangkat
+perangkat saat ini tidak tersambung
+driver diblokir oleh kebijakan
+Windows tidak dapat memeriksa tanda tangan driver (aktifkan mode uji)
+lihat kode di Pengelola Perangkat
+aktif
+nonaktif
+tidak ada
+tidak tersambung
+  perangkat audio “%ls”: %ls
+Driver berjalan versi %ls, di paket: %ls.
+PERHATIAN: driver yang berjalan bukan versi dari paket. Klik “Instal ulang” atau mulai ulang komputer.
+Driver berjalan versi %ls.
+Layanan driver Speak2Mic tidak terdaftar.
+Layanan driver: %ls.
+berjalan
+berhenti
+sedang mulai/berhenti
+Mode tanda tangan uji: %ls; Secure Boot: %ls.
+aktif
+nonaktif
+Perangkat ROOT\\Speak2Mic tidak ditemukan: driver belum diinstal.
+Perangkat tidak berjalan: kode %lu — %ls.
+Perangkat Speak2Mic berjalan.
+Perangkat audio Speak2Mic tidak aktif. “Nonaktif”: aktifkan di Suara (mmsys.cpl); “tidak ada”: mulai ulang layanan audio Windows atau komputer.
+Driver berjalan, tetapi Windows tidak membuat perangkat audio Speak2Mic.
+Instalasi Speak2Mic
+Menghapus versi sebelumnya…
+\nLog terperinci: %ls\n
+Speak2Mic terinstal (perangkat: %d)\n
+Speak2Mic tidak terinstal\n
+Mode tanda tangan uji: %ls\n
+Kustom
+Suara — 16 kHz · 16 bit · mono
+Standar — 48 kHz · 16 bit · stereo
+Tinggi — 48 kHz · 24 bit · stereo
+Studio — 96 kHz · 24 bit · stereo
+Maksimum — 192 kHz · 32 bit · stereo
+Otomatis (16–32)
+16 bit
+24 bit
+32 bit
+1 (mono)
+2 (stereo)
+4 (kuad)
+Kualitas sinyal kabel
+Preset:
+Laju sampel:
+Kedalaman bit:
+Saluran:
+Latensi, ms:
+Terapkan
+Level sinyal
+%lu Hz
+Driver Speak2Mic belum diinstal: pengaturan tidak dapat diterapkan.
+%lu bit
+16–32 bit
+Di driver sekarang: %lu Hz · %ls · hingga %lu sal. · latensi %lu ms
+%ls — pemutaran (program memutar ke sini)
+%ls — mikrofon (ini yang didengar program perekam)
+Perangkat tidak ditemukan: driver belum diinstal atau sedang dimulai ulang.
+tidak ada sinyal
+%.1f dB
+Format bawaan tidak diatur pada semua perangkat Speak2Mic: %ls
+Perangkat Speak2Mic tidak muncul kembali setelah dimulai ulang: format bawaan tidak diatur.
+Pengaturan diterapkan: %lu Hz, %lu sal. Windows tidak menerima %u bit, format bawaan 16 bit.
+Pengaturan diterapkan: format bawaan %lu Hz, %u bit, %lu sal.
+Menerapkan pengaturan, perangkat dimulai ulang…
+Hak administrator diperlukan: permintaan ditolak.
+Driver Speak2Mic belum diinstal.
+Pengaturan disimpan, tetapi perangkat Speak2Mic tidak ditemukan: akan berlaku setelah perangkat diinstal.
+Pengaturan disimpan. Windows tidak dapat memulai ulang perangkat saat berjalan: mulai ulang komputer.
+Pengaturan disimpan, tetapi perangkat tidak dapat dimulai ulang: mulai ulang komputer.
+Mengatur format bawaan perangkat Speak2Mic…
+Speak2Mic — panel kontrol
+— Menginstal Speak2Mic —
+Menghentikan layanan Windows Audio selama instalasi…
+Layanan Windows Audio telah dimulai.
+Pemeriksaan: menunggu perangkat dan perangkat audio dimulai…
+Perangkat audio tidak muncul: memulai ulang layanan audio Windows…
+— Diagnostik —
+— Menghapus Speak2Mic —
+— Mengaktifkan mode tanda tangan uji —
+✔  Mode tanda tangan uji aktif
+✖  Mode tanda tangan uji nonaktif
+✔  Secure Boot nonaktif
+✖  Secure Boot aktif
+•  Driver Speak2Mic belum diinstal
+✔  Driver Speak2Mic terinstal
+✔  Driver Speak2Mic terinstal, versi %ls (sama dengan penginstal)
+✔  Driver Speak2Mic terinstal, versi %ls; penginstal berisi %ls
+Instal ulang
+Instal
+Kabel audio virtual: suara speaker → mikrofon
+Status sistem
+Aktifkan mode uji
+Hapus
+Jalankan Speak2Mic setelah instalasi
+Pintasan di desktop
+Pintasan di menu Start
+Diagnostik
+Buka log
+Tutup
+File driver tidak lengkap di samping penginstal (Speak2Mic.inf/.sys/.cat/.cer, Speak2Mic-Publisher.cer). Ekstrak seluruh arsip.
+Nonaktifkan Secure Boot terlebih dahulu: dengan fitur itu Windows tidak memuat driver bertanda tangan uji.
+Klik “Aktifkan mode uji”, mulai ulang komputer, lalu jalankan penginstal lagi.
+Speak2Mic sudah terinstal. Anda dapat menginstal ulang atau menghapusnya.
+Siap diinstal. Klik “Instal”.
+Mulai ulang komputer untuk menyelesaikan instalasi.
+Driver terinstal, tetapi perangkat audio Speak2Mic tidak berfungsi: lihat penyebab di atas.
+Log terperinci: %ls (tombol “Buka log”). Kirimkan ke pengembang.
+Selesai: “Speak2Mic Speaker” dan “Speak2Mic Microphone” muncul di pengaturan suara.
+Mode uji aktif setelah komputer dimulai ulang.\n\nMulai ulang komputer sekarang?
+Operasi gagal: lihat detail di atas.
+Hapus driver Speak2Mic dan perangkatnya?
+paket driver tidak memiliki katalog bertanda tangan (.cat)
+Windows tidak dapat menambahkan paket ke penyimpanan driver
+tidak ditemukan driver yang cocok di INF
+file tidak memiliki tanda tangan digital
+sertifikat tanda tangan tidak tepercaya (sertifikat akar belum diinstal)
+sertifikat tidak dapat digunakan untuk tujuan ini
+tanda tangan rusak atau file diubah setelah ditandatangani
+sertifikat kedaluwarsa atau belum berlaku (periksa jam)
+Kesalahan: %ls (0x%08lX): %ls. Detail: C:\\Windows\\INF\\setupapi.dev.log
+Kesalahan: %ls (0x%08lX) %ls
+sertifikat tidak ditemukan
+tidak dapat membaca sertifikat
+Sertifikat uji Speak2Mic ditambahkan ke penyimpanan tepercaya (CA akar dan penerbit).
+Kesalahan: file tidak ditemukan: %ls
+tidak dapat membaca kelas perangkat dari INF
+tidak dapat membuat perangkat
+Perangkat %ls dibuat.
+Menginstal driver… Jika Windows menanyakan penerbit, pilih “Tetap instal perangkat lunak driver ini”.
+tidak dapat menginstal driver
+Instalasi dibatalkan di jendela peringatan driver.
+Driver terinstal. Perlu memulai ulang.
+Driver terinstal.
+Paket driver %ls dihapus dari penyimpanan driver.
+Pengaturan driver diatur ulang (setelah instalasi: preset “Standar”).
+tidak dapat menghapus perangkat
+Perangkat dihapus: %d.
+Speak2Mic tidak terinstal sebelumnya.
+tidak dapat menjalankan bcdedit
+Kesalahan: bcdedit berakhir dengan kode %lu. Jika Secure Boot aktif, nonaktifkan terlebih dahulu.
+Mode tanda tangan uji aktif. Mulai ulang komputer dan jalankan instalasi lagi.
+Speak2Mic — instalasi dan diagnostik.lnk
+Log Speak2Mic.lnk
+Kesalahan: tidak dapat menentukan folder Program Files.
+Program sudah ada di %ls.
+Kesalahan: %ls sedang digunakan: tutup Speak2Mic lalu coba lagi.
+Kesalahan menyalin %ls (kode %lu).
+Program diinstal ke %ls.
+Speak2Mic — suara speaker ke mikrofon virtual
+Pintasan desktop dibuat.
+Tidak dapat membuat pintasan desktop.
+Panel kontrol Speak2Mic
+Instal, instal ulang, hapus, dan diagnosis Speak2Mic
+Folder log Speak2Mic
+Pintasan menu Start dibuat (folder Speak2Mic).
+Tidak semua pintasan menu Start dapat dibuat.
+Pintasan dihapus.
+Tidak dapat menghapus %ls (kode %lu): tutup Speak2Mic.
+Pintasan dan program dihapus; folder %ls akan dihapus setelah penginstal ditutup.
+Pintasan dan program dihapus dari %ls.
+Bahasa:
+Versi %ls
+Instalasi Speak2Mic %ls
+Nama perangkat
+Speaker:
+Mikrofon:
+Ganti nama
+Nama diubah.
+Tidak dapat mengganti nama (0x%08lX).
+Atur ulang semua
+Atur ulang semua pengaturan Speak2Mic ke bawaan?\n\nKualitas sinyal: preset “Standar”; nama perangkat: bawaan.
+Semua pengaturan telah diatur ulang ke bawaan.
+Volume mikrofon:
+Bisukan
+Ekspor pengaturan…
+Impor pengaturan…
+File pengaturan Speak2Mic (*.ini)
+Pengaturan disimpan ke %ls
+Tidak dapat menyimpan pengaturan (kode %lu).
+Pengaturan dimuat dari %ls
+File ini tidak tampak seperti pengaturan Speak2Mic.
+Perbarui
+Saluran mikrofon:
+Sama dengan speaker
+Uji
+Hentikan
+Uji suara gagal (0x%08lX).
+Pengaturan kualitas sinyal dipertahankan untuk versi baru.
+Perangkat audio Speak2Mic lama yang dihapus: %d.
+Buka mixer volume
+Hapus log peristiwa
+Panel kontrol Speak2Mic dimulai, versi %ls
+Log peristiwa telah dihapus.
+Nonaktifkan mode uji
+— Menonaktifkan mode tanda tangan uji —
+Mode tanda tangan uji akan nonaktif setelah komputer dimulai ulang.
+Mode uji nonaktif setelah komputer dimulai ulang.\n\nMulai ulang komputer sekarang?
+Tanpa mode uji driver Speak2Mic tidak akan dimuat: perangkat audio Speak2Mic menghilang sampai mode diaktifkan lagi.\n\nNonaktifkan mode uji?
+✔  Mode tanda tangan uji aktif (sampai dimulai ulang)
+✖  Mode tanda tangan uji nonaktif (sampai dimulai ulang)
+Kesalahan: bcdedit berakhir dengan kode %lu.
+Speak2Mic tidak dapat bekerja: Secure Boot aktif, dan driver Speak2Mic bertanda tangan uji tidak dimuat dengannya.\n\nNonaktifkan Secure Boot di pengaturan UEFI (VMware: VM → Settings → Options → Advanced), lalu jalankan Speak2Mic-Setup.exe.
+Speak2Mic tidak dapat bekerja: mode tanda tangan uji Windows nonaktif, dan tanpanya driver Speak2Mic tidak dimuat.\n\nJalankan Speak2Mic-Setup.exe, klik "Aktifkan mode uji" dan mulai ulang komputer.
+Speak2Mic tidak dapat bekerja: driver Speak2Mic belum terpasang.\n\nJalankan Speak2Mic-Setup.exe dan klik "Instal".
+Buka penginstal Speak2Mic sekarang?
+Putar
+Jeda
+Tidak dapat memutar mp3 (0x%08lX).
+Tes suara dimulai.
+Tes suara dihentikan.
+Tes suara selesai.
+Musik: diputar (%ls).
+Musik: dijeda (%ls).
+Musik berhenti: tidak ada file mp3 di folder.
+Musik: trek berikutnya (%ls).
+Speak2Mic tidak mendukung Windows pada prosesor ARM.
+Penginstal untuk sistem ini tidak ditemukan: %ls\n\nEkstrak seluruh arsip.
+Program lain mengubah volume mikrofon (%d %%): dikembalikan ke %d %% (kali: %d).
+Volume mikrofon diubah oleh %ls (%d %%): dikembalikan ke %d %% (kali: %d).
+Tidak dapat mengekstrak penginstal ke folder sementara.
+Buka panel kontrol
+Keluar
+Jalankan panel kontrol bersama Windows (di baki sistem)
+Mulai otomatis panel kontrol aktif.
+Mulai otomatis panel kontrol nonaktif.

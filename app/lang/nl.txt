@@ -1,0 +1,247 @@
+de systeeminterface voor formaatinstellingen is niet beschikbaar
+Windows heeft het formaat niet geaccepteerd (0x%08lX); het vorige formaat blijft behouden
+Windows heeft het formaat niet geaccepteerd (0x%08lX)
+Apparaat niet gevonden
+Verbinden…
+Geen toegang tot het apparaat (0x%08lX)
+%lu Hz · %u bit%ls · %u kan.
+Apparaat losgekoppeld
+Opnamefout
+het apparaat is niet geconfigureerd
+het apparaat kon niet starten (het stuurprogramma gaf een fout bij het starten)
+het stuurprogramma moet opnieuw worden geïnstalleerd
+het apparaat is uitgeschakeld
+het apparaat is niet aanwezig
+het stuurprogramma is niet geïnstalleerd
+Windows kon het stuurprogramma voor het apparaat niet laden
+fout in DriverEntry van het stuurprogramma
+het stuurprogramma is niet geladen (beschadigd of niet compatibel)
+het stuurprogramma meldde een apparaatfout
+het apparaat is momenteel niet aangesloten
+het stuurprogramma is geblokkeerd door beleid
+Windows kon de handtekening van het stuurprogramma niet controleren (schakel de testmodus in)
+zie de code in Apparaatbeheer
+actief
+uitgeschakeld
+niet aanwezig
+niet aangesloten
+  audioapparaat ‘%ls’: %ls
+Actief stuurprogramma: versie %ls, in het pakket: %ls.
+LET OP: het actieve stuurprogramma is niet de versie uit het pakket. Klik op ‘Opnieuw installeren’ of start de computer opnieuw op.
+Actief stuurprogramma: versie %ls.
+De stuurprogrammaservice van Speak2Mic is niet geregistreerd.
+Stuurprogrammaservice: %ls.
+actief
+gestopt
+starten/stoppen
+Testondertekeningsmodus: %ls; Secure Boot: %ls.
+aan
+uit
+Apparaat ROOT\\Speak2Mic niet gevonden: het stuurprogramma is niet geïnstalleerd.
+Het apparaat is niet gestart: code %lu — %ls.
+Het Speak2Mic-apparaat is gestart.
+De Speak2Mic-audioapparaten zijn niet actief. ‘Uitgeschakeld’: schakel ze in bij Geluid (mmsys.cpl); ‘niet aanwezig’: start de Windows-audioservices of de computer opnieuw.
+Het stuurprogramma werkt, maar Windows heeft de Speak2Mic-audioapparaten niet gemaakt.
+Speak2Mic-installatie
+Vorige versie verwijderen…
+\nUitgebreid logboek: %ls\n
+Speak2Mic is geïnstalleerd (apparaten: %d)\n
+Speak2Mic is niet geïnstalleerd\n
+Testondertekeningsmodus: %ls\n
+Aangepast
+Spraak — 16 kHz · 16 bit · mono
+Standaard — 48 kHz · 16 bit · stereo
+Hoog — 48 kHz · 24 bit · stereo
+Studio — 96 kHz · 24 bit · stereo
+Maximum — 192 kHz · 32 bit · stereo
+Auto (16–32)
+16 bit
+24 bit
+32 bit
+1 (mono)
+2 (stereo)
+4 (quad)
+Signaalkwaliteit van de kabel
+Preset:
+Frequentie:
+Bitdiepte:
+Kanalen:
+Latentie, ms:
+Toepassen
+Signaalniveau
+%lu Hz
+Het Speak2Mic-stuurprogramma is niet geïnstalleerd: instellingen kunnen niet worden toegepast.
+%lu bit
+16–32 bit
+Nu in het stuurprogramma: %lu Hz · %ls · tot %lu kan. · latentie %lu ms
+%ls — afspelen (programma's spelen hierin af)
+%ls — microfoon (dit horen opnameprogramma's)
+Apparaat niet gevonden: het stuurprogramma is niet geïnstalleerd of start opnieuw.
+geen signaal
+%.1f dB
+Het standaardformaat is niet op alle Speak2Mic-apparaten ingesteld: %ls
+De Speak2Mic-apparaten kwamen na de herstart niet terug: het standaardformaat is niet ingesteld.
+Instellingen toegepast: %lu Hz, %lu kan. Windows accepteerde %u bit niet, het standaardformaat is 16 bit.
+Instellingen toegepast: standaardformaat %lu Hz, %u bit, %lu kan.
+Instellingen toepassen, het apparaat start opnieuw…
+Beheerdersrechten vereist: de aanvraag is geweigerd.
+Het Speak2Mic-stuurprogramma is niet geïnstalleerd.
+Instellingen opgeslagen, maar het Speak2Mic-apparaat is niet gevonden: ze gelden na de installatie ervan.
+Instellingen opgeslagen. Windows kon het apparaat niet tijdens gebruik herstarten: start de computer opnieuw op.
+Instellingen opgeslagen, maar het apparaat kon niet opnieuw starten: start de computer opnieuw op.
+Standaardformaat van de Speak2Mic-apparaten instellen…
+Speak2Mic — configuratiescherm
+— Speak2Mic installeren —
+De service Windows Audio wordt tijdens de installatie gestopt…
+De service Windows Audio is gestart.
+Controle: wachten tot het apparaat en de audioapparaten starten…
+De audioapparaten zijn niet verschenen: Windows-audioservices opnieuw starten…
+— Diagnose —
+— Speak2Mic verwijderen —
+— Testondertekeningsmodus inschakelen —
+✔  Testondertekeningsmodus staat aan
+✖  Testondertekeningsmodus staat uit
+✔  Secure Boot staat uit
+✖  Secure Boot staat aan
+•  Het Speak2Mic-stuurprogramma is niet geïnstalleerd
+✔  Het Speak2Mic-stuurprogramma is geïnstalleerd
+✔  Het Speak2Mic-stuurprogramma is geïnstalleerd, versie %ls (gelijk aan het installatieprogramma)
+✔  Het Speak2Mic-stuurprogramma is geïnstalleerd, versie %ls; het installatieprogramma bevat %ls
+Opnieuw installeren
+Installeren
+Virtuele audiokabel: luidsprekergeluid → microfoon
+Systeemstatus
+Testmodus inschakelen
+Verwijderen
+Speak2Mic starten na installatie
+Snelkoppeling op het bureaublad
+Snelkoppelingen in het menu Start
+Diagnose
+Logboek openen
+Sluiten
+Naast het installatieprogramma ontbreken stuurprogrammabestanden (Speak2Mic.inf/.sys/.cat/.cer, Speak2Mic-Publisher.cer). Pak het hele archief uit.
+Schakel eerst Secure Boot uit: daarmee laadt Windows geen test-ondertekende stuurprogramma's.
+Klik op ‘Testmodus inschakelen’, start de computer opnieuw op en voer het installatieprogramma opnieuw uit.
+Speak2Mic is al geïnstalleerd. U kunt het opnieuw installeren of verwijderen.
+Klaar om te installeren. Klik op ‘Installeren’.
+Start de computer opnieuw op om de installatie te voltooien.
+Het stuurprogramma is geïnstalleerd, maar de Speak2Mic-audioapparaten werken niet: zie de oorzaak hierboven.
+Uitgebreid logboek: %ls (knop ‘Logboek openen’). Stuur het naar de ontwikkelaar.
+Klaar: ‘Speak2Mic Speaker’ en ‘Speak2Mic Microphone’ staan in de geluidsinstellingen.
+De testmodus wordt actief na een herstart.\n\nDe computer nu opnieuw opstarten?
+De bewerking is mislukt: zie de details hierboven.
+Het Speak2Mic-stuurprogramma en de apparaten verwijderen?
+het stuurprogrammapakket heeft geen ondertekende catalogus (.cat)
+Windows kon het pakket niet toevoegen aan het stuurprogrammaarchief
+geen passend stuurprogramma gevonden in de INF
+het bestand heeft geen digitale handtekening
+het ondertekeningscertificaat wordt niet vertrouwd (basiscertificaat niet geïnstalleerd)
+het certificaat kan niet voor dit doel worden gebruikt
+de handtekening is beschadigd of het bestand is na ondertekening gewijzigd
+het certificaat is verlopen of nog niet geldig (controleer de klok)
+Fout: %ls (0x%08lX): %ls. Details: C:\\Windows\\INF\\setupapi.dev.log
+Fout: %ls (0x%08lX) %ls
+certificaat niet gevonden
+kan het certificaat niet lezen
+De Speak2Mic-testcertificaten zijn toegevoegd aan de vertrouwde archieven (basis-CA en uitgever).
+Fout: bestand niet gevonden: %ls
+kan de apparaatklasse niet uit de INF lezen
+kan het apparaat niet maken
+Apparaat %ls gemaakt.
+Stuurprogramma installeren… Als Windows naar de uitgever vraagt, kies ‘Deze stuurprogrammasoftware toch installeren’.
+kan het stuurprogramma niet installeren
+Installatie geannuleerd in het waarschuwingsvenster van het stuurprogramma.
+Het stuurprogramma is geïnstalleerd. Opnieuw opstarten is vereist.
+Het stuurprogramma is geïnstalleerd.
+Stuurprogrammapakket %ls verwijderd uit het stuurprogrammaarchief.
+Stuurprogramma-instellingen teruggezet (na de installatie: voorinstelling ‘Standaard’).
+kan het apparaat niet verwijderen
+Apparaten verwijderd: %d.
+Speak2Mic was niet geïnstalleerd.
+kan bcdedit niet starten
+Fout: bcdedit stopte met code %lu. Als Secure Boot aan staat, schakel het dan eerst uit.
+Testondertekeningsmodus staat aan. Start de computer opnieuw op en voer de installatie opnieuw uit.
+Speak2Mic — installatie en diagnose.lnk
+Speak2Mic-logboeken.lnk
+Fout: kan de map Program Files niet bepalen.
+De programma's staan al in %ls.
+Fout: %ls is in gebruik: sluit Speak2Mic en probeer het opnieuw.
+Fout bij kopiëren van %ls (code %lu).
+Programma's geïnstalleerd in %ls.
+Speak2Mic — luidsprekergeluid naar een virtuele microfoon
+Snelkoppeling op het bureaublad gemaakt.
+Kan de snelkoppeling op het bureaublad niet maken.
+Speak2Mic-configuratiescherm
+Speak2Mic installeren, opnieuw installeren, verwijderen en diagnosticeren
+Map met Speak2Mic-logboeken
+Snelkoppelingen in het menu Start gemaakt (map Speak2Mic).
+Niet alle snelkoppelingen in het menu Start konden worden gemaakt.
+Snelkoppelingen verwijderd.
+Kan %ls niet verwijderen (code %lu): sluit Speak2Mic.
+Snelkoppelingen en programma's verwijderd; de map %ls wordt verwijderd na het sluiten van het installatieprogramma.
+Snelkoppelingen en programma's verwijderd uit %ls.
+Taal:
+Versie %ls
+Speak2Mic-installatie %ls
+Apparaatnamen
+Luidspreker:
+Microfoon:
+Naam wijzigen
+Namen gewijzigd.
+Naam wijzigen mislukt (0x%08lX).
+Alles herstellen
+Alle Speak2Mic-instellingen herstellen naar de standaardwaarden?\n\nSignaalkwaliteit: voorinstelling ‘Standaard’; apparaatnamen: standaard.
+Alle instellingen zijn hersteld naar de standaardwaarden.
+Microfoonvolume:
+Dempen
+Instellingen exporteren…
+Instellingen importeren…
+Speak2Mic-instellingenbestanden (*.ini)
+Instellingen opgeslagen in %ls
+Kan de instellingen niet opslaan (code %lu).
+Instellingen geladen uit %ls
+Het bestand lijkt geen Speak2Mic-instellingen te bevatten.
+Bijwerken
+Microfoonkanalen:
+Zelfde als luidspreker
+Testen
+Stoppen
+Geluidstest mislukt (0x%08lX).
+Instellingen voor signaalkwaliteit behouden voor de nieuwe versie.
+Oude Speak2Mic-audioapparaten verwijderd: %d.
+Volumemixer openen
+Gebeurtenislogboek wissen
+Speak2Mic-configuratiescherm gestart, versie %ls
+Het gebeurtenislogboek is gewist.
+Testmodus uitschakelen
+— Testondertekeningsmodus uitschakelen —
+De testondertekeningsmodus staat uit nadat de computer opnieuw is opgestart.
+De testmodus wordt uitgeschakeld na een herstart.\n\nDe computer nu opnieuw opstarten?
+Zonder testmodus wordt het Speak2Mic-stuurprogramma niet geladen: de Speak2Mic-audioapparaten verdwijnen totdat de modus weer wordt ingeschakeld.\n\nTestmodus uitschakelen?
+✔  Testondertekeningsmodus staat aan (tot herstart)
+✖  Testondertekeningsmodus staat uit (tot herstart)
+Fout: bcdedit is beëindigd met code %lu.
+Speak2Mic kan niet werken: Secure Boot staat aan en het testondertekende Speak2Mic-stuurprogramma laadt daarmee niet.\n\nSchakel Secure Boot uit in de UEFI-instellingen (VMware: VM → Settings → Options → Advanced) en start daarna Speak2Mic-Setup.exe.
+Speak2Mic kan niet werken: de Windows-testondertekeningsmodus staat uit en zonder deze modus laadt het Speak2Mic-stuurprogramma niet.\n\nStart Speak2Mic-Setup.exe, klik op "Testmodus inschakelen" en start de computer opnieuw op.
+Speak2Mic kan niet werken: het Speak2Mic-stuurprogramma is niet geïnstalleerd.\n\nStart Speak2Mic-Setup.exe en klik op "Installeren".
+Het Speak2Mic-installatieprogramma nu openen?
+Afspelen
+Pauze
+Kan mp3 niet afspelen (0x%08lX).
+Geluidstest gestart.
+Geluidstest gestopt.
+Geluidstest voltooid.
+Muziek: afspelen (%ls).
+Muziek: pauze (%ls).
+Muziek gestopt: geen mp3-bestanden in de map.
+Muziek: volgend nummer (%ls).
+Speak2Mic ondersteunt Windows op ARM-processors niet.
+Installatieprogramma voor dit systeem niet gevonden: %ls\n\nPak het hele archief uit.
+Een ander programma wijzigde het microfoonvolume (%d %%): teruggezet naar %d %% (keer: %d).
+Het microfoonvolume is gewijzigd door %ls (%d %%): teruggezet naar %d %% (keer: %d).
+Kan het installatieprogramma niet uitpakken naar een tijdelijke map.
+Configuratiescherm openen
+Afsluiten
+Configuratiescherm met Windows starten (in het systeemvak)
+Automatisch starten van het configuratiescherm aan.
+Automatisch starten van het configuratiescherm uit.

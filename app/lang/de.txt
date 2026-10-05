@@ -1,0 +1,247 @@
+die System-Schnittstelle für Formateinstellungen ist nicht verfügbar
+Windows hat das Format nicht akzeptiert (0x%08lX); das bisherige Format bleibt
+Windows hat das Format nicht akzeptiert (0x%08lX)
+Gerät nicht gefunden
+Verbinden…
+Kein Zugriff auf das Gerät (0x%08lX)
+%lu Hz · %u Bit%ls · %u Kan.
+Gerät getrennt
+Aufnahmefehler
+das Gerät ist nicht konfiguriert
+das Gerät konnte nicht gestartet werden (der Treiber meldete beim Start einen Fehler)
+der Treiber muss neu installiert werden
+das Gerät ist deaktiviert
+das Gerät ist nicht vorhanden
+der Treiber ist nicht installiert
+Windows konnte den Treiber für das Gerät nicht laden
+Fehler in DriverEntry des Treibers
+der Treiber wurde nicht geladen (beschädigt oder inkompatibel)
+der Treiber meldete einen Gerätefehler
+das Gerät ist derzeit nicht verbunden
+der Treiber ist durch eine Richtlinie blockiert
+Windows konnte die Treibersignatur nicht prüfen (Testmodus aktivieren)
+siehe Code im Geräte-Manager
+aktiv
+deaktiviert
+nicht vorhanden
+nicht angeschlossen
+  Audiogerät „%ls“: %ls
+Laufender Treiber: Version %ls, im Paket: %ls.
+ACHTUNG: Es läuft nicht die Treiberversion aus dem Paket. Klicken Sie auf „Neu installieren“ oder starten Sie den Computer neu.
+Laufender Treiber: Version %ls.
+Der Speak2Mic-Treiberdienst ist nicht registriert.
+Treiberdienst: %ls.
+läuft
+beendet
+startet/stoppt
+Testsignaturmodus: %ls; Secure Boot: %ls.
+ein
+aus
+Gerät ROOT\\Speak2Mic nicht gefunden: der Treiber ist nicht installiert.
+Das Gerät ist nicht gestartet: Code %lu — %ls.
+Das Speak2Mic-Gerät ist gestartet.
+Die Speak2Mic-Audiogeräte sind nicht aktiv. „Deaktiviert“: unter „Sound“ (mmsys.cpl) aktivieren; „nicht vorhanden“: die Windows-Audiodienste oder den Computer neu starten.
+Der Treiber läuft, aber Windows hat die Speak2Mic-Audiogeräte nicht erstellt.
+Speak2Mic-Installation
+Vorherige Version wird entfernt…
+\nAusführliches Protokoll: %ls\n
+Speak2Mic ist installiert (Geräte: %d)\n
+Speak2Mic ist nicht installiert\n
+Testsignaturmodus: %ls\n
+Benutzerdefiniert
+Sprache — 16 kHz · 16 Bit · Mono
+Standard — 48 kHz · 16 Bit · Stereo
+Hoch — 48 kHz · 24 Bit · Stereo
+Studio — 96 kHz · 24 Bit · Stereo
+Maximum — 192 kHz · 32 Bit · Stereo
+Auto (16–32)
+16 Bit
+24 Bit
+32 Bit
+1 (Mono)
+2 (Stereo)
+4 (Quadro)
+Signalqualität des Kabels
+Voreinstellung:
+Abtastrate:
+Bittiefe:
+Kanäle:
+Latenz, ms:
+Übernehmen
+Signalpegel
+%lu Hz
+Der Speak2Mic-Treiber ist nicht installiert: Einstellungen können nicht übernommen werden.
+%lu Bit
+16–32 Bit
+Im Treiber: %lu Hz · %ls · bis %lu Kan. · Latenz %lu ms
+%ls — Wiedergabe (hierhin spielen Programme)
+%ls — Mikrofon (das hören Aufnahmeprogramme)
+Gerät nicht gefunden: der Treiber ist nicht installiert oder startet neu.
+kein Signal
+%.1f dB
+Das Standardformat wurde nicht für alle Speak2Mic-Geräte gesetzt: %ls
+Die Speak2Mic-Geräte sind nach dem Neustart nicht erschienen: das Standardformat wurde nicht gesetzt.
+Einstellungen übernommen: %lu Hz, %lu Kan. Windows hat %u Bit nicht akzeptiert, das Standardformat ist 16 Bit.
+Einstellungen übernommen: Standardformat %lu Hz, %u Bit, %lu Kan.
+Einstellungen werden übernommen, das Gerät startet neu…
+Administratorrechte erforderlich: die Anfrage wurde abgelehnt.
+Der Speak2Mic-Treiber ist nicht installiert.
+Einstellungen gespeichert, aber das Speak2Mic-Gerät wurde nicht gefunden: sie gelten nach seiner Installation.
+Einstellungen gespeichert. Windows konnte das Gerät nicht im laufenden Betrieb neu starten: starten Sie den Computer neu.
+Einstellungen gespeichert, aber das Gerät konnte nicht neu gestartet werden: starten Sie den Computer neu.
+Standardformat der Speak2Mic-Geräte wird gesetzt…
+Speak2Mic — Systemsteuerung
+— Speak2Mic wird installiert —
+Der Dienst Windows Audio wird während der Installation angehalten…
+Der Dienst Windows Audio ist gestartet.
+Prüfung: Warten auf den Start des Geräts und der Audiogeräte…
+Die Audiogeräte sind nicht erschienen: die Windows-Audiodienste werden neu gestartet…
+— Diagnose —
+— Speak2Mic wird entfernt —
+— Testsignaturmodus wird aktiviert —
+✔  Testsignaturmodus ist aktiv
+✖  Testsignaturmodus ist aus
+✔  Secure Boot ist aus
+✖  Secure Boot ist aktiv
+•  Der Speak2Mic-Treiber ist nicht installiert
+✔  Der Speak2Mic-Treiber ist installiert
+✔  Der Speak2Mic-Treiber ist installiert, Version %ls (wie im Installationsprogramm)
+✔  Der Speak2Mic-Treiber ist installiert, Version %ls; im Installationsprogramm %ls
+Neu installieren
+Installieren
+Virtuelles Audiokabel: Lautsprecherton → Mikrofon
+Systemstatus
+Testmodus aktivieren
+Entfernen
+Speak2Mic nach der Installation starten
+Verknüpfung auf dem Desktop
+Verknüpfungen im Startmenü
+Diagnose
+Protokoll öffnen
+Schließen
+Neben dem Installationsprogramm fehlen Treiberdateien (Speak2Mic.inf/.sys/.cat/.cer, Speak2Mic-Publisher.cer). Entpacken Sie das ganze Archiv.
+Schalten Sie zuerst Secure Boot aus: damit lädt Windows keine testsignierten Treiber.
+Klicken Sie auf „Testmodus aktivieren“, starten Sie den Computer neu und führen Sie das Installationsprogramm erneut aus.
+Speak2Mic ist bereits installiert. Sie können es neu installieren oder entfernen.
+Bereit zur Installation. Klicken Sie auf „Installieren“.
+Starten Sie den Computer neu, um die Installation abzuschließen.
+Der Treiber ist installiert, aber die Speak2Mic-Audiogeräte funktionieren nicht: Ursache siehe oben.
+Ausführliches Protokoll: %ls (Schaltfläche „Protokoll öffnen“). Bitte an den Entwickler senden.
+Fertig: „Speak2Mic Speaker“ und „Speak2Mic Microphone“ sind in den Soundeinstellungen.
+Der Testmodus wird nach einem Neustart aktiv.\n\nComputer jetzt neu starten?
+Der Vorgang ist fehlgeschlagen: Details siehe oben.
+Den Speak2Mic-Treiber und seine Geräte entfernen?
+das Treiberpaket hat keinen signierten Katalog (.cat)
+Windows konnte das Paket nicht zum Treiberspeicher hinzufügen
+kein passender Treiber in der INF gefunden
+die Datei hat keine digitale Signatur
+das Signaturzertifikat ist nicht vertrauenswürdig (Stammzertifikat nicht installiert)
+das Zertifikat kann für diesen Zweck nicht verwendet werden
+die Signatur ist beschädigt oder die Datei wurde nach dem Signieren geändert
+das Zertifikat ist abgelaufen oder noch nicht gültig (Uhr prüfen)
+Fehler: %ls (0x%08lX): %ls. Details: C:\\Windows\\INF\\setupapi.dev.log
+Fehler: %ls (0x%08lX) %ls
+Zertifikat nicht gefunden
+Zertifikat kann nicht gelesen werden
+Die Speak2Mic-Testzertifikate wurden als vertrauenswürdig hinzugefügt (Stammzertifizierungsstelle und Herausgeber).
+Fehler: Datei nicht gefunden: %ls
+die Geräteklasse kann nicht aus der INF gelesen werden
+das Gerät kann nicht erstellt werden
+Gerät %ls erstellt.
+Treiber wird installiert… Wenn Windows nach dem Herausgeber fragt, wählen Sie „Diese Treibersoftware trotzdem installieren“.
+der Treiber kann nicht installiert werden
+Die Installation wurde im Treiber-Warnfenster abgebrochen.
+Der Treiber ist installiert. Ein Neustart ist erforderlich.
+Der Treiber ist installiert.
+Treiberpaket %ls aus dem Treiberspeicher entfernt.
+Treibereinstellungen zurückgesetzt (nach der Installation: Voreinstellung „Standard“).
+das Gerät kann nicht entfernt werden
+Entfernte Geräte: %d.
+Speak2Mic war nicht installiert.
+bcdedit kann nicht gestartet werden
+Fehler: bcdedit endete mit Code %lu. Wenn Secure Boot aktiv ist, schalten Sie es zuerst aus.
+Testsignaturmodus ist aktiv. Starten Sie den Computer neu und führen Sie die Installation erneut aus.
+Speak2Mic — Installation und Diagnose.lnk
+Speak2Mic-Protokolle.lnk
+Fehler: der Ordner Program Files kann nicht ermittelt werden.
+Die Programme sind bereits in %ls.
+Fehler: %ls ist belegt: schließen Sie Speak2Mic und versuchen Sie es erneut.
+Fehler beim Kopieren von %ls (Code %lu).
+Programme installiert in %ls.
+Speak2Mic — Lautsprecherton in ein virtuelles Mikrofon
+Desktop-Verknüpfung erstellt.
+Die Desktop-Verknüpfung kann nicht erstellt werden.
+Speak2Mic-Systemsteuerung
+Speak2Mic installieren, neu installieren, entfernen und diagnostizieren
+Ordner mit den Speak2Mic-Protokollen
+Startmenü-Verknüpfungen erstellt (Ordner Speak2Mic).
+Nicht alle Startmenü-Verknüpfungen konnten erstellt werden.
+Verknüpfungen entfernt.
+%ls kann nicht gelöscht werden (Code %lu): schließen Sie Speak2Mic.
+Verknüpfungen und Programme entfernt; der Ordner %ls wird nach dem Schließen des Installationsprogramms gelöscht.
+Verknüpfungen und Programme aus %ls entfernt.
+Sprache:
+Version %ls
+Speak2Mic-Installation %ls
+Gerätenamen
+Lautsprecher:
+Mikrofon:
+Umbenennen
+Namen geändert.
+Umbenennen fehlgeschlagen (0x%08lX).
+Alle Einstellungen zurücksetzen
+Alle Speak2Mic-Einstellungen auf die Standardwerte zurücksetzen?\n\nSignalqualität: Voreinstellung „Standard“; Gerätenamen: Standardnamen.
+Alle Einstellungen wurden auf die Standardwerte zurückgesetzt.
+Mikrofonlautstärke:
+Stumm
+Einstellungen exportieren…
+Einstellungen importieren…
+Speak2Mic-Einstellungsdateien (*.ini)
+Einstellungen gespeichert in %ls
+Einstellungen können nicht gespeichert werden (Code %lu).
+Einstellungen geladen aus %ls
+Die Datei sieht nicht wie Speak2Mic-Einstellungen aus.
+Aktualisieren
+Mikrofonkanäle:
+Wie Lautsprecher
+Testen
+Stopp
+Soundtest fehlgeschlagen (0x%08lX).
+Einstellungen der Signalqualität für die neue Version übernommen.
+Alte Speak2Mic-Audiogeräte entfernt: %d.
+Lautstärkemixer öffnen
+Ereignisprotokoll leeren
+Speak2Mic-Systemsteuerung gestartet, Version %ls
+Das Ereignisprotokoll wurde geleert.
+Testmodus deaktivieren
+— Testsignaturmodus wird deaktiviert —
+Der Testsignaturmodus ist nach dem Neustart des Computers aus.
+Der Testmodus wird nach einem Neustart ausgeschaltet.\n\nComputer jetzt neu starten?
+Ohne Testmodus wird der Speak2Mic-Treiber nicht geladen: die Speak2Mic-Audiogeräte verschwinden, bis der Modus wieder aktiviert wird.\n\nTestmodus deaktivieren?
+✔  Testsignaturmodus ist aktiv (bis zum Neustart)
+✖  Testsignaturmodus ist aus (bis zum Neustart)
+Fehler: bcdedit wurde mit Code %lu beendet.
+Speak2Mic kann nicht arbeiten: Secure Boot ist aktiv, und der testsignierte Speak2Mic-Treiber wird damit nicht geladen.\n\nSchalten Sie Secure Boot in den UEFI-Einstellungen aus (VMware: VM → Settings → Options → Advanced) und starten Sie dann Speak2Mic-Setup.exe.
+Speak2Mic kann nicht arbeiten: der Windows-Testsignaturmodus ist aus, ohne ihn wird der Speak2Mic-Treiber nicht geladen.\n\nStarten Sie Speak2Mic-Setup.exe, klicken Sie auf „Testmodus aktivieren“ und starten Sie den Computer neu.
+Speak2Mic kann nicht arbeiten: der Speak2Mic-Treiber ist nicht installiert.\n\nStarten Sie Speak2Mic-Setup.exe und klicken Sie auf „Installieren“.
+Speak2Mic-Installationsprogramm jetzt öffnen?
+Abspielen
+Pause
+MP3 konnte nicht abgespielt werden (0x%08lX).
+Tontest gestartet.
+Tontest angehalten.
+Tontest beendet.
+Musik: Wiedergabe (%ls).
+Musik: Pause (%ls).
+Musik angehalten: keine MP3-Dateien im Ordner.
+Musik: nächster Titel (%ls).
+Speak2Mic unterstützt Windows auf ARM-Prozessoren nicht.
+Das Installationsprogramm für dieses System wurde nicht gefunden: %ls\n\nEntpacken Sie das ganze Archiv.
+Ein anderes Programm hat die Mikrofonlautstärke geändert (%d %%): zurückgesetzt auf %d %% (Mal: %d).
+Die Mikrofonlautstärke wurde von %ls geändert (%d %%): zurückgesetzt auf %d %% (Mal: %d).
+Das Installationsprogramm konnte nicht in einen temporären Ordner entpackt werden.
+Systemsteuerung öffnen
+Beenden
+Systemsteuerung mit Windows starten (im Infobereich)
+Autostart der Systemsteuerung ein.
+Autostart der Systemsteuerung aus.

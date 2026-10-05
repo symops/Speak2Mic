@@ -1,0 +1,23 @@
+# Build output
+dist/
+*.exe
+*.sys
+*.cat
+*.cer
+*.o
+*.a
+*.res
+*.unsigned*
+driver/mingw/out/
+tools/generate-cat-file/generate-cat-file
+tools/generate-cat-file/strip-pe-image
+
+# Test signing keys: created by driver/mingw/build.sh when missing; never publish them
+# (the installer trusts this root on every machine).
+driver/mingw/testcert/
+
+# Microsoft WDK InfVerif (not redistributable): put infverif.exe here yourself, see check_inf.sh
+tools/infverif/*.exe
+
+# Music for the "Play / Pause" button: put your own mp3 files here (not part of the repository)
+media/mp3/*.mp3

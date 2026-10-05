@@ -1,0 +1,247 @@
+systemowy interfejs ustawień formatu jest niedostępny
+Windows nie zaakceptował formatu (0x%08lX); pozostawiono poprzedni format
+Windows nie zaakceptował formatu (0x%08lX)
+Nie znaleziono urządzenia
+Łączenie…
+Brak dostępu do urządzenia (0x%08lX)
+%lu Hz · %u bit%ls · %u kan.
+Urządzenie odłączone
+Błąd przechwytywania
+urządzenie nie jest skonfigurowane
+nie udało się uruchomić urządzenia (sterownik zwrócił błąd przy starcie)
+sterownik trzeba zainstalować ponownie
+urządzenie jest wyłączone
+urządzenie jest nieobecne
+sterownik nie jest zainstalowany
+Windows nie mógł załadować sterownika urządzenia
+błąd w DriverEntry sterownika
+sterownik się nie załadował (uszkodzony lub niezgodny)
+sterownik zgłosił błąd urządzenia
+urządzenie nie jest teraz podłączone
+sterownik jest zablokowany przez zasady
+Windows nie mógł sprawdzić podpisu sterownika (włącz tryb testowy)
+zobacz kod w Menedżerze urządzeń
+aktywne
+wyłączone
+nieobecne
+odłączone
+  urządzenie audio „%ls”: %ls
+Uruchomiony sterownik w wersji %ls, w pakiecie: %ls.
+UWAGA: działa inna wersja sterownika niż w pakiecie. Kliknij „Zainstaluj ponownie” lub uruchom ponownie komputer.
+Uruchomiony sterownik w wersji %ls.
+Usługa sterownika Speak2Mic nie jest zarejestrowana.
+Usługa sterownika: %ls.
+działa
+zatrzymana
+uruchamia się/zatrzymuje
+Tryb podpisu testowego: %ls; Secure Boot: %ls.
+włączony
+wyłączony
+Nie znaleziono urządzenia ROOT\\Speak2Mic: sterownik nie jest zainstalowany.
+Urządzenie nie jest uruchomione: kod %lu — %ls.
+Urządzenie Speak2Mic jest uruchomione.
+Urządzenia audio Speak2Mic nie są aktywne. „Wyłączone”: włącz je w oknie Dźwięk (mmsys.cpl); „nieobecne”: uruchom ponownie usługi audio Windows lub komputer.
+Sterownik działa, ale Windows nie utworzył urządzeń audio Speak2Mic.
+Instalacja Speak2Mic
+Usuwanie poprzedniej wersji…
+\nSzczegółowy dziennik: %ls\n
+Speak2Mic jest zainstalowany (urządzeń: %d)\n
+Speak2Mic nie jest zainstalowany\n
+Tryb podpisu testowego: %ls\n
+Własne ustawienie
+Głos — 16 kHz · 16 bit · mono
+Standard — 48 kHz · 16 bit · stereo
+Wysoka — 48 kHz · 24 bit · stereo
+Studio — 96 kHz · 24 bit · stereo
+Maksimum — 192 kHz · 32 bit · stereo
+Auto (16–32)
+16 bit
+24 bit
+32 bit
+1 (mono)
+2 (stereo)
+4 (kwadro)
+Jakość sygnału kabla
+Ustawienie:
+Częstotliwość:
+Rozdzielczość:
+Kanały:
+Opóźnienie, ms:
+Zastosuj
+Poziom sygnału
+%lu Hz
+Sterownik Speak2Mic nie jest zainstalowany: nie można zastosować ustawień.
+%lu bit
+16–32 bit
+Teraz w sterowniku: %lu Hz · %ls · do %lu kan. · opóźnienie %lu ms
+%ls — odtwarzanie (tu grają programy)
+%ls — mikrofon (to słyszą programy nagrywające)
+Nie znaleziono urządzenia: sterownik nie jest zainstalowany lub się restartuje.
+brak sygnału
+%.1f dB
+Domyślny format nie został ustawiony dla wszystkich urządzeń Speak2Mic: %ls
+Urządzenia Speak2Mic nie pojawiły się po restarcie: domyślny format nie został ustawiony.
+Ustawienia zastosowane: %lu Hz, %lu kan. Windows nie zaakceptował %u bit, domyślny format to 16 bit.
+Ustawienia zastosowane: domyślny format %lu Hz, %u bit, %lu kan.
+Stosowanie ustawień, urządzenie się restartuje…
+Wymagane uprawnienia administratora: żądanie odrzucono.
+Sterownik Speak2Mic nie jest zainstalowany.
+Ustawienia zapisane, ale nie znaleziono urządzenia Speak2Mic: zostaną zastosowane po jego instalacji.
+Ustawienia zapisane. Windows nie mógł zrestartować urządzenia w locie: uruchom ponownie komputer.
+Ustawienia zapisane, ale nie udało się zrestartować urządzenia: uruchom ponownie komputer.
+Ustawianie domyślnego formatu urządzeń Speak2Mic…
+Speak2Mic — panel sterowania
+— Instalacja Speak2Mic —
+Zatrzymywanie usługi Windows Audio na czas instalacji…
+Usługa Windows Audio została uruchomiona.
+Sprawdzanie: oczekiwanie na uruchomienie urządzenia i urządzeń audio…
+Urządzenia audio się nie pojawiły: ponowne uruchamianie usług audio Windows…
+— Diagnostyka —
+— Usuwanie Speak2Mic —
+— Włączanie trybu podpisu testowego —
+✔  Tryb podpisu testowego jest włączony
+✖  Tryb podpisu testowego jest wyłączony
+✔  Secure Boot jest wyłączony
+✖  Secure Boot jest włączony
+•  Sterownik Speak2Mic nie jest zainstalowany
+✔  Sterownik Speak2Mic jest zainstalowany
+✔  Sterownik Speak2Mic jest zainstalowany, wersja %ls (jak w instalatorze)
+✔  Sterownik Speak2Mic jest zainstalowany, wersja %ls; w instalatorze %ls
+Zainstaluj ponownie
+Zainstaluj
+Wirtualny kabel audio: dźwięk głośników → mikrofon
+Stan systemu
+Włącz tryb testowy
+Usuń
+Uruchom Speak2Mic po instalacji
+Skrót na pulpicie
+Skróty w menu Start
+Diagnostyka
+Otwórz dziennik
+Zamknij
+Obok instalatora brakuje plików sterownika (Speak2Mic.inf/.sys/.cat/.cer, Speak2Mic-Publisher.cer). Rozpakuj całe archiwum.
+Najpierw wyłącz Secure Boot: przy nim Windows nie ładuje sterowników z podpisem testowym.
+Kliknij „Włącz tryb testowy”, uruchom ponownie komputer i jeszcze raz uruchom instalator.
+Speak2Mic jest już zainstalowany. Możesz zainstalować go ponownie lub usunąć.
+Wszystko gotowe do instalacji. Kliknij „Zainstaluj”.
+Uruchom ponownie komputer, aby zakończyć instalację.
+Sterownik jest zainstalowany, ale urządzenia audio Speak2Mic nie działają: przyczyna powyżej.
+Szczegółowy dziennik: %ls (przycisk „Otwórz dziennik”). Wyślij go twórcy programu.
+Gotowe: „Speak2Mic Speaker” i „Speak2Mic Microphone” są w ustawieniach dźwięku.
+Tryb testowy włączy się po ponownym uruchomieniu.\n\nUruchomić ponownie komputer teraz?
+Operacja nie powiodła się: szczegóły powyżej.
+Usunąć sterownik Speak2Mic i jego urządzenia?
+pakiet sterownika nie ma podpisanego katalogu (.cat)
+Windows nie mógł dodać pakietu do magazynu sterowników
+nie znaleziono pasującego sterownika w pliku INF
+plik nie ma podpisu cyfrowego
+certyfikat podpisu nie jest zaufany (certyfikat główny nie jest zainstalowany)
+certyfikatu nie można użyć do tego celu
+podpis jest uszkodzony lub plik zmieniono po podpisaniu
+certyfikat wygasł lub jeszcze nie jest ważny (sprawdź zegar)
+Błąd: %ls (0x%08lX): %ls. Szczegóły: C:\\Windows\\INF\\setupapi.dev.log
+Błąd: %ls (0x%08lX) %ls
+nie znaleziono certyfikatu
+nie udało się odczytać certyfikatu
+Certyfikaty testowe Speak2Mic dodano do zaufanych (główny urząd certyfikacji i wydawca).
+Błąd: nie znaleziono pliku %ls
+nie udało się odczytać klasy urządzenia z pliku INF
+nie udało się utworzyć urządzenia
+Utworzono urządzenie %ls.
+Instalowanie sterownika… Jeśli Windows zapyta o wydawcę, wybierz „Zainstaluj mimo to oprogramowanie tego sterownika”.
+nie udało się zainstalować sterownika
+Instalację anulowano w oknie ostrzeżenia o sterowniku.
+Sterownik jest zainstalowany. Wymagane jest ponowne uruchomienie.
+Sterownik jest zainstalowany.
+Pakiet sterownika %ls usunięto z magazynu sterowników.
+Ustawienia sterownika zresetowane (po instalacji: ustawienie „Standard”).
+nie udało się usunąć urządzenia
+Usunięto urządzeń: %d.
+Speak2Mic nie był zainstalowany.
+nie udało się uruchomić bcdedit
+Błąd: bcdedit zakończył się kodem %lu. Jeśli Secure Boot jest włączony, najpierw go wyłącz.
+Tryb podpisu testowego jest włączony. Uruchom ponownie komputer i jeszcze raz uruchom instalację.
+Speak2Mic — instalacja i diagnostyka.lnk
+Dzienniki Speak2Mic.lnk
+Błąd: nie można ustalić folderu Program Files.
+Programy są już w %ls.
+Błąd: %ls jest zajęty: zamknij Speak2Mic i spróbuj ponownie.
+Błąd kopiowania %ls (kod %lu).
+Programy zainstalowano w %ls.
+Speak2Mic — dźwięk głośników do wirtualnego mikrofonu
+Utworzono skrót na pulpicie.
+Nie udało się utworzyć skrótu na pulpicie.
+Panel sterowania Speak2Mic
+Instalacja, ponowna instalacja, usuwanie i diagnostyka Speak2Mic
+Folder z dziennikami Speak2Mic
+Utworzono skróty w menu Start (folder Speak2Mic).
+Nie wszystkie skróty w menu Start udało się utworzyć.
+Skróty usunięte.
+Nie udało się usunąć %ls (kod %lu): zamknij Speak2Mic.
+Skróty i programy usunięte; folder %ls zostanie usunięty po zamknięciu instalatora.
+Skróty i programy usunięte z %ls.
+Język:
+Wersja %ls
+Instalacja Speak2Mic %ls
+Nazwy urządzeń
+Głośnik:
+Mikrofon:
+Zmień nazwy
+Nazwy zmienione.
+Nie udało się zmienić nazwy (0x%08lX).
+Przywróć wszystko
+Przywrócić wszystkie ustawienia Speak2Mic do domyślnych?\n\nJakość sygnału: ustawienie „Standard”; nazwy urządzeń: domyślne.
+Wszystkie ustawienia przywrócono do domyślnych.
+Głośność mikrofonu:
+Wycisz
+Eksportuj ustawienia…
+Importuj ustawienia…
+Pliki ustawień Speak2Mic (*.ini)
+Ustawienia zapisano w %ls
+Nie udało się zapisać ustawień (kod %lu).
+Ustawienia wczytano z %ls
+Plik nie wygląda na ustawienia Speak2Mic.
+Aktualizuj
+Kanały mikrofonu:
+Jak głośnik
+Testuj
+Zatrzymaj
+Test dźwięku nie powiódł się (0x%08lX).
+Ustawienia jakości sygnału zachowane dla nowej wersji.
+Usunięto stare urządzenia audio Speak2Mic: %d.
+Otwórz mikser głośności
+Wyczyść dziennik zdarzeń
+Uruchomiono panel sterowania Speak2Mic, wersja %ls
+Dziennik zdarzeń został wyczyszczony.
+Wyłącz tryb testowy
+— Wyłączanie trybu podpisu testowego —
+Tryb podpisu testowego zostanie wyłączony po ponownym uruchomieniu komputera.
+Tryb testowy wyłączy się po ponownym uruchomieniu.\n\nUruchomić ponownie komputer teraz?
+Bez trybu testowego sterownik Speak2Mic nie będzie ładowany: urządzenia dźwiękowe Speak2Mic znikną do czasu ponownego włączenia trybu.\n\nWyłączyć tryb testowy?
+✔  Tryb podpisu testowego jest włączony (do ponownego uruchomienia)
+✖  Tryb podpisu testowego jest wyłączony (do ponownego uruchomienia)
+Błąd: bcdedit zakończył się kodem %lu.
+Speak2Mic nie może działać: Secure Boot jest włączony, a sterownik Speak2Mic z podpisem testowym nie ładuje się przy nim.\n\nWyłącz Secure Boot w ustawieniach UEFI (VMware: VM → Settings → Options → Advanced), a następnie uruchom Speak2Mic-Setup.exe.
+Speak2Mic nie może działać: tryb podpisu testowego systemu Windows jest wyłączony, a bez niego sterownik Speak2Mic się nie ładuje.\n\nUruchom Speak2Mic-Setup.exe, kliknij „Włącz tryb testowy” i uruchom ponownie komputer.
+Speak2Mic nie może działać: sterownik Speak2Mic nie jest zainstalowany.\n\nUruchom Speak2Mic-Setup.exe i kliknij „Zainstaluj”.
+Otworzyć teraz instalator Speak2Mic?
+Odtwórz
+Pauza
+Nie udało się odtworzyć mp3 (0x%08lX).
+Test dźwięku uruchomiony.
+Test dźwięku zatrzymany.
+Test dźwięku zakończony.
+Muzyka: odtwarzanie (%ls).
+Muzyka: pauza (%ls).
+Muzyka zatrzymana: brak plików mp3 w folderze.
+Muzyka: następny utwór (%ls).
+Speak2Mic nie obsługuje systemu Windows na procesorach ARM.
+Nie znaleziono instalatora dla tego systemu: %ls\n\nRozpakuj całe archiwum.
+Inny program zmienił głośność mikrofonu (%d %%) — przywrócono %d %% (razy: %d).
+Głośność mikrofonu zmienił program %ls (%d %%) — przywrócono %d %% (razy: %d).
+Nie udało się rozpakować instalatora do folderu tymczasowego.
+Otwórz panel sterowania
+Zakończ
+Uruchamiaj panel sterowania razem z Windows (w zasobniku)
+Autostart panelu sterowania włączony.
+Autostart panelu sterowania wyłączony.

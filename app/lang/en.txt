@@ -1,0 +1,315 @@
+the system format settings interface is unavailable
+Windows did not accept the format (0x%08lX); the previous format was kept
+Windows did not accept the format (0x%08lX)
+Device not found
+Connecting…
+Cannot access the device (0x%08lX)
+%lu Hz · %u-bit%ls · %u ch
+Device disconnected
+Capture error
+the device is not configured
+the device failed to start (the driver returned an error on start)
+the driver needs to be reinstalled
+the device is disabled
+the device is not present
+the driver is not installed
+Windows could not load the driver for the device
+error in the driver's DriverEntry
+the driver did not load (damaged or incompatible)
+the driver reported a device error
+the device is not connected right now
+the driver is blocked by policy
+Windows could not verify the driver signature (enable test mode)
+see the code in Device Manager
+active
+disabled
+not present
+unplugged
+  sound device "%ls": %ls
+Running driver version %ls, package version %ls.
+WARNING: the running driver is not the version in the package. Click "Reinstall" or restart the computer.
+Running driver version %ls.
+The Speak2Mic driver service is not registered.
+Driver service: %ls.
+running
+stopped
+starting/stopping
+Test signing mode: %ls; Secure Boot: %ls.
+on
+off
+Device ROOT\\Speak2Mic not found: the driver is not installed.
+The device is not started: code %lu — %ls.
+The Speak2Mic device is started.
+The Speak2Mic sound devices are not active. "Disabled": enable them in Sound (mmsys.cpl); "not present": restart the Windows audio services or the computer.
+The driver is running, but Windows did not create the Speak2Mic sound devices.
+Speak2Mic Setup
+Removing the previous version…
+\nDetailed log: %ls\n
+Speak2Mic is installed (devices: %d)\n
+Speak2Mic is not installed\n
+Test signing mode: %ls\n
+Custom
+Voice — 16 kHz · 16-bit · mono
+Standard — 48 kHz · 16-bit · stereo
+High — 48 kHz · 24-bit · stereo
+Studio — 96 kHz · 24-bit · stereo
+Maximum — 192 kHz · 32-bit · stereo
+Auto (16–32)
+16-bit
+24-bit
+32-bit
+1 (mono)
+2 (stereo)
+4 (quad)
+Cable signal quality
+Preset:
+Sample rate:
+Bit depth:
+Channels:
+Latency, ms:
+Apply
+Signal level
+%lu Hz
+The Speak2Mic driver is not installed: settings cannot be applied.
+%lu-bit
+16–32-bit
+Driver now: %lu Hz · %ls · up to %lu ch · latency %lu ms
+%ls — playback (programs play into it)
+%ls — microphone (recording programs hear this)
+Device not found: the driver is not installed or is restarting.
+no signal
+%.1f dB
+The default format was not set on all Speak2Mic devices: %ls
+The Speak2Mic devices did not come back after the restart: the default format was not set.
+Settings applied: %lu Hz, %lu ch. Windows did not accept %u-bit, the default format is 16-bit.
+Settings applied: default format %lu Hz, %u-bit, %lu ch.
+Applying settings, the device is restarting…
+Administrator rights are required: the request was declined.
+The Speak2Mic driver is not installed.
+Settings saved, but the Speak2Mic device was not found: they apply once it is installed.
+Settings saved. Windows could not restart the device on the fly: restart the computer.
+Settings saved, but the device could not be restarted: restart the computer.
+Setting the default format of the Speak2Mic devices…
+Speak2Mic — control panel
+— Installing Speak2Mic —
+Stopping the Windows Audio service during installation…
+The Windows Audio service is started.
+Checking: waiting for the device and the sound devices to start…
+The sound devices did not appear: restarting the Windows audio services…
+— Diagnostics —
+— Removing Speak2Mic —
+— Enabling test signing mode —
+✔  Test signing mode is on
+✖  Test signing mode is off
+✔  Secure Boot is off
+✖  Secure Boot is on
+•  The Speak2Mic driver is not installed
+✔  The Speak2Mic driver is installed
+✔  The Speak2Mic driver is installed, version %ls (same as the installer)
+✔  The Speak2Mic driver is installed, version %ls; the installer has %ls
+Reinstall
+Install
+Virtual audio cable: speaker sound → microphone
+System status
+Enable test mode
+Remove
+Start Speak2Mic after installation
+Desktop shortcut
+Start menu shortcuts
+Diagnostics
+Open log
+Close
+Driver files are missing next to the installer (Speak2Mic.inf/.sys/.cat/.cer, Speak2Mic-Publisher.cer). Extract the whole archive.
+Turn off Secure Boot first: with it Windows does not load test-signed drivers.
+Click "Enable test mode", restart the computer and run the installer again.
+Speak2Mic is already installed. You can reinstall or remove it.
+Ready to install. Click "Install".
+Restart the computer to finish the installation.
+The driver is installed, but the Speak2Mic sound devices do not work: see the reason above.
+Detailed log: %ls ("Open log" button). Please send it to the developer.
+Done: "Speak2Mic Speaker" and "Speak2Mic Microphone" are in the sound settings.
+Test mode takes effect after a restart.\n\nRestart the computer now?
+The operation failed: see the details above.
+Remove the Speak2Mic driver and its devices?
+the driver package has no signed catalog (.cat)
+Windows could not add the package to the driver store
+no matching driver found in the INF
+the file has no digital signature
+the signing certificate is not trusted (the root certificate is not installed)
+the certificate cannot be used for this purpose
+the signature is damaged or the file was changed after signing
+the certificate has expired or is not valid yet (check the clock)
+Error: %ls (0x%08lX): %ls. Details: C:\\Windows\\INF\\setupapi.dev.log
+Error: %ls (0x%08lX) %ls
+certificate not found
+cannot read the certificate
+The Speak2Mic test certificates were added to the trusted stores (root CA and publisher).
+Error: file not found: %ls
+cannot read the device class from the INF
+cannot create the device
+Device %ls created.
+Installing the driver… If Windows asks about the publisher, choose "Install this driver software anyway".
+cannot install the driver
+Installation was cancelled in the driver warning window.
+The driver is installed. A restart is required.
+The driver is installed.
+Driver package %ls removed from the driver store.
+Driver settings reset (the "Standard" preset after installation).
+cannot remove the device
+Devices removed: %d.
+Speak2Mic was not installed.
+cannot run bcdedit
+Error: bcdedit exited with code %lu. If Secure Boot is on, turn it off first.
+Test signing mode is on. Restart the computer and run the installation again.
+Speak2Mic — setup and diagnostics.lnk
+Speak2Mic logs.lnk
+Error: cannot determine the Program Files folder.
+The programs are already in %ls.
+Error: %ls is in use: close Speak2Mic and try again.
+Error copying %ls (code %lu).
+Programs installed to %ls.
+Speak2Mic — speaker sound into a virtual microphone
+Desktop shortcut created.
+Cannot create the desktop shortcut.
+Speak2Mic control panel
+Install, reinstall, remove and diagnose Speak2Mic
+Speak2Mic log folder
+Start menu shortcuts created (Speak2Mic folder).
+Not all Start menu shortcuts could be created.
+Shortcuts removed.
+Cannot delete %ls (code %lu): close Speak2Mic.
+Shortcuts and programs removed; the folder %ls is deleted after the installer closes.
+Shortcuts and programs removed from %ls.
+Language:
+Version %ls
+Speak2Mic Setup %ls
+Device names
+Speaker:
+Microphone:
+Rename
+Names changed.
+Cannot rename (0x%08lX).
+Reset all settings
+Reset all Speak2Mic settings to the defaults?\n\nSignal quality: the "Standard" preset; device names: the defaults.
+All settings were reset to the defaults.
+Microphone volume:
+Mute
+Export settings…
+Import settings…
+Speak2Mic settings files (*.ini)
+Settings saved to %ls
+Cannot save the settings (code %lu).
+Settings loaded from %ls
+The file does not look like Speak2Mic settings.
+Update
+Microphone channels:
+Same as speaker
+Test
+Stop
+Sound test failed (0x%08lX).
+Signal quality settings kept for the new version.
+Old Speak2Mic sound devices removed: %d.
+Open the volume mixer
+Clear the event log
+Speak2Mic control panel started, version %ls
+The event log was cleared.
+Disable test mode
+— Disabling test signing mode —
+Test signing mode will be off after the computer restarts.
+Test mode turns off after a restart.\n\nRestart the computer now?
+Without test mode the Speak2Mic driver will not load: the Speak2Mic audio devices disappear until the mode is enabled again.\n\nDisable test mode?
+✔  Test signing mode is on (until restart)
+✖  Test signing mode is off (until restart)
+Error: bcdedit exited with code %lu.
+Speak2Mic cannot work: Secure Boot is on, and the test-signed Speak2Mic driver does not load with it.\n\nTurn Secure Boot off in the UEFI settings (VMware: VM → Settings → Options → Advanced), then run Speak2Mic-Setup.exe.
+Speak2Mic cannot work: Windows test signing mode is off, and the Speak2Mic driver does not load without it.\n\nRun Speak2Mic-Setup.exe, click "Enable test mode" and restart the computer.
+Speak2Mic cannot work: the Speak2Mic driver is not installed.\n\nRun Speak2Mic-Setup.exe and click "Install".
+Open the Speak2Mic installer now?
+Play
+Pause
+Could not play mp3 (0x%08lX).
+Sound test started.
+Sound test stopped.
+Sound test finished.
+Music: playing (%ls).
+Music: paused (%ls).
+Music stopped: no mp3 files in the folder.
+Music: next track (%ls).
+Speak2Mic does not support Windows on ARM processors.
+The installer for this system was not found: %ls\n\nExtract the whole archive.
+Another program changed the microphone volume (%d %%): set back to %d %% (times: %d).
+The microphone volume was changed by %ls (%d %%): set back to %d %% (times: %d).
+Could not extract the installer to a temporary folder.
+Open the control panel
+Exit
+Start the control panel with Windows (in the tray)
+Control panel autostart on.
+Control panel autostart off.
+[driver] the driver log is empty: the driver has never started
+[driver] ---- driver log (DriverLog) ----
+[setupapi] cannot open %ls (%lu)
+[setupapi] setupapi.dev.log has no Speak2Mic entries
+[setupapi] ---- last setupapi.dev.log section about Speak2Mic ----
+---- diagnostics ----
+Cables created by the driver on start: %lu (code 0x%08lX).
+---- end of diagnostics (result %d) ----
+---- filter check (as the Audio Endpoint Builder sees them) ----
+Driver filters: %d interfaces found; formats accepted by the check (PROPOSEDATAFORMAT): %d of %d.
+Windows does not see any interface of the driver's filters.
+The format check (PROPOSEDATAFORMAT) is turned off in the driver (ProposeFormat = 0, code %lu); Windows picks the format by opening a test stream.
+The driver did not answer the format check (PROPOSEDATAFORMAT, code %lu) although it is on: please send setup.log.
+The filter rejected the test formats (code %lu). If no sound passes, please send setup.log.
+---- end of filter check ----
+(the driver log is empty or unavailable)
+  device format (Windows):     %ls  [0x%08lX]
+  default format (OEM):        %ls  [0x%08lX]
+  mix format:                  %ls  [0x%08lX]
+PCM 24 (3 bytes)
+PCM 24 in 32
+  format check (%lu Hz): IsFormatSupported exclusive / shared / exclusive stream open
+    %u ch %-17ls %-10ls  exclusive 0x%08lX %-28ls shared 0x%08lX %-22ls open 0x%08lX %ls
+plain
+  default format change (IPolicyConfig::SetDeviceFormat), %lu Hz %u ch:
+mix float ext
+mix float plain
+mix = device
+ -> now: 
+  previous format restored: 0x%08lX
+==== Speak2Mic sound devices: %d ====
+playback
+recording
+  device properties:
+==== driver settings (%ls) ====
+  %-14ls (not set, default)
+ProposeFormat = %lu, restarting the Speak2Mic device…
+Cannot write the setting (administrator rights are required).
+The Speak2Mic device was not found.
+Restart: %ls%ls
+done
+FAILED
+, Windows asks for a restart
+The Speak2Mic sound devices are present.
+The Speak2Mic sound devices did NOT appear within 15 s.
+Speak2Mic — format debugging
+Usage: s2mdebug [formats | level | sounds | propose on|off] [--lang ru|en]
+Close the Speak2Mic control panel and programs that use Speak2Mic Speaker/Mic: otherwise the exclusive
+stream open test will report "device in use".
+==== diagnostics ====
+==== driver log during the tests ====
+Done. Full report: %ls
+Press Enter to exit.
+The sound devices still did not appear: turning off the driver's format check (ProposeFormat = 0) and restarting the device…
+With ProposeFormat = 0 the sound devices appeared.
+With ProposeFormat = 0 the sound devices did not appear either.
+==== level check (1 kHz tone, −20 dBFS, 3 s) ====
+  Windows volume "%ls": %.0f%% (%.1f dB, range %.1f…%.1f dB), sound %ls, control %ls
+in the driver
+software
+  Speak2Mic Speaker/Mic not found or not active: level check skipped.
+  cannot start the level check (0x%08lX, step %d)
+  played into Speak2Mic Speaker:           peak %6.1f dBFS, RMS %6.1f dBFS
+  Speak2Mic Speaker output (loopback):     peak %6.1f dBFS, RMS %6.1f dBFS
+  Speak2Mic Microphone:                    peak %6.1f dBFS, RMS %6.1f dBFS
+  difference mic − speaker output: %+.1f dB (should be about 0)
+==== Windows sounds (WAV resources) ====
+Sounds found: %d. Folder: %ls

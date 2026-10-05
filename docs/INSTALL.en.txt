@@ -1,0 +1,63 @@
+Speak2Mic (x64) — virtual audio cable: "Speak2Mic Speaker" (playback) -> "Speak2Mic Microphone" (microphone)
+=====================================================================================================
+
+IMPORTANT: the driver is signed with a test certificate, so Windows test signing mode is required.
+Install it in a virtual machine and take a snapshot first.
+
+1. Preparation (once)
+   - VMware: power off the VM, VM > Settings > Options > Advanced > clear "Enable UEFI Secure Boot".
+
+2. Installation
+   - Run Speak2Mic-Setup.exe (asks for administrator rights). The window shows the system status.
+   - If test signing mode is off: "Enable test mode" -> restart -> run Speak2Mic-Setup.exe again.
+     The same button later turns the mode off ("Disable test mode" -> restart). Without test mode the
+     driver does not load: the Speak2Mic devices are gone until the mode is enabled again.
+   - "Install". If Windows says it cannot verify the publisher, choose
+     "Install this driver software anyway".
+   - "Desktop shortcut" and "Start menu shortcuts" are optional.
+   - The programs are copied to C:\Program Files\Speak2Mic\ (run Speak2Mic-Setup.exe from there later
+     to reinstall, diagnose or remove; there is a Start menu shortcut).
+   - "Speak2Mic Speaker" and "Speak2Mic Microphone" appear in Sound settings, then Speak2Mic.exe opens.
+   - Fallback without a window: install.cmd as administrator
+     (enable test mode yourself:  bcdedit /set testsigning on  and restart).
+
+3. VM sound -> virtual microphone
+   - Settings -> System -> Sound: output device "Speak2Mic Speaker".
+   - In recording programs choose the microphone "Speak2Mic Microphone". The meters in Speak2Mic.exe show the signal.
+   - To hear the sound too: Control Panel -> Sound -> Recording -> "Speak2Mic Microphone" -> Properties ->
+     "Listen" -> "Listen to this device" -> the VMware speakers.
+
+4. Signal quality
+   - Speak2Mic.exe, "Cable signal quality": a preset or sample rate/bit depth/channels -> "Apply".
+     The panel restarts the driver and sets this default format on the Speak2Mic devices
+     (Sound -> Properties -> Advanced -> "Default Format").
+
+5. Device names and reset
+   - Speak2Mic.exe, "Device names": type your names -> "Rename" (an empty box restores the default
+     name). "Reset all settings" at the top left restores the "Standard" preset and the default
+     names (the language is kept).
+   - "Export settings…" / "Import settings…" at the bottom: an .ini file with the signal quality, names,
+     microphone volume and mute (the language is not included).
+
+6. Interface language
+   - The system language by default (Windows display language or regional format) if it is one of the
+     17 languages, English otherwise. A language chosen by hand is kept. Change it with the
+     "Language" list in the top right corner of Speak2Mic.exe or Speak2Mic-Setup.exe; the program restarts.
+     Console s2minstall.exe and s2mdebug.exe: --lang ru|en|uk|be|de|...
+
+7. Removal
+   - Speak2Mic-Setup.exe -> "Remove" (or uninstall.cmd as administrator). The driver, the programs in
+     C:\Program Files\Speak2Mic and the shortcuts are removed.
+
+Logs
+   - All programs write logs to C:\ProgramData\Speak2Mic\logs\ (setup.log, panel.log,
+     install.log, debug.log). The driver keeps its own log in the registry; Speak2Mic-Setup.exe ->
+     "Diagnostics" adds it to setup.log together with the device state and part of
+     C:\Windows\INF\setupapi.dev.log.
+   - If something does not work: Speak2Mic-Setup.exe -> "Diagnostics" -> "Open log" and send setup.log.
+   - Format problems: close Speak2Mic.exe and run s2mdebug.exe as administrator, then send debug.log.
+
+Troubleshooting
+   - Code 52 in Device Manager: test mode is off or Secure Boot is on.
+   - Blue screen: revert the snapshot and send C:\Windows\Minidump\*.dmp.
+   - Clicks: increase the latency in Speak2Mic.exe (50–100 ms).

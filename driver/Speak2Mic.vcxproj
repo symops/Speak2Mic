@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Visual Studio 2022 + Windows Driver Kit (WDK) project for the Speak2Mic WDM/PortCls driver. -->
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{5B0C2E6A-8D41-4F3B-9A57-2C1E8F4D7B90}</ProjectGuid>
+    <RootNamespace>Speak2Mic</RootNamespace>
+    <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
+    <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
+    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+    <WindowsTargetPlatformVersion>$(LatestTargetPlatformVersion)</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>Driver</ConfigurationType>
+    <DriverType>WDM</DriverType>
+    <!-- Desktop, not Universal: the INF writes endpoint names under HKLM\...\MediaCategories. -->
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
+    <SpectreMitigation>false</SpectreMitigation>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)' == 'Debug'">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)' == 'Release'">
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <PropertyGroup>
+    <TargetName>Speak2Mic</TargetName>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>false</TreatWarningAsError>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(DDK_LIB_PATH)portcls.lib;$(DDK_LIB_PATH)stdunk.lib;$(DDK_LIB_PATH)libcntpr.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <DriverSign>
+      <FileDigestAlgorithm>sha256</FileDigestAlgorithm>
+    </DriverSign>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <ClCompile Include="adapter.cpp" />
+    <ClCompile Include="cable.cpp" />
+    <ClCompile Include="minwave.cpp" />
+    <ClCompile Include="mintopo.cpp" />
+    <ClCompile Include="guids.cpp" />
+    <ClCompile Include="log.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="common.h" />
+    <ClInclude Include="compat.h" />
+    <ClInclude Include="pinnames.h" />
+    <ClInclude Include="cable.h" />
+    <ClInclude Include="minwave.h" />
+    <ClInclude Include="mintopo.h" />
+    <ClInclude Include="log.h" />
+    <ClInclude Include="version.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Speak2Mic.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Inf Include="Speak2Mic.inf" />
+  </ItemGroup>
+  <ItemGroup>
+    <FilesToPackage Include="$(TargetPath)" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

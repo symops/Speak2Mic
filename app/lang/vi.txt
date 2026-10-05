@@ -1,0 +1,247 @@
+giao diện hệ thống để cài đặt định dạng không khả dụng
+Windows không chấp nhận định dạng (0x%08lX); giữ nguyên định dạng trước đó
+Windows không chấp nhận định dạng (0x%08lX)
+Không tìm thấy thiết bị
+Đang kết nối…
+Không truy cập được thiết bị (0x%08lX)
+%lu Hz · %u bit%ls · %u kênh
+Thiết bị đã ngắt kết nối
+Lỗi thu âm
+thiết bị chưa được cấu hình
+không khởi động được thiết bị (trình điều khiển trả về lỗi khi khởi động)
+cần cài đặt lại trình điều khiển
+thiết bị bị vô hiệu hóa
+thiết bị không có mặt
+trình điều khiển chưa được cài đặt
+Windows không tải được trình điều khiển cho thiết bị
+lỗi trong DriverEntry của trình điều khiển
+trình điều khiển không tải được (bị hỏng hoặc không tương thích)
+trình điều khiển báo lỗi thiết bị
+thiết bị hiện không được kết nối
+trình điều khiển bị chặn bởi chính sách
+Windows không kiểm tra được chữ ký trình điều khiển (hãy bật chế độ thử nghiệm)
+xem mã trong Trình quản lý Thiết bị
+hoạt động
+đã tắt
+không có mặt
+chưa cắm
+  thiết bị âm thanh “%ls”: %ls
+Trình điều khiển đang chạy phiên bản %ls, trong gói: %ls.
+CHÚ Ý: trình điều khiển đang chạy không phải phiên bản trong gói. Nhấn “Cài đặt lại” hoặc khởi động lại máy tính.
+Trình điều khiển đang chạy phiên bản %ls.
+Dịch vụ trình điều khiển Speak2Mic chưa được đăng ký.
+Dịch vụ trình điều khiển: %ls.
+đang chạy
+đã dừng
+đang khởi động/dừng
+Chế độ ký thử nghiệm: %ls; Secure Boot: %ls.
+bật
+tắt
+Không tìm thấy thiết bị ROOT\\Speak2Mic: trình điều khiển chưa được cài đặt.
+Thiết bị chưa khởi động: mã %lu — %ls.
+Thiết bị Speak2Mic đã khởi động.
+Các thiết bị âm thanh Speak2Mic không hoạt động. “Đã tắt”: bật trong Âm thanh (mmsys.cpl); “không có mặt”: khởi động lại dịch vụ âm thanh Windows hoặc máy tính.
+Trình điều khiển đang chạy nhưng Windows chưa tạo các thiết bị âm thanh Speak2Mic.
+Cài đặt Speak2Mic
+Đang gỡ phiên bản trước…
+\nNhật ký chi tiết: %ls\n
+Speak2Mic đã được cài đặt (thiết bị: %d)\n
+Speak2Mic chưa được cài đặt\n
+Chế độ ký thử nghiệm: %ls\n
+Tùy chỉnh
+Giọng nói — 16 kHz · 16 bit · mono
+Tiêu chuẩn — 48 kHz · 16 bit · stereo
+Cao — 48 kHz · 24 bit · stereo
+Phòng thu — 96 kHz · 24 bit · stereo
+Tối đa — 192 kHz · 32 bit · stereo
+Tự động (16–32)
+16 bit
+24 bit
+32 bit
+1 (mono)
+2 (stereo)
+4 (quad)
+Chất lượng tín hiệu cáp
+Mẫu cài đặt:
+Tần số:
+Độ sâu bit:
+Kênh:
+Độ trễ, ms:
+Áp dụng
+Mức tín hiệu
+%lu Hz
+Trình điều khiển Speak2Mic chưa được cài đặt: không thể áp dụng cài đặt.
+%lu bit
+16–32 bit
+Hiện tại trong trình điều khiển: %lu Hz · %ls · tối đa %lu kênh · độ trễ %lu ms
+%ls — phát lại (các chương trình phát vào đây)
+%ls — micrô (các chương trình ghi âm nghe thấy âm thanh này)
+Không tìm thấy thiết bị: trình điều khiển chưa được cài đặt hoặc đang khởi động lại.
+không có tín hiệu
+%.1f dB
+Chưa đặt được định dạng mặc định cho tất cả thiết bị Speak2Mic: %ls
+Thiết bị Speak2Mic không xuất hiện lại sau khi khởi động lại: chưa đặt định dạng mặc định.
+Đã áp dụng cài đặt: %lu Hz, %lu kênh. Windows không chấp nhận %u bit, định dạng mặc định là 16 bit.
+Đã áp dụng cài đặt: định dạng mặc định %lu Hz, %u bit, %lu kênh.
+Đang áp dụng cài đặt, thiết bị đang khởi động lại…
+Cần quyền quản trị viên: yêu cầu đã bị từ chối.
+Trình điều khiển Speak2Mic chưa được cài đặt.
+Đã lưu cài đặt nhưng không tìm thấy thiết bị Speak2Mic: cài đặt sẽ áp dụng sau khi thiết bị được cài.
+Đã lưu cài đặt. Windows không khởi động lại được thiết bị khi đang chạy: hãy khởi động lại máy tính.
+Đã lưu cài đặt nhưng không khởi động lại được thiết bị: hãy khởi động lại máy tính.
+Đang đặt định dạng mặc định cho thiết bị Speak2Mic…
+Speak2Mic — bảng điều khiển
+— Đang cài đặt Speak2Mic —
+Đang dừng dịch vụ Windows Audio trong khi cài đặt…
+Dịch vụ Windows Audio đã khởi động.
+Kiểm tra: đang chờ thiết bị và các thiết bị âm thanh khởi động…
+Các thiết bị âm thanh không xuất hiện: đang khởi động lại dịch vụ âm thanh Windows…
+— Chẩn đoán —
+— Đang gỡ Speak2Mic —
+— Đang bật chế độ ký thử nghiệm —
+✔  Chế độ ký thử nghiệm đang bật
+✖  Chế độ ký thử nghiệm đang tắt
+✔  Secure Boot đang tắt
+✖  Secure Boot đang bật
+•  Trình điều khiển Speak2Mic chưa được cài đặt
+✔  Trình điều khiển Speak2Mic đã được cài đặt
+✔  Trình điều khiển Speak2Mic đã được cài đặt, phiên bản %ls (giống trình cài đặt)
+✔  Trình điều khiển Speak2Mic đã được cài đặt, phiên bản %ls; trình cài đặt có %ls
+Cài đặt lại
+Cài đặt
+Cáp âm thanh ảo: âm thanh loa → micrô
+Trạng thái hệ thống
+Bật chế độ thử nghiệm
+Gỡ bỏ
+Chạy Speak2Mic sau khi cài đặt
+Lối tắt trên màn hình nền
+Lối tắt trong menu Start
+Chẩn đoán
+Mở nhật ký
+Đóng
+Thiếu tệp trình điều khiển bên cạnh trình cài đặt (Speak2Mic.inf/.sys/.cat/.cer, Speak2Mic-Publisher.cer). Hãy giải nén toàn bộ tệp lưu trữ.
+Trước tiên hãy tắt Secure Boot: khi bật, Windows không tải trình điều khiển ký thử nghiệm.
+Nhấn “Bật chế độ thử nghiệm”, khởi động lại máy tính rồi chạy lại trình cài đặt.
+Speak2Mic đã được cài đặt. Bạn có thể cài đặt lại hoặc gỡ bỏ.
+Sẵn sàng cài đặt. Nhấn “Cài đặt”.
+Khởi động lại máy tính để hoàn tất cài đặt.
+Trình điều khiển đã được cài đặt nhưng thiết bị âm thanh Speak2Mic không hoạt động: xem nguyên nhân ở trên.
+Nhật ký chi tiết: %ls (nút “Mở nhật ký”). Hãy gửi cho nhà phát triển.
+Xong: “Speak2Mic Speaker” và “Speak2Mic Microphone” đã có trong cài đặt âm thanh.
+Chế độ thử nghiệm sẽ bật sau khi khởi động lại.\n\nKhởi động lại máy tính ngay bây giờ?
+Thao tác thất bại: xem chi tiết ở trên.
+Gỡ trình điều khiển Speak2Mic và các thiết bị của nó?
+gói trình điều khiển không có danh mục đã ký (.cat)
+Windows không thêm được gói vào kho trình điều khiển
+không tìm thấy trình điều khiển phù hợp trong INF
+tệp không có chữ ký số
+chứng chỉ ký không đáng tin cậy (chưa cài chứng chỉ gốc)
+không thể dùng chứng chỉ cho mục đích này
+chữ ký bị hỏng hoặc tệp đã bị thay đổi sau khi ký
+chứng chỉ đã hết hạn hoặc chưa có hiệu lực (kiểm tra đồng hồ)
+Lỗi: %ls (0x%08lX): %ls. Chi tiết: C:\\Windows\\INF\\setupapi.dev.log
+Lỗi: %ls (0x%08lX) %ls
+không tìm thấy chứng chỉ
+không đọc được chứng chỉ
+Đã thêm chứng chỉ thử nghiệm Speak2Mic vào kho tin cậy (CA gốc và nhà phát hành).
+Lỗi: không tìm thấy tệp %ls
+không đọc được lớp thiết bị từ INF
+không tạo được thiết bị
+Đã tạo thiết bị %ls.
+Đang cài trình điều khiển… Nếu Windows hỏi về nhà phát hành, hãy chọn “Vẫn cài đặt phần mềm trình điều khiển này”.
+không cài được trình điều khiển
+Đã hủy cài đặt trong cửa sổ cảnh báo trình điều khiển.
+Đã cài trình điều khiển. Cần khởi động lại.
+Đã cài trình điều khiển.
+Đã gỡ gói trình điều khiển %ls khỏi kho trình điều khiển.
+Đã đặt lại cài đặt trình điều khiển (sau khi cài: mẫu “Tiêu chuẩn”).
+không gỡ được thiết bị
+Số thiết bị đã gỡ: %d.
+Speak2Mic chưa từng được cài đặt.
+không chạy được bcdedit
+Lỗi: bcdedit kết thúc với mã %lu. Nếu Secure Boot đang bật, hãy tắt nó trước.
+Chế độ ký thử nghiệm đã bật. Khởi động lại máy tính rồi chạy lại cài đặt.
+Speak2Mic — cài đặt và chẩn đoán.lnk
+Nhật ký Speak2Mic.lnk
+Lỗi: không xác định được thư mục Program Files.
+Các chương trình đã có trong %ls.
+Lỗi: %ls đang được dùng: hãy đóng Speak2Mic rồi thử lại.
+Lỗi sao chép %ls (mã %lu).
+Đã cài các chương trình vào %ls.
+Speak2Mic — âm thanh loa vào micrô ảo
+Đã tạo lối tắt trên màn hình nền.
+Không tạo được lối tắt trên màn hình nền.
+Bảng điều khiển Speak2Mic
+Cài đặt, cài đặt lại, gỡ bỏ và chẩn đoán Speak2Mic
+Thư mục nhật ký Speak2Mic
+Đã tạo lối tắt trong menu Start (thư mục Speak2Mic).
+Không tạo được tất cả lối tắt trong menu Start.
+Đã xóa lối tắt.
+Không xóa được %ls (mã %lu): hãy đóng Speak2Mic.
+Đã xóa lối tắt và chương trình; thư mục %ls sẽ bị xóa sau khi đóng trình cài đặt.
+Đã xóa lối tắt và chương trình khỏi %ls.
+Ngôn ngữ:
+Phiên bản %ls
+Cài đặt Speak2Mic %ls
+Tên thiết bị
+Loa:
+Micrô:
+Đổi tên
+Đã đổi tên.
+Không đổi tên được (0x%08lX).
+Đặt lại tất cả
+Đặt lại mọi cài đặt Speak2Mic về mặc định?\n\nChất lượng tín hiệu: mẫu “Tiêu chuẩn”; tên thiết bị: mặc định.
+Đã đặt lại mọi cài đặt về mặc định.
+Âm lượng micrô:
+Tắt tiếng
+Xuất cài đặt…
+Nhập cài đặt…
+Tệp cài đặt Speak2Mic (*.ini)
+Đã lưu cài đặt vào %ls
+Không lưu được cài đặt (mã %lu).
+Đã tải cài đặt từ %ls
+Tệp này không giống cài đặt Speak2Mic.
+Cập nhật
+Kênh micrô:
+Giống loa
+Kiểm tra
+Dừng
+Kiểm tra âm thanh thất bại (0x%08lX).
+Đã giữ cài đặt chất lượng tín hiệu cho phiên bản mới.
+Số thiết bị âm thanh Speak2Mic cũ đã xóa: %d.
+Mở bộ trộn âm lượng
+Xóa nhật ký sự kiện
+Đã khởi động bảng điều khiển Speak2Mic, phiên bản %ls
+Đã xóa nhật ký sự kiện.
+Tắt chế độ thử nghiệm
+— Đang tắt chế độ ký thử nghiệm —
+Chế độ ký thử nghiệm sẽ tắt sau khi máy tính khởi động lại.
+Chế độ thử nghiệm sẽ tắt sau khi khởi động lại.\n\nKhởi động lại máy tính ngay bây giờ?
+Không có chế độ thử nghiệm, trình điều khiển Speak2Mic sẽ không tải: các thiết bị âm thanh Speak2Mic sẽ biến mất cho đến khi bật lại chế độ này.\n\nTắt chế độ thử nghiệm?
+✔  Chế độ ký thử nghiệm đang bật (đến khi khởi động lại)
+✖  Chế độ ký thử nghiệm đang tắt (đến khi khởi động lại)
+Lỗi: bcdedit kết thúc với mã %lu.
+Speak2Mic không thể hoạt động: Secure Boot đang bật, và trình điều khiển Speak2Mic ký thử nghiệm không tải được khi đó.\n\nHãy tắt Secure Boot trong cài đặt UEFI (VMware: VM → Settings → Options → Advanced), sau đó chạy Speak2Mic-Setup.exe.
+Speak2Mic không thể hoạt động: chế độ ký thử nghiệm của Windows đang tắt, thiếu nó trình điều khiển Speak2Mic không tải.\n\nHãy chạy Speak2Mic-Setup.exe, bấm "Bật chế độ thử nghiệm" rồi khởi động lại máy tính.
+Speak2Mic không thể hoạt động: trình điều khiển Speak2Mic chưa được cài đặt.\n\nHãy chạy Speak2Mic-Setup.exe và bấm "Cài đặt".
+Mở trình cài đặt Speak2Mic ngay bây giờ?
+Phát
+Tạm dừng
+Không phát được mp3 (0x%08lX).
+Đã bắt đầu kiểm tra âm thanh.
+Đã dừng kiểm tra âm thanh.
+Kiểm tra âm thanh đã xong.
+Nhạc: đang phát (%ls).
+Nhạc: tạm dừng (%ls).
+Nhạc đã dừng: thư mục không có tệp mp3.
+Nhạc: bài tiếp theo (%ls).
+Speak2Mic không hỗ trợ Windows trên bộ xử lý ARM.
+Không tìm thấy trình cài đặt cho hệ thống này: %ls\n\nHãy giải nén toàn bộ tệp lưu trữ.
+Một chương trình khác đã thay đổi âm lượng micrô (%d %%): đã đặt lại %d %% (lần: %d).
+Âm lượng micrô đã bị %ls thay đổi (%d %%): đã đặt lại %d %% (lần: %d).
+Không thể giải nén trình cài đặt vào thư mục tạm.
+Mở bảng điều khiển
+Thoát
+Khởi động bảng điều khiển cùng Windows (trong khay hệ thống)
+Đã bật tự khởi động bảng điều khiển.
+Đã tắt tự khởi động bảng điều khiển.
