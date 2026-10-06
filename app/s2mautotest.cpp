@@ -14,8 +14,10 @@
 //   format     default format with a random bit depth (Windows may refuse 24/32 bit: 16 is accepted as fallback)
 //   stress     open/close shared-mode streams many times
 //   testsound  the panel's "Test" (Windows' test melodies per channel), started and stopped
-//   music      the panel's "Play / Pause" (mp3 folder next to this program): plays, pauses, continues the same track,
-//              measured on the microphone; a folder without mp3 starts nothing (skipped if there are no mp3 files)
+//   music      the panel's "Play / Pause" on music it generates at the start (the same melody as MP3, FLAC and WAV when
+//              Windows has the encoders; one folder per format, one with all of them plus a broken file and a text file)
+//              or on the Generator: plays, pauses, continues the same track, measured on the microphone; a folder
+//              without music starts nothing. The generated music is removed at the end.
 //   orphans    the number of leftover endpoint records must not grow
 //   cli        s2mctl.exe with random commands (status, set, name, volume, mute, export/import, invalid arguments,
 //              test): exit codes and the resulting state
@@ -27,6 +29,8 @@
 #include "devctl.h"
 #include "diag.h"
 #include "mp3player.h"
+#include "atmusic.h"
+#include <mfapi.h>
 #include "../driver/version.h"
 #include <stdio.h>
 #include <stdarg.h>
@@ -1131,23 +1135,50 @@ static void CheckNewOrphans(const wchar_t* action)
 }
 
 // The panel's "Play / Pause": the mp3 player (same code) on the speaker, measured on the microphone.
+static TestMusic g_music;          // generated at the start, removed at the end (atmusic.h)
+
+static void MusicLogLine(const wchar_t* line) { Out(L"%ls", line); }
+
 static void ActionMusic()
 {
-    wchar_t folder[MAX_PATH], empty[MAX_PATH];
-    Mp3DefaultFolder(folder);
-    if (!Mp3FolderHasFiles(folder))
+    // The source: the generated music (one format, or all of them with a broken file and a text file among them),
+    // the Generator, or the program's own mp3 folder when nothing could be generated.
+    wchar_t folder[MAX_PATH];
+    const wchar_t* what = L"";
+    int pick = g_music.formatCount ? Rand(0, g_music.formatCount + 1) : -1;
+    if (pick >= 0 && pick < g_music.formatCount)
     {
-        Out(L"[music] skipped: no music files (mp3, wav, flac, ogg) in %ls", folder);
-        return;
+        wcscpy(folder, g_music.formats[pick].folder);
+        what = g_music.formats[pick].format;
     }
-    Out(L"[music] random music file from %ls on the speaker", folder);
+    else if (pick == g_music.formatCount)
+    {
+        wcscpy(folder, g_music.all);
+        what = L"all formats + a broken file";
+    }
+    else if (pick > g_music.formatCount)
+    {
+        wcscpy(folder, MP3_GENERATOR);
+        what = L"Generator";
+    }
+    else
+    {
+        Mp3DefaultFolder(folder);
+        what = L"the program's folder";
+        if (!Mp3FolderHasFiles(folder))
+        {
+            Out(L"[music] skipped: no test music could be made and no music files in %ls", folder);
+            return;
+        }
+    }
+    Out(L"[music] %ls (%ls) on the speaker", what, folder);
 
-    // A folder without mp3: nothing starts (the panel's button is disabled then).
-    GetTempPathW(MAX_PATH, empty);
-    wcsncat(empty, L"s2m_autotest_nomp3", MAX_PATH - wcslen(empty) - 1);
-    CreateDirectoryW(empty, nullptr);
-    Check(!Mp3Play(g_spk.id, empty, nullptr, 0) && !Mp3Playing(), L"empty folder: nothing plays");
-    RemoveDirectoryW(empty);
+    // A folder without music (a text file only): nothing starts (the panel's button is disabled then).
+    if (g_music.empty[0])
+    {
+        Check(!Mp3FolderHasFiles(g_music.empty), L"folder without music: no files found");
+        Check(!Mp3Play(g_spk.id, g_music.empty, nullptr, 0) && !Mp3Playing(), L"folder without music: nothing plays");
+    }
 
     float db = 0, mn = 0, mx = 0;
     bool mute = false;
@@ -1379,6 +1410,8 @@ int wmain(int argc, wchar_t** argv)
     }
     Snapshot snap;
     TakeSnapshot(&snap);
+    MFStartup(MF_VERSION, MFSTARTUP_LITE);
+    if (!TestMusicCreate(&g_music, MusicLogLine)) Warn(L"no test music could be made: [music] uses the program's mp3 folder");
     {
         static wchar_t ids[128][80];
         g_orphansAtStart = S2mFindOrphanEndpoints(ids, 128);
@@ -1436,6 +1469,9 @@ int wmain(int argc, wchar_t** argv)
         }
     }
     Out(L"");
+    Mp3Pause();
+    TestMusicDelete(&g_music);
+    Out(L"Test music removed.");
     Restore(snap);
     Out(L"");
     Out(L"==== %d action(s): %d passed, %d FAILED, %d warning(s); seed %u ====", iteration, g_pass, g_fail, g_warn, seed);
