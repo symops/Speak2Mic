@@ -1129,8 +1129,19 @@ static void ActionMusic()
     GetEndpointMute(g_mic.id, &mute);
     MicToUnity();
     Quality q = ReadQuality();
-    // Music has quiet passages: a generous limit over 1.5 s.
+    // Music has quiet passages: a generous limit over 1.5 s (repeated, see musicLevel).
     auto level = [&]() { SignalResult r = RunSignal(g_spk.id, g_mic.id, -1, 0.0f, 1500, (int)q.latency); return SUCCEEDED(r.hr) ? Db(r.peakAll) : -999.0f; };
+    // The music files have silent passages, also at their ends (a continued track near its end + the next one's
+    // lead-in: over 2 s): while the player still plays, listen up to twice more before calling it silence.
+    auto musicLevel = [&]() {
+        float peak = level();
+        for (int retry = 1; retry <= 2 && peak <= -60.0f && Mp3Playing(); retry++)
+        {
+            Out(L"  info music: %.1f dBFS (a silent passage? %ls), listening again", peak, Mp3LastFile());
+            peak = level();
+        }
+        return peak;
+    };
 
     if (Check(Mp3Play(g_spk.id, folder, nullptr, 0) && Mp3Playing(), L"playback started"))
     {
@@ -1139,7 +1150,7 @@ static void ActionMusic()
         wcsncpy(track, Mp3LastFile(), MAX_PATH - 1);
         track[MAX_PATH - 1] = 0;
         const wchar_t* name = wcsrchr(track, L'\\');
-        float on = level();
+        float on = musicLevel();
         Check(on > -60.0f, L"music reaches the microphone: peak %.1f dBFS > -60 (%ls)", on, name ? name + 1 : track);
         Check(Mp3Playing(), L"still playing after the measurement");
 
@@ -1156,7 +1167,7 @@ static void ActionMusic()
         Check(Mp3Play(g_spk.id, folder, nullptr, 0) && Mp3Playing(), L"playback continued");
         Sleep(300);
         Check(_wcsicmp(Mp3LastFile(), track) == 0, L"continues the same track (%ls; paused: %ls)", Mp3LastFile(), track);
-        float again = level();
+        float again = musicLevel();
         Check(again > -60.0f, L"music again after Play: peak %.1f dBFS > -60", again);
         Mp3Pause();
     }
