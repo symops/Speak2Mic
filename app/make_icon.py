@@ -126,20 +126,13 @@ def render_glyph(g):
 
 
 def add_setup_badge(img):
-    """Installer variant: the same icon with a white round badge and a download arrow in the
-    lower-right corner, so Speak2Mic-Setup.exe and the control panel are told apart."""
+    """Installer variant: the same icon with a green round badge and a white download arrow in the lower-right
+    corner (as Show2Cam's installer), so Speak2Mic-Setup.exe and the control panel are told apart."""
     out = img.copy()
-    cx, cy, r = 770, 770, 235
-    shadow = Image.new('RGBA', (W, W), (0, 0, 0, 0))
-    ImageDraw.Draw(shadow).ellipse((cx - r, cy - r + 16, cx + r, cy + r + 16), fill=(0, 0, 0, 120))
-    out.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(16)))
     d = ImageDraw.Draw(out)
-    d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=(255, 255, 255, 255))
-    col = (22, 163, 74, 255)                       # green "install" arrow
-    sw = 58
-    d.rectangle((cx - sw / 2, cy - 150, cx + sw / 2, cy + 20), fill=col)
-    d.polygon([(cx - 125, cy - 5), (cx + 125, cy - 5), (cx, cy + 125)], fill=col)
-    d.rounded_rectangle((cx - 130, cy + 140, cx + 130, cy + 140 + 44), radius=22, fill=col)
+    d.ellipse((610, 610, 960, 960), fill=(30, 200, 90, 255), outline=(255, 255, 255, 255), width=28)
+    d.rectangle((755, 680, 815, 820), fill=(255, 255, 255, 255))
+    d.polygon([(700, 800), (870, 800), (785, 890)], fill=(255, 255, 255, 255))
     return out
 
 
