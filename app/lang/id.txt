@@ -245,3 +245,7 @@ Keluar
 Jalankan panel kontrol bersama Windows (di baki sistem)
 Mulai otomatis panel kontrol aktif.
 Mulai otomatis panel kontrol nonaktif.
+Musik:
+Telusuri…
+Buka
+Folder musik: %ls.

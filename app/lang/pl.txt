@@ -245,3 +245,7 @@ Zakończ
 Uruchamiaj panel sterowania razem z Windows (w zasobniku)
 Autostart panelu sterowania włączony.
 Autostart panelu sterowania wyłączony.
+Muzyka:
+Przeglądaj…
+Otwórz
+Folder z muzyką: %ls.

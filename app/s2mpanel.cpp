@@ -16,6 +16,7 @@
 #include <commctrl.h>
 #include <commdlg.h>
 #include <shellapi.h>
+#include <shobjidl.h>
 #include <setupapi.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -34,6 +35,7 @@ enum
     IDC_GROUP3, IDC_L_SPKNAME, IDC_SPKNAME, IDC_L_MICNAME, IDC_MICNAME, IDC_RENAME, IDC_RENAME_STATUS,
     IDC_RESET_ALL, IDC_MIXER, IDC_CLEARLOG, IDC_L_MICVOL, IDC_MICVOL, IDC_MICVOL_VALUE, IDC_MICMUTE,
     IDC_EXPORT, IDC_IMPORT, IDC_IO_STATUS, IDC_PLAY, IDC_AUTOSTART,
+    IDC_L_MUSIC, IDC_MUSICDIR, IDC_MUSIC_BROWSE, IDC_MUSIC_OPEN,
 };
 
 // Default endpoint names (driver pin names, see gen.py); the user can rename them in the panel.
@@ -41,7 +43,7 @@ static const wchar_t kDefaultName[2][32] = { L"Speak2Mic Speaker", L"Speak2Mic M
 static const int kMicMaxPercent = 300;    // microphone slider: 100 % = 0 dB, 300 % = +9.5 dB
 #define S2M_USER_KEY L"Software\\Speak2Mic"
 
-enum { TIMER_METERS = 1, TIMER_REFRESH = 2, TIMER_FORMAT = 3, TIMER_MP3 = 4 };
+enum { TIMER_METERS = 1, TIMER_REFRESH = 2, TIMER_FORMAT = 3, TIMER_MP3 = 4, TIMER_MUSICDIR = 5 };
 
 // ---------------------------------------------------------------------------
 // Settings
@@ -622,7 +624,7 @@ static void Layout()
     Place(IDC_SETTINGS_STATUS, L1, 204, 548, 28);
     SendMessageW(Ctl(IDC_LATENCY_UD), UDM_SETBUDDY, (WPARAM)Ctl(IDC_LATENCY), 0);
 
-    Place(IDC_GROUP2, 12, 246, 576, 252);
+    Place(IDC_GROUP2, 12, 246, 576, 286);
     Place(IDC_IN_LABEL, L1, 272, 400, 20);  Place(IDC_IN_DB, 430, 272, 142, 20);
     Place(IDC_IN_METER, L1, 294, 548, 34);
     Place(IDC_IN_FORMAT, L1, 332, 330, 20); Place(IDC_TEST, 362, 330, 102, 26);   // test: under the speaker meter
@@ -634,14 +636,17 @@ static void Layout()
     Place(IDC_L_MICVOL, L1, 462, 160, 24);  Place(IDC_MICVOL, 188, 460, 236, 28);
     Place(IDC_MICVOL_VALUE, 424, 462, 62, 24);
     Place(IDC_MICMUTE, 494, 462, 90, 24);
+    // the music folder ("Play")
+    Place(IDC_L_MUSIC, L1, 500, 100, 20);   Place(IDC_MUSICDIR, C1 + 4, 496, 292, 23);
+    Place(IDC_MUSIC_BROWSE, 420, 495, 74, 27);  Place(IDC_MUSIC_OPEN, 498, 495, 74, 27);
 
-    Place(IDC_GROUP3, 12, 506, 576, 94);
-    Place(IDC_L_SPKNAME, L1, 534, 94, 20);  Place(IDC_SPKNAME, C1, 530, 272, 23);
-    Place(IDC_L_MICNAME, L1, 568, 94, 20);  Place(IDC_MICNAME, C1, 564, 272, 23);
-    Place(IDC_RENAME, C2, 563, W2, 27);
-    Place(IDC_IO_STATUS, L1, 606, 512, 300); // events (newest at the bottom, shown when closed)
-    Place(IDC_CLEARLOG, 542, 604, 32, 26);   // clear the event log
-    Place(IDC_AUTOSTART, L1, 638, 548, 22);  // start with Windows (in the tray)
+    Place(IDC_GROUP3, 12, 540, 576, 94);
+    Place(IDC_L_SPKNAME, L1, 568, 94, 20);  Place(IDC_SPKNAME, C1, 564, 272, 23);
+    Place(IDC_L_MICNAME, L1, 602, 94, 20);  Place(IDC_MICNAME, C1, 598, 272, 23);
+    Place(IDC_RENAME, C2, 597, W2, 27);
+    Place(IDC_IO_STATUS, L1, 640, 512, 300); // events (newest at the bottom, shown when closed)
+    Place(IDC_CLEARLOG, 542, 638, 32, 26);   // clear the event log
+    Place(IDC_AUTOSTART, L1, 672, 548, 22);  // start with Windows (in the tray)
     if (g_eventsWidest) FitEventList(nullptr);   // new DPI: text widths changed
 
     // Bottom row: settings file.
@@ -681,6 +686,11 @@ static void CreateControls()
     Create(TRACKBAR_CLASSW, L"", TBS_HORZ | TBS_BOTTOM | WS_TABSTOP, IDC_MICVOL);
     Create(L"STATIC", L"", SS_RIGHT | SS_CENTERIMAGE, IDC_MICVOL_VALUE);
     Create(L"BUTTON", TR(L"Без звука"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_MICMUTE);
+    Create(L"STATIC", TR(L"Музыка:"), 0, IDC_L_MUSIC);
+    Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_MUSICDIR, WS_EX_CLIENTEDGE);
+    SendMessageW(Ctl(IDC_MUSICDIR), EM_LIMITTEXT, MAX_PATH - 1, 0);
+    Create(L"BUTTON", TR(L"Обзор…"), BS_PUSHBUTTON | WS_TABSTOP, IDC_MUSIC_BROWSE);
+    Create(L"BUTTON", TR(L"Открыть"), BS_PUSHBUTTON | WS_TABSTOP, IDC_MUSIC_OPEN);
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETRANGE, FALSE, MAKELPARAM(0, kMicMaxPercent));
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETPAGESIZE, 0, 10);
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETTIC, 0, 100);     // mark at 100 % = unchanged signal
@@ -1167,15 +1177,105 @@ static void OnTestDone(HRESULT hr)
 }
 
 // ---------------------------------------------------------------------------
-// Music: the .mp3 files of the "mp3" folder next to the program (C:\Program Files\Speak2Mic\mp3), in random
-// order, on "Speak2Mic Speaker". The folder is read again on every track and on every "Play".
+// Music: the music files of the chosen folder (default: "mp3" next to the program, C:\Program Files\Speak2Mic\mp3),
+// in random order, on "Speak2Mic Speaker". The folder is read again on every track and on every "Play".
 
 #define WM_APP_PLAY_DONE (WM_APP + 21)
 #define WM_APP_PLAY_TRACK (WM_APP + 22)    // lParam = file name (malloc)
 
+// The folder: the user's choice (HKCU\Software\Speak2Mic\MusicFolder), else "mp3" next to the program.
 static void Mp3Folder(wchar_t* folder)
 {
+    DWORD size = MAX_PATH * sizeof(wchar_t);
+    if (RegGetValueW(HKEY_CURRENT_USER, S2M_USER_KEY, L"MusicFolder", RRF_RT_REG_SZ, nullptr, folder, &size) == ERROR_SUCCESS &&
+        folder[0])
+        return;
     Mp3DefaultFolder(folder);
+}
+
+static void UpdatePlayButton();
+
+// Stores the folder typed / chosen (the default one is stored as "no choice").
+static void SetMusicFolder(const wchar_t* folder, bool announce)
+{
+    wchar_t def[MAX_PATH], cur[MAX_PATH];
+    Mp3DefaultFolder(def);
+    Mp3Folder(cur);
+    if (_wcsicmp(cur, folder) == 0) return;
+    HKEY key;
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, S2M_USER_KEY, 0, nullptr, 0, KEY_SET_VALUE, nullptr, &key, nullptr) == ERROR_SUCCESS)
+    {
+        if (!folder[0] || _wcsicmp(folder, def) == 0) RegDeleteValueW(key, L"MusicFolder");
+        else RegSetValueExW(key, L"MusicFolder", 0, REG_SZ, (const BYTE*)folder, (DWORD)((wcslen(folder) + 1) * sizeof(wchar_t)));
+        RegCloseKey(key);
+    }
+    AppLog(L"music folder: %ls", folder[0] ? folder : def);
+    if (announce)
+    {
+        wchar_t t[MAX_PATH + 80];
+        _snwprintf(t, MAX_PATH + 80, TR(L"Папка с музыкой: %ls."), folder[0] ? folder : def);
+        t[MAX_PATH + 79] = 0;
+        AddEvent(t);
+    }
+    UpdatePlayButton();
+}
+
+static void ShowMusicFolder()
+{
+    wchar_t folder[MAX_PATH];
+    Mp3Folder(folder);
+    g_updatingControls = true;
+    SetWindowTextW(Ctl(IDC_MUSICDIR), folder);
+    g_updatingControls = false;
+}
+
+static void ApplyMusicFolderEdit()
+{
+    KillTimer(g_wnd, TIMER_MUSICDIR);
+    wchar_t t[MAX_PATH];
+    GetWindowTextW(Ctl(IDC_MUSICDIR), t, MAX_PATH);
+    wchar_t* b = t;
+    while (*b == L' ') b++;
+    size_t n = wcslen(b);
+    while (n && (b[n - 1] == L' ' || b[n - 1] == L'\\')) b[--n] = 0;
+    SetMusicFolder(b, true);
+}
+
+static void OnMusicBrowse()
+{
+    IFileOpenDialog* dlg = nullptr;
+    if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dlg)))) return;
+    DWORD opts = 0;
+    dlg->GetOptions(&opts);
+    dlg->SetOptions(opts | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM);
+    wchar_t cur[MAX_PATH];
+    Mp3Folder(cur);
+    IShellItem* start = nullptr;
+    if (SUCCEEDED(SHCreateItemFromParsingName(cur, nullptr, IID_PPV_ARGS(&start))))
+    {
+        dlg->SetFolder(start);
+        start->Release();
+    }
+    if (SUCCEEDED(dlg->Show(g_wnd)))
+    {
+        IShellItem* item = nullptr;
+        PWSTR path = nullptr;
+        if (SUCCEEDED(dlg->GetResult(&item)) && SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &path)))
+        {
+            SetMusicFolder(path, true);
+            ShowMusicFolder();
+            CoTaskMemFree(path);
+        }
+        if (item) item->Release();
+    }
+    dlg->Release();
+}
+
+static void OnMusicOpen()
+{
+    wchar_t folder[MAX_PATH];
+    Mp3Folder(folder);
+    ShellExecuteW(g_wnd, L"open", folder, nullptr, nullptr, SW_SHOWNORMAL);
 }
 
 // "Play" without files in the folder is disabled; while playing it is "Pause".
@@ -1722,6 +1822,11 @@ static void OnExport()
     auto put = [&](const wchar_t* key, const wchar_t* value) { WritePrivateProfileStringW(kIniSection, key, value, path); };
     auto putNum = [&](const wchar_t* key, long value) { _snwprintf(v, 256, L"%ld", value); put(key, v); };
     put(L"Version", L"" S2M_VER_STR);
+    {
+        wchar_t music[MAX_PATH];
+        Mp3Folder(music);
+        put(L"MusicFolder", music);
+    }
     // The applied driver settings (not unapplied edits in the panel).
     putNum(L"SampleRate", (long)g_settings.rate);
     putNum(L"Channels", (long)g_settings.channels);
@@ -1763,6 +1868,13 @@ static void OnImport()
     wchar_t names[2][256];
     GetPrivateProfileStringW(kIniSection, L"SpeakerName", L"", names[0], 256, path);
     GetPrivateProfileStringW(kIniSection, L"MicName", L"", names[1], 256, path);
+    wchar_t music[MAX_PATH] = L"";
+    GetPrivateProfileStringW(kIniSection, L"MusicFolder", L"", music, MAX_PATH, path);
+    if (music[0])
+    {
+        SetMusicFolder(music, false);
+        ShowMusicFolder();
+    }
     DWORD micChannels = num(L"MicChannels");
     DWORD rate = num(L"SampleRate"), channels = num(L"Channels"), bits = num(L"BitsPerSample"),
           latency = num(L"LatencyMs"), volume = num(L"MicVolumePercent"), mute = num(L"MicMute");
@@ -1986,6 +2098,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         RestoreSavedNames();
         SetTimer(hwnd, TIMER_METERS, 33, nullptr);
         SetTimer(hwnd, TIMER_MP3, 2000, nullptr);
+        ShowMusicFolder();
         UpdatePlayButton();
         SendMessageW(Ctl(IDC_AUTOSTART), BM_SETCHECK, S2mAutostartEnabled() ? BST_CHECKED : BST_UNCHECKED, 0);
         EnsureMicWatch();
@@ -2012,6 +2125,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     }
 
     case WM_TIMER:
+        if (wp == TIMER_MUSICDIR)
+        {
+            ApplyMusicFolderEdit();
+            return 0;
+        }
         if (wp == TIMER_MP3)
         {
             UpdatePlayButton();             // .mp3 files added to / removed from the folder
@@ -2163,6 +2281,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         {
             UpdateApplyButton();    // typed or changed with the up/down arrows
         }
+        else if (code == EN_CHANGE && id == IDC_MUSICDIR && !g_updatingControls)
+        {
+            SetTimer(hwnd, TIMER_MUSICDIR, 1200, nullptr);      // applied after a pause in typing
+        }
+        else if (code == EN_KILLFOCUS && id == IDC_MUSICDIR)
+        {
+            ApplyMusicFolderEdit();
+        }
         else if (code == EN_CHANGE && (id == IDC_SPKNAME || id == IDC_MICNAME) && !g_updatingControls)
         {
             UpdateRenameButton();
@@ -2188,6 +2314,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             else if (id == IDC_TEST) OnTest();
             else if (id == IDC_PLAY) OnPlay();
             else if (id == IDC_IMPORT) OnImport();
+            else if (id == IDC_MUSIC_BROWSE) OnMusicBrowse();
+            else if (id == IDC_MUSIC_OPEN) OnMusicOpen();
         }
         return 0;
     }
@@ -2334,7 +2462,11 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
     if (argv) LocalFree(argv);
 
     // Nothing here works without the driver, and the driver loads only in test signing mode (Secure Boot off).
+#ifdef S2M_UI_TEST
+    S2mNotReady notReady = S2mReadyOk;      // layout check under Wine (no driver there); never in a release build
+#else
     S2mNotReady notReady = S2mCheckReady();
+#endif
     if (notReady != S2mReadyOk && g_startInTray)
     {
         AppLog(L"started in the tray (autostart) but not ready: exiting without a message");
@@ -2383,7 +2515,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
 
     // Size the window for the monitor DPI: 600x666 client area at 96 DPI.
     UINT dpi = GetDpiForSystem();
-    RECT r = { 0, 0, MulDiv(600, (int)dpi, 96), MulDiv(666, (int)dpi, 96) };
+    RECT r = { 0, 0, MulDiv(600, (int)dpi, 96), MulDiv(700, (int)dpi, 96) };
     DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
     AdjustWindowRectExForDpi(&r, style, FALSE, WS_EX_CONTROLPARENT, dpi);
     wchar_t title[160];

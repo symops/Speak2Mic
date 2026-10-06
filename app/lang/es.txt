@@ -245,3 +245,7 @@ Salir
 Iniciar el panel de control con Windows (en la bandeja)
 Inicio automático del panel activado.
 Inicio automático del panel desactivado.
+Música:
+Examinar…
+Abrir
+Carpeta de música: %ls.

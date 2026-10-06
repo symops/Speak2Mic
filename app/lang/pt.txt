@@ -245,3 +245,7 @@ Sair
 Iniciar o painel de controle com o Windows (na bandeja)
 Inicialização automática do painel ativada.
 Inicialização automática do painel desativada.
+Música:
+Procurar…
+Abrir
+Pasta de música: %ls.

@@ -245,3 +245,7 @@ Thoát
 Khởi động bảng điều khiển cùng Windows (trong khay hệ thống)
 Đã bật tự khởi động bảng điều khiển.
 Đã tắt tự khởi động bảng điều khiển.
+Nhạc:
+Duyệt…
+Mở
+Thư mục nhạc: %ls.

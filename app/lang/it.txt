@@ -245,3 +245,7 @@ Esci
 Avvia il pannello di controllo con Windows (nell'area di notifica)
 Avvio automatico del pannello attivato.
 Avvio automatico del pannello disattivato.
+Musica:
+Sfoglia…
+Apri
+Cartella della musica: %ls.

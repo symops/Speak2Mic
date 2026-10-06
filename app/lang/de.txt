@@ -245,3 +245,7 @@ Beenden
 Systemsteuerung mit Windows starten (im Infobereich)
 Autostart der Systemsteuerung ein.
 Autostart der Systemsteuerung aus.
+Musik:
+Durchsuchen…
+Öffnen
+Musikordner: %ls.

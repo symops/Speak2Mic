@@ -245,3 +245,7 @@ Afsluiten
 Configuratiescherm met Windows starten (in het systeemvak)
 Automatisch starten van het configuratiescherm aan.
 Automatisch starten van het configuratiescherm uit.
+Muziek:
+Bladeren…
+Openen
+Muziekmap: %ls.

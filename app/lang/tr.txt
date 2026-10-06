@@ -245,3 +245,7 @@ Denetim masasını aç
 Denetim masasını Windows ile başlat (sistem tepsisinde)
 Denetim masasının otomatik başlatılması açık.
 Denetim masasının otomatik başlatılması kapalı.
+Müzik:
+Gözat…
+Aç
+Müzik klasörü: %ls.
