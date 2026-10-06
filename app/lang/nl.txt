@@ -249,3 +249,6 @@ Muziek:
 Bladeren…
 Openen
 Muziekmap: %ls.
+Map (mp3, wav, flac, ogg)
+Generator
+Muziek: generator (maakt melodieën).

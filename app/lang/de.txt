@@ -249,3 +249,6 @@ Musik:
 Durchsuchen…
 Öffnen
 Musikordner: %ls.
+Ordner (mp3, wav, flac, ogg)
+Generator
+Musik: Generator (erzeugt Melodien).

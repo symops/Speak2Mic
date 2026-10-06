@@ -249,3 +249,6 @@ Musik:
 Telusuri…
 Buka
 Folder musik: %ls.
+Folder (mp3, wav, flac, ogg)
+Generator
+Musik: generator (menyintesis melodi).

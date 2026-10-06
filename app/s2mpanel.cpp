@@ -20,6 +20,7 @@
 #include <setupapi.h>
 #include <stdio.h>
 #include <wchar.h>
+#include <wctype.h>
 #include <math.h>
 
 
@@ -35,7 +36,7 @@ enum
     IDC_GROUP3, IDC_L_SPKNAME, IDC_SPKNAME, IDC_L_MICNAME, IDC_MICNAME, IDC_RENAME, IDC_RENAME_STATUS,
     IDC_RESET_ALL, IDC_MIXER, IDC_CLEARLOG, IDC_L_MICVOL, IDC_MICVOL, IDC_MICVOL_VALUE, IDC_MICMUTE,
     IDC_EXPORT, IDC_IMPORT, IDC_IO_STATUS, IDC_PLAY, IDC_AUTOSTART,
-    IDC_L_MUSIC, IDC_MUSICDIR, IDC_MUSIC_BROWSE, IDC_MUSIC_OPEN,
+    IDC_L_MUSIC, IDC_MUSICDIR, IDC_MUSIC_BROWSE, IDC_MUSIC_OPEN, IDC_MUSICSRC,
 };
 
 // Default endpoint names (driver pin names, see gen.py); the user can rename them in the panel.
@@ -637,7 +638,8 @@ static void Layout()
     Place(IDC_MICVOL_VALUE, 424, 462, 62, 24);
     Place(IDC_MICMUTE, 494, 462, 90, 24);
     // the music folder ("Play")
-    Place(IDC_L_MUSIC, L1, 500, 100, 20);   Place(IDC_MUSICDIR, C1 + 4, 496, 292, 23);
+    Place(IDC_L_MUSIC, L1, 500, 96, 20);    Place(IDC_MUSICSRC, C1 + 4, 496, 132, 300);
+    Place(IDC_MUSICDIR, 260, 497, 156, 23);
     Place(IDC_MUSIC_BROWSE, 420, 495, 74, 27);  Place(IDC_MUSIC_OPEN, 498, 495, 74, 27);
 
     Place(IDC_GROUP3, 12, 540, 576, 94);
@@ -687,6 +689,9 @@ static void CreateControls()
     Create(L"STATIC", L"", SS_RIGHT | SS_CENTERIMAGE, IDC_MICVOL_VALUE);
     Create(L"BUTTON", TR(L"Без звука"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_MICMUTE);
     Create(L"STATIC", TR(L"Музыка:"), 0, IDC_L_MUSIC);
+    Create(WC_COMBOBOXW, L"", CBS_DROPDOWNLIST | WS_TABSTOP, IDC_MUSICSRC);
+    ComboAdd(IDC_MUSICSRC, TR(L"Папка (mp3, wav, flac, ogg)"), 0);
+    ComboAdd(IDC_MUSICSRC, TR(L"Генератор"), 1);
     Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_MUSICDIR, WS_EX_CLIENTEDGE);
     SendMessageW(Ctl(IDC_MUSICDIR), EM_LIMITTEXT, MAX_PATH - 1, 0);
     Create(L"BUTTON", TR(L"Обзор…"), BS_PUSHBUTTON | WS_TABSTOP, IDC_MUSIC_BROWSE);
@@ -1195,6 +1200,72 @@ static void Mp3Folder(wchar_t* folder)
 
 static void UpdatePlayButton();
 
+// The music source: the folder or the generator (HKCU\Software\Speak2Mic\MusicSource = 1): pleasant music
+// synthesized on the fly (see mp3player.h).
+static bool MusicIsGenerator()
+{
+    DWORD v = 0, size = sizeof(v);
+    RegGetValueW(HKEY_CURRENT_USER, S2M_USER_KEY, L"MusicSource", RRF_RT_REG_DWORD, nullptr, &v, &size);
+    return v == 1;
+}
+
+// What "Play" plays: the folder, or MP3_GENERATOR.
+static void MusicPlayFolder(wchar_t* folder)
+{
+    if (MusicIsGenerator()) wcscpy(folder, MP3_GENERATOR);
+    else Mp3Folder(folder);
+}
+
+// A track's name for the event list ("Генератор #123" for the generator's tracks).
+static void TrackTitle(const wchar_t* path, wchar_t* out, size_t len)
+{
+    const wchar_t* name = wcsrchr(path, L'\\');
+    name = name ? name + 1 : path;
+    if (!wcsncmp(path, MP3_GENERATOR, wcslen(MP3_GENERATOR)) || (MusicIsGenerator() && iswdigit(name[0])))
+        _snwprintf(out, len, L"%ls #%ls", TR(L"Генератор"), name);
+    else
+        _snwprintf(out, len, L"%ls", name);
+    out[len - 1] = 0;
+}
+
+static void ShowMusicSource()
+{
+    bool gen = MusicIsGenerator();
+    g_updatingControls = true;
+    SendMessageW(Ctl(IDC_MUSICSRC), CB_SETCURSEL, gen ? 1 : 0, 0);
+    g_updatingControls = false;
+    EnableWindow(Ctl(IDC_MUSICDIR), !gen);
+    EnableWindow(Ctl(IDC_MUSIC_BROWSE), !gen);
+    EnableWindow(Ctl(IDC_MUSIC_OPEN), !gen);
+}
+
+static void SetMusicSource(bool generator, bool announce)
+{
+    if (generator == MusicIsGenerator()) return;
+    HKEY key;
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, S2M_USER_KEY, 0, nullptr, 0, KEY_SET_VALUE, nullptr, &key, nullptr) == ERROR_SUCCESS)
+    {
+        DWORD v = generator ? 1 : 0;
+        RegSetValueExW(key, L"MusicSource", 0, REG_DWORD, (const BYTE*)&v, sizeof(v));
+        RegCloseKey(key);
+    }
+    AppLog(L"music source: %ls", generator ? L"generator" : L"folder");
+    if (announce)
+    {
+        if (generator) AddEvent(TR(L"Музыка: генератор (синтезирует мелодии)."));
+        else
+        {
+            wchar_t folder[MAX_PATH], t[MAX_PATH + 80];
+            Mp3Folder(folder);
+            _snwprintf(t, MAX_PATH + 80, TR(L"Папка с музыкой: %ls."), folder);
+            t[MAX_PATH + 79] = 0;
+            AddEvent(t);
+        }
+    }
+    ShowMusicSource();
+    UpdatePlayButton();
+}
+
 // Stores the folder typed / chosen (the default one is stored as "no choice").
 static void SetMusicFolder(const wchar_t* folder, bool announce)
 {
@@ -1282,7 +1353,7 @@ static void OnMusicOpen()
 static void UpdatePlayButton()
 {
     wchar_t folder[MAX_PATH];
-    Mp3Folder(folder);
+    MusicPlayFolder(folder);
     bool playing = Mp3Playing();
     SetText(IDC_PLAY, playing ? TR(L"Пауза") : TR(L"Играть"));
     EnableWindow(Ctl(IDC_PLAY), playing || Mp3FolderHasFiles(folder));
@@ -1299,21 +1370,21 @@ static void OnPlay()
     if (Mp3Playing())
     {
         StopMusic();
-        const wchar_t* track = wcsrchr(Mp3LastFile(), L'\\');
-        wchar_t t[400];
-        _snwprintf(t, 400, TR(L"Музыка: пауза (%ls)."), track ? track + 1 : Mp3LastFile());
+        wchar_t title[MAX_PATH], t[400];
+        TrackTitle(Mp3LastFile(), title, MAX_PATH);
+        _snwprintf(t, 400, TR(L"Музыка: пауза (%ls)."), title);
         t[399] = 0;
         AddEvent(t);
         return;
     }
     wchar_t folder[MAX_PATH];
-    Mp3Folder(folder);
+    MusicPlayFolder(folder);
     int i = FindCableDevice(true);
     if (i >= 0 && Mp3Play(g_devs[i].id, folder, g_wnd, WM_APP_PLAY_DONE, WM_APP_PLAY_TRACK))
     {
-        const wchar_t* track = wcsrchr(Mp3LastFile(), L'\\');
-        wchar_t t[400];
-        _snwprintf(t, 400, TR(L"Музыка: воспроизведение (%ls)."), track ? track + 1 : Mp3LastFile());
+        wchar_t title[MAX_PATH], t[400];
+        TrackTitle(Mp3LastFile(), title, MAX_PATH);
+        _snwprintf(t, 400, TR(L"Музыка: воспроизведение (%ls)."), title);
         t[399] = 0;
         AddEvent(t);
     }
@@ -1826,6 +1897,7 @@ static void OnExport()
         wchar_t music[MAX_PATH];
         Mp3Folder(music);
         put(L"MusicFolder", music);
+        put(L"MusicSource", MusicIsGenerator() ? L"generator" : L"folder");
     }
     // The applied driver settings (not unapplied edits in the panel).
     putNum(L"SampleRate", (long)g_settings.rate);
@@ -1875,6 +1947,10 @@ static void OnImport()
         SetMusicFolder(music, false);
         ShowMusicFolder();
     }
+    wchar_t musicSource[32] = L"";
+    GetPrivateProfileStringW(kIniSection, L"MusicSource", L"", musicSource, 32, path);
+    if (!_wcsicmp(musicSource, L"generator") || !_wcsicmp(musicSource, L"folder"))
+        SetMusicSource(!_wcsicmp(musicSource, L"generator"), false);
     DWORD micChannels = num(L"MicChannels");
     DWORD rate = num(L"SampleRate"), channels = num(L"Channels"), bits = num(L"BitsPerSample"),
           latency = num(L"LatencyMs"), volume = num(L"MicVolumePercent"), mute = num(L"MicMute");
@@ -2099,6 +2175,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         SetTimer(hwnd, TIMER_METERS, 33, nullptr);
         SetTimer(hwnd, TIMER_MP3, 2000, nullptr);
         ShowMusicFolder();
+        ShowMusicSource();
         UpdatePlayButton();
         SendMessageW(Ctl(IDC_AUTOSTART), BM_SETCHECK, S2mAutostartEnabled() ? BST_CHECKED : BST_UNCHECKED, 0);
         EnsureMicWatch();
@@ -2202,8 +2279,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     case WM_APP_PLAY_TRACK:
     {
         wchar_t* name = (wchar_t*)lp;
-        wchar_t t[400];
-        _snwprintf(t, 400, TR(L"Музыка: следующий трек (%ls)."), name ? name : L"?");
+        wchar_t t[400], title[MAX_PATH];
+        TrackTitle(name ? name : L"?", title, MAX_PATH);
+        _snwprintf(t, 400, TR(L"Музыка: следующий трек (%ls)."), title);
         t[399] = 0;
         AddEvent(t);
         free(name);
@@ -2253,7 +2331,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         if (id == IDM_TRAY_EXIT) { PostMessageW(hwnd, WM_CLOSE, 0, 0); return 0; }
         if (code == CBN_SELCHANGE && !g_updatingControls)
         {
-            if (id == IDC_LANG)
+            if (id == IDC_MUSICSRC)
+            {
+                SetMusicSource(SendMessageW(Ctl(IDC_MUSICSRC), CB_GETCURSEL, 0, 0) == 1, true);
+            }
+            else if (id == IDC_LANG)
             {
                 if (LangApplyCombo(Ctl(IDC_LANG))) PostMessageW(hwnd, WM_CLOSE, 0, 0);   // a new copy starts
             }

@@ -249,3 +249,6 @@ Música:
 Examinar…
 Abrir
 Carpeta de música: %ls.
+Carpeta (mp3, wav, flac, ogg)
+Generador
+Música: generador (sintetiza melodías).

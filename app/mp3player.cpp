@@ -11,8 +11,11 @@
 #include <bcrypt.h>
 #include <wchar.h>
 #include <stdio.h>
+#include <math.h>
 #define STB_VORBIS_HEADER_ONLY
 #include "third_party/stb_vorbis.c"     // OGG Vorbis (Windows has no decoder for it); compiled in stbvorbis.c
+
+static bool IsGeneratorPath(const wchar_t* path) { return wcsncmp(path, MP3_GENERATOR, wcslen(MP3_GENERATOR)) == 0; }
 
 static HANDLE        g_thread;
 static volatile LONG g_stop;
@@ -92,6 +95,7 @@ void Mp3DefaultFolder(wchar_t* folder)
 
 bool Mp3FolderHasFiles(const wchar_t* folder)
 {
+    if (IsGeneratorPath(folder)) return true;
     static wchar_t one[1][MAX_PATH];
     return ListMp3(folder, one, 1) > 0;
 }
@@ -109,6 +113,20 @@ bool Mp3Playing()
 // The next file: the paused one if it is still there, else a random one (not the one just played, if there is a choice).
 static bool PickFile(wchar_t* path, LONGLONG* pos)
 {
+    if (IsGeneratorPath(g_folder))
+    {
+        // the generator: the paused track again, else a new one (its seed is the "file name")
+        *pos = 0;
+        if (g_resumeFile[0] && IsGeneratorPath(g_resumeFile))
+        {
+            wcscpy(path, g_resumeFile);
+            *pos = g_resumePos;
+        }
+        else
+            _snwprintf(path, MAX_PATH, L"%ls\\%d", MP3_GENERATOR, 1 + RandomIndex(999999));
+        g_resumeFile[0] = 0;
+        return true;
+    }
     static wchar_t names[512][MAX_PATH];
     int n = ListMp3(g_folder, names, 512);
     *pos = 0;
@@ -149,11 +167,171 @@ static void Store(BYTE* p, float v, int bytes, bool isFloat)
     else *(LONG*)p = s;
 }
 
-// One track being decoded to float samples: Media Foundation (mp3, wav, flac) or stb_vorbis (ogg).
+// ---------------------------------------------------------------------------
+// The generator ("folder" MP3_GENERATOR): endless pleasant music made up on the fly, as "tracks" of 45..90 s, each
+// with its own key, mode and tempo - a soft pad chord per bar, a bass, a bell-like pentatonic melody (no wrong notes)
+// and a stereo echo; fade in / out. A track is its seed ("::generator\<seed>"): Pause / Play continues it exactly.
+
+struct Synth
+{
+    ULONG    seed;
+    double   rate;
+    LONGLONG n, total;                 // sample position / track length
+    LONGLONG stepLen, nextStep;        // half a beat
+    int      step;
+    int      root, minor;              // MIDI note of the key, minor mode
+    int      chordDegree, melodyIdx;
+    double   pad[3], padPhase[3], bass, bassPhase;
+    struct Note { double freq, phase, amp, decay, pan; bool on; } notes[12];
+    float*   delay;                    // stereo echo line
+    int      delayLen, delayPos;
+};
+
+static ULONG SynthRand(Synth* s)
+{
+    s->seed ^= s->seed << 13;
+    s->seed ^= s->seed >> 17;
+    s->seed ^= s->seed << 5;
+    return s->seed;
+}
+
+static double MidiFreq(double note) { return 440.0 * pow(2.0, (note - 69) / 12.0); }
+
+// Scale degree (any integer, 7 per octave) of the key -> MIDI note
+static int ScaleNote(const Synth* s, int degree)
+{
+    static const int major[7] = { 0, 2, 4, 5, 7, 9, 11 }, minor[7] = { 0, 2, 3, 5, 7, 8, 10 };
+    int oct = degree >= 0 ? degree / 7 : -((-degree + 6) / 7);
+    int d = degree - oct * 7;
+    return s->root + oct * 12 + (s->minor ? minor[d] : major[d]);
+}
+
+// Pentatonic step (5 per octave) -> MIDI note (major / minor pentatonic of the key)
+static int PentaNote(const Synth* s, int idx)
+{
+    static const int major[5] = { 0, 2, 4, 7, 9 }, minor[5] = { 0, 3, 5, 7, 10 };
+    int oct = idx >= 0 ? idx / 5 : -((-idx + 4) / 5);
+    int d = idx - oct * 5;
+    return s->root + 12 + oct * 12 + (s->minor ? minor[d] : major[d]);
+}
+
+static void SynthChord(Synth* s)
+{
+    // a pleasant progression: I - V - vi - IV (major) / i - VI - III - VII (minor), then random steps among them
+    static const int progMajor[4] = { 0, 4, 5, 3 }, progMinor[4] = { 0, 5, 2, 6 };
+    int bar = s->step / 8;
+    int deg = (bar < 4 ? (s->minor ? progMinor : progMajor)[bar % 4]
+                       : (s->minor ? progMinor : progMajor)[SynthRand(s) % 4]);
+    s->chordDegree = deg;
+    for (int i = 0; i < 3; i++) s->pad[i] = MidiFreq(ScaleNote(s, deg + 2 * i) - 12) * (1.0 + (i - 1) * 0.0015);
+    s->bass = MidiFreq(ScaleNote(s, deg) - 24);
+}
+
+static bool SynthOpen(Synth* s, ULONG seed, double rate)
+{
+    ZeroMemory(s, sizeof(*s));
+    s->seed = seed ? seed : 1;
+    s->rate = rate;
+    s->root = 57 + (int)(SynthRand(s) % 12);                        // A3..G#4
+    s->minor = (int)(SynthRand(s) % 2);
+    double bpm = 66 + (SynthRand(s) % 30);
+    s->stepLen = (LONGLONG)(rate * 30.0 / bpm);                      // half a beat
+    s->total = (LONGLONG)(rate * (45 + SynthRand(s) % 46));
+    s->delayLen = (int)(s->stepLen * 3 / 2);                          // dotted-quarter echo
+    s->delay = (float*)calloc((size_t)s->delayLen * 2, sizeof(float));
+    s->melodyIdx = 5;
+    SynthChord(s);
+    return s->delay != nullptr;
+}
+
+static void SynthClose(Synth* s)
+{
+    free(s->delay);
+    s->delay = nullptr;
+}
+
+// One stereo frame.
+static void SynthFrame(Synth* s, float* lr)
+{
+    const double twoPi = 6.283185307179586;
+    if (s->n >= s->nextStep)
+    {
+        if (s->step % 8 == 0 && s->step) SynthChord(s);
+        // melody: a note on most half beats, a small step on the pentatonic scale
+        if (SynthRand(s) % 100 < 62)
+        {
+            int move = (int)(SynthRand(s) % 5) - 2;
+            s->melodyIdx += move;
+            if (s->melodyIdx < 0) s->melodyIdx = 1;
+            if (s->melodyIdx > 11) s->melodyIdx = 9;
+            for (auto& nt : s->notes)
+                if (!nt.on)
+                {
+                    nt.on = true;
+                    nt.freq = MidiFreq(PentaNote(s, s->melodyIdx));
+                    nt.phase = 0;
+                    nt.amp = 0.16 + (SynthRand(s) % 60) / 1000.0;
+                    nt.decay = exp(-1.0 / (s->rate * (0.6 + (SynthRand(s) % 100) / 100.0)));
+                    nt.pan = ((int)(SynthRand(s) % 120) - 60) / 100.0;
+                    break;
+                }
+        }
+        s->step++;
+        s->nextStep += s->stepLen;
+    }
+    // fade in / out of the track (2 s)
+    double t = (double)s->n, fade = 1.0, edge = 2.0 * s->rate;
+    if (t < edge) fade = t / edge;
+    if (t > s->total - edge) fade = (s->total - t) / edge;
+    if (fade < 0) fade = 0;
+    double l = 0, r = 0;
+    // pad: three soft voices, slowly breathing
+    double breathe = 0.75 + 0.25 * sin(twoPi * t / (s->rate * 6));
+    for (int i = 0; i < 3; i++)
+    {
+        s->padPhase[i] += s->pad[i] / s->rate;
+        if (s->padPhase[i] > 1) s->padPhase[i] -= 1;
+        double v = sin(twoPi * s->padPhase[i]) * 0.7 + sin(2 * twoPi * s->padPhase[i]) * 0.15;
+        l += v * 0.055 * breathe * (i == 0 ? 1.0 : 0.8);
+        r += v * 0.055 * breathe * (i == 2 ? 1.0 : 0.8);
+    }
+    // bass
+    s->bassPhase += s->bass / s->rate;
+    if (s->bassPhase > 1) s->bassPhase -= 1;
+    double b = sin(twoPi * s->bassPhase) * 0.10;
+    l += b;
+    r += b;
+    // melody bells
+    for (auto& nt : s->notes)
+    {
+        if (!nt.on) continue;
+        nt.phase += nt.freq / s->rate;
+        if (nt.phase > 1) nt.phase -= 1;
+        double v = (sin(twoPi * nt.phase) + 0.3 * sin(2 * twoPi * nt.phase) + 0.1 * sin(3 * twoPi * nt.phase)) * nt.amp;
+        nt.amp *= nt.decay;
+        if (nt.amp < 0.0005) nt.on = false;
+        l += v * (1 - nt.pan) * 0.5;
+        r += v * (1 + nt.pan) * 0.5;
+    }
+    // ping-pong echo
+    float* d = s->delay + (size_t)s->delayPos * 2;
+    double dl = d[0], dr = d[1];
+    d[0] = (float)(l * 0.6 + dr * 0.35);
+    d[1] = (float)(r * 0.6 + dl * 0.35);
+    if (++s->delayPos >= s->delayLen) s->delayPos = 0;
+    l = (l + dl * 0.45) * fade;
+    r = (r + dr * 0.45) * fade;
+    lr[0] = (float)tanh(l * 1.4) * 0.8f;
+    lr[1] = (float)tanh(r * 1.4) * 0.8f;
+    s->n++;
+}
+
+// One track being decoded to float samples: Media Foundation (mp3, wav, flac), stb_vorbis (ogg) or the generator.
 struct Decoder
 {
     IMFSourceReader* mf;
     stb_vorbis*      ogg;
+    Synth*           syn;
     UINT32           ch, rate;
     LONGLONG         pos;           // position of the data returned last, 100-ns units
     float*           tmp;           // decoded frames handed out by DecRead
@@ -164,6 +342,20 @@ static HRESULT DecOpen(Decoder* d, const wchar_t* path, LONGLONG pos)
 {
     ZeroMemory(d, sizeof(*d));
     d->pos = pos;
+    if (IsGeneratorPath(path))
+    {
+        const wchar_t* sl = wcsrchr(path, L'\\');
+        ULONG seed = sl ? (ULONG)wcstoul(sl + 1, nullptr, 10) : 1;
+        d->syn = (Synth*)calloc(1, sizeof(Synth));
+        if (!d->syn || !SynthOpen(d->syn, seed * 2654435761u + 12345, 48000)) return E_OUTOFMEMORY;
+        d->ch = 2;
+        d->rate = 48000;
+        // continue a paused track exactly: run the generator silently up to the position
+        LONGLONG skip = pos * 48000 / 10000000;
+        float lr[2];
+        for (LONGLONG i = 0; i < skip && d->syn->n < d->syn->total; i++) SynthFrame(d->syn, lr);
+        return S_OK;
+    }
     if (IsOgg(path))
     {
         FILE* f = _wfopen(path, L"rb");
@@ -219,6 +411,17 @@ static bool DecGrow(Decoder* d, size_t floats)
 static HRESULT DecRead(Decoder* d, const float** data, size_t* frames)
 {
     *frames = 0;
+    if (d->syn)
+    {
+        const size_t chunk = 2400;                          // 50 ms
+        if (!DecGrow(d, chunk * 2)) return E_OUTOFMEMORY;
+        d->pos = d->syn->n * 10000000 / 48000;
+        size_t n = 0;
+        while (n < chunk && d->syn->n < d->syn->total) SynthFrame(d->syn, d->tmp + n++ * 2);
+        *data = d->tmp;
+        *frames = n;                                        // 0: the end of this "track"
+        return S_OK;
+    }
     if (d->ogg)
     {
         const int chunk = 4096;
@@ -263,6 +466,11 @@ static void DecClose(Decoder* d)
 {
     if (d->mf) d->mf->Release();
     if (d->ogg) stb_vorbis_close(d->ogg);
+    if (d->syn)
+    {
+        SynthClose(d->syn);
+        free(d->syn);
+    }
     free(d->tmp);
     ZeroMemory(d, sizeof(*d));
 }

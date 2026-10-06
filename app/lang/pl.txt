@@ -249,3 +249,6 @@ Muzyka:
 Przeglądaj…
 Otwórz
 Folder z muzyką: %ls.
+Folder (mp3, wav, flac, ogg)
+Generator
+Muzyka: generator (syntetyzuje melodie).

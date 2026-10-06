@@ -249,3 +249,6 @@ Música:
 Procurar…
 Abrir
 Pasta de música: %ls.
+Pasta (mp3, wav, flac, ogg)
+Gerador
+Música: gerador (sintetiza melodias).

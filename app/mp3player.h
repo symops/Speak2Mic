@@ -7,6 +7,10 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+// Pass as the folder to play the generator instead of files: endless pleasant music synthesized on the fly
+// (tracks "::generator\<number>" of 45..90 s, each with its own key, mode and tempo).
+#define MP3_GENERATOR L"::generator"
+
 bool Mp3FolderHasFiles(const wchar_t* folder);
 // The "mp3" folder of this program: next to the exe (installed: C:\Program Files\Speak2Mic\mp3), or one level up
 // (the package: the programs are in x64\ / x86\, the music in the package root).

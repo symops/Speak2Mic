@@ -249,3 +249,6 @@ Musique :
 Parcourir…
 Ouvrir
 Dossier de musique : %ls.
+Dossier (mp3, wav, flac, ogg)
+Générateur
+Musique : générateur (synthétise des mélodies).
