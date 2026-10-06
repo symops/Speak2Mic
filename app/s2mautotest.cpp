@@ -1355,9 +1355,28 @@ static void ActionMusic()
         else
             Check(true, L"paused: microphone peak %.1f dBFS < %.1f", off, quietLimit);
 
-        Check(Mp3Play(g_spk.id, folder, nullptr, 0) && Mp3Playing(), L"playback continued");
-        Sleep(300);
-        Check(_wcsicmp(Mp3LastFile(), track) == 0, L"continues the same track (%ls; paused: %ls)", Mp3LastFile(), track);
+        bool resumed = Mp3Play(g_spk.id, folder, nullptr, 0);
+        // the track Play starts with, read at once: a short track's rest may end within moments and the next one begin
+        wchar_t first[MAX_PATH];
+        wcsncpy(first, Mp3LastFile(), MAX_PATH - 1);
+        first[MAX_PATH - 1] = 0;
+        Check(resumed && (Mp3Playing() || _wcsicmp(Mp3LastFile(), first) != 0), L"playback continued");
+        Check(_wcsicmp(first, track) == 0, L"continues the same track (%ls; paused: %ls)", first, track);
+        // Another folder chosen meanwhile: Play starts a track of that one, not the paused one of the old folder.
+        if (g_music.formatCount > 1 && _wcsicmp(folder, MP3_GENERATOR) != 0)
+        {
+            Mp3Pause();
+            const TestMusicFolder& other = g_music.formats[Rand(0, g_music.formatCount - 1)];
+            if (_wcsicmp(other.folder, folder) != 0 && Mp3Play(g_spk.id, other.folder, nullptr, 0))
+            {
+                const wchar_t* now = Mp3LastFile();
+                size_t n = wcslen(other.folder);
+                Check(_wcsnicmp(now, other.folder, n) == 0 && now[n] == L'\\',
+                      L"another folder: a track of it plays (%ls), not the paused one", now);
+                Mp3Pause();
+            }
+            Mp3Play(g_spk.id, folder, nullptr, 0);      // back for the level check below
+        }
         float again = musicLevel();
         Check(again > -60.0f, L"music again after Play: peak %.1f dBFS > -60", again);
         Mp3Pause();

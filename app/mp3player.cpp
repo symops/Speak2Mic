@@ -130,7 +130,14 @@ static bool PickFile(wchar_t* path, LONGLONG* pos)
     static wchar_t names[512][MAX_PATH];
     int n = ListMp3(g_folder, names, 512);
     *pos = 0;
-    if (g_resumeFile[0] && GetFileAttributesW(g_resumeFile) != INVALID_FILE_ATTRIBUTES)
+    // The paused track continues only when it belongs to the folder chosen now (another folder: a track of that one).
+    const wchar_t* slash = g_resumeFile[0] ? wcsrchr(g_resumeFile, L'\\') : nullptr;
+    size_t dirLen = slash ? (size_t)(slash - g_resumeFile) : 0;
+    size_t folderLen = wcslen(g_folder);
+    while (folderLen && g_folder[folderLen - 1] == L'\\') folderLen--;
+    bool sameFolder = dirLen && dirLen == folderLen && _wcsnicmp(g_resumeFile, g_folder, dirLen) == 0;
+    if (g_resumeFile[0] && !sameFolder) AppLog(L"mp3: paused track %ls not in %ls: not continued", g_resumeFile, g_folder);
+    if (g_resumeFile[0] && sameFolder && GetFileAttributesW(g_resumeFile) != INVALID_FILE_ATTRIBUTES)
     {
         wcscpy(path, g_resumeFile);
         *pos = g_resumePos;
