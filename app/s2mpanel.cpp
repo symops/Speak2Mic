@@ -32,7 +32,7 @@ enum
     IDC_OUT_LABEL, IDC_OUT_DB, IDC_OUT_METER, IDC_OUT_FORMAT,
     IDC_GROUP1, IDC_GROUP2,
     IDC_L_PRESET, IDC_L_RATE, IDC_L_BITS, IDC_L_CHANNELS, IDC_L_LATENCY, IDC_L_LANG, IDC_LANG,
-    IDC_L_MICCHANNELS, IDC_MICCHANNELS, IDC_TEST,
+    IDC_L_MICCHANNELS, IDC_MICCHANNELS,
     IDC_GROUP3, IDC_L_SPKNAME, IDC_SPKNAME, IDC_L_MICNAME, IDC_MICNAME, IDC_RENAME, IDC_RENAME_STATUS,
     IDC_RESET_ALL, IDC_MIXER, IDC_CLEARLOG, IDC_L_MICVOL, IDC_MICVOL, IDC_MICVOL_VALUE, IDC_MICMUTE,
     IDC_EXPORT, IDC_IMPORT, IDC_IO_STATUS, IDC_PLAY, IDC_AUTOSTART,
@@ -547,6 +547,9 @@ static HWND Create(const wchar_t* cls, const wchar_t* text, DWORD style, int id,
     return h;
 }
 
+// The music sources (HKCU\Software\Speak2Mic\MusicSource); the list shows them as Test, Folder, Generator.
+enum { MusicFolderSrc = 0, MusicGeneratorSrc = 1, MusicTestSrc = 2 };
+
 static void ComboAdd(int id, const wchar_t* text, LPARAM data)
 {
     int i = (int)SendMessageW(Ctl(id), CB_ADDSTRING, 0, (LPARAM)text);
@@ -625,11 +628,10 @@ static void Layout()
     Place(IDC_SETTINGS_STATUS, L1, 204, 548, 28);
     SendMessageW(Ctl(IDC_LATENCY_UD), UDM_SETBUDDY, (WPARAM)Ctl(IDC_LATENCY), 0);
 
-    Place(IDC_GROUP2, 12, 246, 576, 286);
+    Place(IDC_GROUP2, 12, 246, 576, 322);
     Place(IDC_IN_LABEL, L1, 272, 400, 20);  Place(IDC_IN_DB, 430, 272, 142, 20);
     Place(IDC_IN_METER, L1, 294, 548, 34);
-    Place(IDC_IN_FORMAT, L1, 332, 330, 20); Place(IDC_TEST, 362, 330, 102, 26);   // test: under the speaker meter
-    Place(IDC_PLAY, 470, 330, 102, 26);                                           // music: right of "Test"
+    Place(IDC_IN_FORMAT, L1, 332, 548, 20);
     Place(IDC_OUT_LABEL, L1, 362, 400, 20); Place(IDC_OUT_DB, 430, 362, 142, 20);
     Place(IDC_OUT_METER, L1, 384, 548, 34);
     Place(IDC_OUT_FORMAT, L1, 422, 548, 36);
@@ -641,14 +643,15 @@ static void Layout()
     Place(IDC_L_MUSIC, L1, 500, 96, 20);    Place(IDC_MUSICSRC, C1 + 4, 496, 132, 300);
     Place(IDC_MUSICDIR, 260, 497, 156, 23);
     Place(IDC_MUSIC_BROWSE, 420, 495, 74, 27);  Place(IDC_MUSIC_OPEN, 498, 495, 74, 27);
+    Place(IDC_PLAY, L1, 532, 150, 28);      // plays the chosen source (as Show2Cam's buttons: bottom left)
 
-    Place(IDC_GROUP3, 12, 540, 576, 94);
-    Place(IDC_L_SPKNAME, L1, 568, 94, 20);  Place(IDC_SPKNAME, C1, 564, 272, 23);
-    Place(IDC_L_MICNAME, L1, 602, 94, 20);  Place(IDC_MICNAME, C1, 598, 272, 23);
-    Place(IDC_RENAME, C2, 597, W2, 27);
-    Place(IDC_IO_STATUS, L1, 640, 512, 300); // events (newest at the bottom, shown when closed)
-    Place(IDC_CLEARLOG, 542, 638, 32, 26);   // clear the event log
-    Place(IDC_AUTOSTART, L1, 672, 548, 22);  // start with Windows (in the tray)
+    Place(IDC_GROUP3, 12, 576, 576, 94);
+    Place(IDC_L_SPKNAME, L1, 604, 94, 20);  Place(IDC_SPKNAME, C1, 600, 272, 23);
+    Place(IDC_L_MICNAME, L1, 638, 94, 20);  Place(IDC_MICNAME, C1, 634, 272, 23);
+    Place(IDC_RENAME, C2, 633, W2, 27);
+    Place(IDC_IO_STATUS, L1, 676, 512, 300); // events (newest at the bottom, shown when closed)
+    Place(IDC_CLEARLOG, 542, 674, 32, 26);   // clear the event log
+    Place(IDC_AUTOSTART, L1, 708, 548, 22);  // start with Windows (in the tray)
     if (g_eventsWidest) FitEventList(nullptr);   // new DPI: text widths changed
 
     // Bottom row: settings file.
@@ -665,8 +668,6 @@ static void CreateControls()
     Create(WC_COMBOBOXW, L"", CBS_DROPDOWNLIST | WS_TABSTOP, IDC_BITS);
     Create(L"STATIC", TR(L"Каналы:"), 0, IDC_L_CHANNELS);
     Create(WC_COMBOBOXW, L"", CBS_DROPDOWNLIST | WS_TABSTOP, IDC_CHANNELS);
-    Create(L"BUTTON", TR(L"Проверка"), BS_PUSHBUTTON | WS_TABSTOP, IDC_TEST);
-    Create(L"BUTTON", TR(L"Играть"), BS_PUSHBUTTON | WS_TABSTOP, IDC_PLAY);
     Create(L"STATIC", TR(L"Каналы микрофона:"), 0, IDC_L_MICCHANNELS);
     Create(WC_COMBOBOXW, L"", CBS_DROPDOWNLIST | WS_TABSTOP, IDC_MICCHANNELS);
     Create(L"STATIC", TR(L"Задержка, мс:"), 0, IDC_L_LATENCY);
@@ -690,12 +691,14 @@ static void CreateControls()
     Create(L"BUTTON", TR(L"Без звука"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_MICMUTE);
     Create(L"STATIC", TR(L"Музыка:"), 0, IDC_L_MUSIC);
     Create(WC_COMBOBOXW, L"", CBS_DROPDOWNLIST | WS_TABSTOP, IDC_MUSICSRC);
-    ComboAdd(IDC_MUSICSRC, TR(L"Папка (mp3, wav, flac, ogg)"), 0);
-    ComboAdd(IDC_MUSICSRC, TR(L"Генератор"), 1);
+    ComboAdd(IDC_MUSICSRC, TR(L"Проверка"), MusicTestSrc);
+    ComboAdd(IDC_MUSICSRC, TR(L"Папка (mp3, wav, flac, ogg)"), MusicFolderSrc);
+    ComboAdd(IDC_MUSICSRC, TR(L"Генератор"), MusicGeneratorSrc);
     Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_MUSICDIR, WS_EX_CLIENTEDGE);
     SendMessageW(Ctl(IDC_MUSICDIR), EM_LIMITTEXT, MAX_PATH - 1, 0);
     Create(L"BUTTON", TR(L"Обзор…"), BS_PUSHBUTTON | WS_TABSTOP, IDC_MUSIC_BROWSE);
     Create(L"BUTTON", TR(L"Открыть"), BS_PUSHBUTTON | WS_TABSTOP, IDC_MUSIC_OPEN);
+    Create(L"BUTTON", TR(L"Играть"), BS_PUSHBUTTON | WS_TABSTOP, IDC_PLAY);
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETRANGE, FALSE, MAKELPARAM(0, kMicMaxPercent));
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETPAGESIZE, 0, 10);
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETTIC, 0, 100);     // mark at 100 % = unchanged signal
@@ -1123,6 +1126,8 @@ static HANDLE        g_testThread;
 static volatile LONG g_testStop;
 static wchar_t       g_testDevice[256];
 
+static void UpdatePlayButton();
+
 static DWORD WINAPI TestThread(LPVOID)
 {
     HRESULT hr = PlayChannelTest(g_testDevice, &g_testStop);
@@ -1137,7 +1142,7 @@ static void StopTest()
     WaitForSingleObject(g_testThread, 3000);
     CloseHandle(g_testThread);
     g_testThread = nullptr;
-    SetText(IDC_TEST, TR(L"Проверка"));
+    UpdatePlayButton();
 }
 
 static void OnTest()
@@ -1154,11 +1159,8 @@ static void OnTest()
     g_testDevice[255] = 0;
     g_testStop = 0;
     g_testThread = CreateThread(nullptr, 0, TestThread, nullptr, 0, nullptr);
-    if (g_testThread)
-    {
-        SetText(IDC_TEST, TR(L"Стоп"));
-        AddEvent(TR(L"Проверка звука запущена."));
-    }
+    if (g_testThread) AddEvent(TR(L"Проверка звука запущена."));
+    UpdatePlayButton();
     AppLog(L"sound test started on \"%ls\"", g_devs[i].name);
 }
 
@@ -1170,7 +1172,7 @@ static void OnTestDone(HRESULT hr)
         CloseHandle(g_testThread);
         g_testThread = nullptr;
     }
-    SetText(IDC_TEST, TR(L"Проверка"));
+    UpdatePlayButton();
     if (FAILED(hr))
     {
         wchar_t t[160];
@@ -1200,14 +1202,17 @@ static void Mp3Folder(wchar_t* folder)
 
 static void UpdatePlayButton();
 
-// The music source: the folder or the generator (HKCU\Software\Speak2Mic\MusicSource = 1): pleasant music
-// synthesized on the fly (see mp3player.h).
-static bool MusicIsGenerator()
+// The music source (HKCU\Software\Speak2Mic\MusicSource): the folder (0), the generator (1: pleasant music
+// synthesized on the fly, see mp3player.h) or the test (2: Windows' test melody on every speaker channel in turn).
+
+static int MusicSource()
 {
     DWORD v = 0, size = sizeof(v);
     RegGetValueW(HKEY_CURRENT_USER, S2M_USER_KEY, L"MusicSource", RRF_RT_REG_DWORD, nullptr, &v, &size);
-    return v == 1;
+    return v <= MusicTestSrc ? (int)v : MusicFolderSrc;
 }
+
+static bool MusicIsGenerator() { return MusicSource() == MusicGeneratorSrc; }
 
 // What "Play" plays: the folder, or MP3_GENERATOR.
 static void MusicPlayFolder(wchar_t* folder)
@@ -1230,30 +1235,40 @@ static void TrackTitle(const wchar_t* path, wchar_t* out, size_t len)
 
 static void ShowMusicSource()
 {
-    bool gen = MusicIsGenerator();
+    int src = MusicSource();
     g_updatingControls = true;
-    SendMessageW(Ctl(IDC_MUSICSRC), CB_SETCURSEL, gen ? 1 : 0, 0);
+    ComboSelectData(IDC_MUSICSRC, src);
     g_updatingControls = false;
-    EnableWindow(Ctl(IDC_MUSICDIR), !gen);
-    EnableWindow(Ctl(IDC_MUSIC_BROWSE), !gen);
-    EnableWindow(Ctl(IDC_MUSIC_OPEN), !gen);
+    EnableWindow(Ctl(IDC_MUSICDIR), src == MusicFolderSrc);
+    EnableWindow(Ctl(IDC_MUSIC_BROWSE), src == MusicFolderSrc);
+    EnableWindow(Ctl(IDC_MUSIC_OPEN), src == MusicFolderSrc);
 }
 
-static void SetMusicSource(bool generator, bool announce)
+static void StopMusic();
+
+static const wchar_t* MusicSourceKey(int src)
 {
-    if (generator == MusicIsGenerator()) return;
+    return src == MusicGeneratorSrc ? L"generator" : src == MusicTestSrc ? L"test" : L"folder";
+}
+
+static void SetMusicSource(int src, bool announce)
+{
+    if (src < MusicFolderSrc || src > MusicTestSrc || src == MusicSource()) return;
+    // what plays now stops: "Play" starts the new source
+    StopTest();
+    StopMusic();
     HKEY key;
     if (RegCreateKeyExW(HKEY_CURRENT_USER, S2M_USER_KEY, 0, nullptr, 0, KEY_SET_VALUE, nullptr, &key, nullptr) == ERROR_SUCCESS)
     {
-        DWORD v = generator ? 1 : 0;
+        DWORD v = (DWORD)src;
         RegSetValueExW(key, L"MusicSource", 0, REG_DWORD, (const BYTE*)&v, sizeof(v));
         RegCloseKey(key);
     }
-    AppLog(L"music source: %ls", generator ? L"generator" : L"folder");
+    AppLog(L"music source: %ls", MusicSourceKey(src));
     if (announce)
     {
-        if (generator) AddEvent(TR(L"Музыка: генератор (синтезирует мелодии)."));
-        else
+        if (src == MusicGeneratorSrc) AddEvent(TR(L"Музыка: генератор (синтезирует мелодии)."));
+        else if (src == MusicFolderSrc)
         {
             wchar_t folder[MAX_PATH], t[MAX_PATH + 80];
             Mp3Folder(folder);
@@ -1349,9 +1364,15 @@ static void OnMusicOpen()
     ShellExecuteW(g_wnd, L"open", folder, nullptr, nullptr, SW_SHOWNORMAL);
 }
 
-// "Play" without files in the folder is disabled; while playing it is "Pause".
+// "Play" without files in the folder is disabled; while playing it is "Pause" ("Stop" for the test).
 static void UpdatePlayButton()
 {
+    if (MusicSource() == MusicTestSrc)
+    {
+        SetText(IDC_PLAY, g_testThread ? TR(L"Стоп") : TR(L"Играть"));
+        EnableWindow(Ctl(IDC_PLAY), TRUE);
+        return;
+    }
     wchar_t folder[MAX_PATH];
     MusicPlayFolder(folder);
     bool playing = Mp3Playing();
@@ -1367,6 +1388,11 @@ static void StopMusic()
 
 static void OnPlay()
 {
+    if (MusicSource() == MusicTestSrc)
+    {
+        OnTest();                           // starts / stops Windows' test melody
+        return;
+    }
     if (Mp3Playing())
     {
         StopMusic();
@@ -1897,7 +1923,7 @@ static void OnExport()
         wchar_t music[MAX_PATH];
         Mp3Folder(music);
         put(L"MusicFolder", music);
-        put(L"MusicSource", MusicIsGenerator() ? L"generator" : L"folder");
+        put(L"MusicSource", MusicSourceKey(MusicSource()));
     }
     // The applied driver settings (not unapplied edits in the panel).
     putNum(L"SampleRate", (long)g_settings.rate);
@@ -1949,8 +1975,8 @@ static void OnImport()
     }
     wchar_t musicSource[32] = L"";
     GetPrivateProfileStringW(kIniSection, L"MusicSource", L"", musicSource, 32, path);
-    if (!_wcsicmp(musicSource, L"generator") || !_wcsicmp(musicSource, L"folder"))
-        SetMusicSource(!_wcsicmp(musicSource, L"generator"), false);
+    for (int src = MusicFolderSrc; src <= MusicTestSrc; src++)
+        if (!_wcsicmp(musicSource, MusicSourceKey(src))) SetMusicSource(src, false);
     DWORD micChannels = num(L"MicChannels");
     DWORD rate = num(L"SampleRate"), channels = num(L"Channels"), bits = num(L"BitsPerSample"),
           latency = num(L"LatencyMs"), volume = num(L"MicVolumePercent"), mute = num(L"MicMute");
@@ -2333,7 +2359,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         {
             if (id == IDC_MUSICSRC)
             {
-                SetMusicSource(SendMessageW(Ctl(IDC_MUSICSRC), CB_GETCURSEL, 0, 0) == 1, true);
+                SetMusicSource((int)ComboData(IDC_MUSICSRC), true);
             }
             else if (id == IDC_LANG)
             {
@@ -2393,7 +2419,6 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                 SendMessageW(Ctl(IDC_AUTOSTART), BM_SETCHECK, S2mAutostartEnabled() ? BST_CHECKED : BST_UNCHECKED, 0);
             }
             else if (id == IDC_EXPORT) OnExport();
-            else if (id == IDC_TEST) OnTest();
             else if (id == IDC_PLAY) OnPlay();
             else if (id == IDC_IMPORT) OnImport();
             else if (id == IDC_MUSIC_BROWSE) OnMusicBrowse();
@@ -2595,9 +2620,9 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
     wc.lpszClassName = L"S2mPanel";
     RegisterClassExW(&wc);
 
-    // Size the window for the monitor DPI: 600x666 client area at 96 DPI.
+    // Size the window for the monitor DPI: 600x736 client area at 96 DPI.
     UINT dpi = GetDpiForSystem();
-    RECT r = { 0, 0, MulDiv(600, (int)dpi, 96), MulDiv(700, (int)dpi, 96) };
+    RECT r = { 0, 0, MulDiv(600, (int)dpi, 96), MulDiv(736, (int)dpi, 96) };
     DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
     AdjustWindowRectExForDpi(&r, style, FALSE, WS_EX_CONTROLPARENT, dpi);
     wchar_t title[160];

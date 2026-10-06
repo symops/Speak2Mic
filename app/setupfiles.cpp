@@ -118,11 +118,25 @@ bool SetupInstallFiles(const wchar_t* sourceDir, SetupLog log, void* ctx)
         _snwprintf(pattern, MAX_PATH, L"%ls\\*.mp3", mp3Src);
         _snwprintf(mp3Dest, MAX_PATH, L"%ls\\mp3", dest);
         pattern[MAX_PATH - 1] = mp3Dest[MAX_PATH - 1] = 0;
+        CreateDirectoryW(mp3Dest, nullptr);      // the panel's default music folder, also when no music is bundled
+        // Music bundled by earlier versions (1.mp3 .. 10.mp3, no longer shipped): removed when name and size match
+        // exactly, so a user's own files are kept.
+        static const DWORD kOldSizes[10] = { 3811412, 1997470, 4836248, 5700588, 3271409, 3049055, 1078795, 3824369,
+                                             1546074, 4922766 };
+        for (int n = 1; n <= 10; n++)
+        {
+            wchar_t old[MAX_PATH];
+            _snwprintf(old, MAX_PATH, L"%ls\\%d.mp3", mp3Dest, n);
+            old[MAX_PATH - 1] = 0;
+            WIN32_FILE_ATTRIBUTE_DATA fa;
+            if (GetFileAttributesExW(old, GetFileExInfoStandard, &fa) && !fa.nFileSizeHigh && fa.nFileSizeLow == kOldSizes[n - 1] &&
+                DeleteFileW(old))
+                AppLog(L"removed the formerly bundled %ls", old);
+        }
         WIN32_FIND_DATAW fd;
         HANDLE h = FindFirstFileW(pattern, &fd);
         if (h != INVALID_HANDLE_VALUE)
         {
-            CreateDirectoryW(mp3Dest, nullptr);
             do
             {
                 wchar_t from[MAX_PATH], to[MAX_PATH];
