@@ -245,10 +245,13 @@ Zakończ
 Uruchamiaj panel sterowania razem z Windows (w zasobniku)
 Autostart panelu sterowania włączony.
 Autostart panelu sterowania wyłączony.
-Muzyka:
+Źródło:
 Przeglądaj…
 Otwórz
 Folder z muzyką: %ls.
 Audio z folderu
 Generator
 Muzyka: generator (syntetyzuje melodie).
+Zamknij podgląd
+Mikrofon i muzyka
+Folder:

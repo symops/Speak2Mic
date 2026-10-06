@@ -245,10 +245,13 @@ Keluar
 Jalankan panel kontrol bersama Windows (di baki sistem)
 Mulai otomatis panel kontrol aktif.
 Mulai otomatis panel kontrol nonaktif.
-Musik:
+Sumber:
 Telusuri…
 Buka
 Folder musik: %ls.
 Audio dari folder
 Generator
 Musik: generator (menyintesis melodi).
+Tutup pemeriksaan
+Mikrofon dan musik
+Folder:

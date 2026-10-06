@@ -245,10 +245,13 @@ Beenden
 Systemsteuerung mit Windows starten (im Infobereich)
 Autostart der Systemsteuerung ein.
 Autostart der Systemsteuerung aus.
-Musik:
+Quelle:
 Durchsuchen…
 Öffnen
 Musikordner: %ls.
 Audio aus einem Ordner
 Generator
 Musik: Generator (erzeugt Melodien).
+Prüfung schließen
+Mikrofon und Musik
+Ordner:

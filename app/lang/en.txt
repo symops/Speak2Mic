@@ -245,13 +245,16 @@ Exit
 Start the control panel with Windows (in the tray)
 Control panel autostart on.
 Control panel autostart off.
-Music:
+Source:
 Browse…
 Open
 Music folder: %ls.
 Audio from a folder
 Generator
 Music: generator (synthesizes melodies).
+Close check
+Microphone and music
+Folder:
 [driver] the driver log is empty: the driver has never started
 [driver] ---- driver log (DriverLog) ----
 [setupapi] cannot open %ls (%lu)

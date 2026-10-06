@@ -245,10 +245,13 @@ Thoát
 Khởi động bảng điều khiển cùng Windows (trong khay hệ thống)
 Đã bật tự khởi động bảng điều khiển.
 Đã tắt tự khởi động bảng điều khiển.
-Nhạc:
+Nguồn:
 Duyệt…
 Mở
 Thư mục nhạc: %ls.
 Âm thanh từ thư mục
 Trình tạo
 Nhạc: trình tạo (tổng hợp giai điệu).
+Đóng kiểm tra
+Micrô và nhạc
+Thư mục:

@@ -245,10 +245,13 @@ Afsluiten
 Configuratiescherm met Windows starten (in het systeemvak)
 Automatisch starten van het configuratiescherm aan.
 Automatisch starten van het configuratiescherm uit.
-Muziek:
+Bron:
 Bladeren…
 Openen
 Muziekmap: %ls.
 Audio uit een map
 Generator
 Muziek: generator (maakt melodieën).
+Controle sluiten
+Microfoon en muziek
+Map:

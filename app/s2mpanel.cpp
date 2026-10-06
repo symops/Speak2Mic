@@ -36,7 +36,7 @@ enum
     IDC_GROUP3, IDC_L_SPKNAME, IDC_SPKNAME, IDC_L_MICNAME, IDC_MICNAME, IDC_RENAME, IDC_RENAME_STATUS,
     IDC_RESET_ALL, IDC_MIXER, IDC_CLEARLOG, IDC_L_MICVOL, IDC_MICVOL, IDC_MICVOL_VALUE, IDC_MICMUTE,
     IDC_EXPORT, IDC_IMPORT, IDC_IO_STATUS, IDC_PLAY, IDC_AUTOSTART,
-    IDC_L_MUSIC, IDC_MUSICDIR, IDC_MUSIC_BROWSE, IDC_MUSIC_OPEN, IDC_MUSICSRC,
+    IDC_L_MUSIC, IDC_MUSICDIR, IDC_MUSIC_BROWSE, IDC_MUSIC_OPEN, IDC_MUSICSRC, IDC_SIGNAL, IDC_L_MUSICDIR,
 };
 
 // Default endpoint names (driver pin names, see gen.py); the user can rename them in the panel.
@@ -323,6 +323,7 @@ static void ClearMeter(HWND meter)
 
 static HINSTANCE   g_inst;
 static HWND        g_wnd;
+static HWND        g_sig;          // "Signal" window (the meters), shown by the "Check" button
 static HFONT       g_font, g_fontBold;
 static HICON       g_toolIcons[5];      // reset / export / import / mixer / clear log (resources 10..14), for the DPI
 static UINT        g_dpi = 96;
@@ -342,7 +343,9 @@ static int         g_devCount;
 static LevelMeter  g_meterIn, g_meterOut;
 static bool        g_inFound, g_outFound;
 
-static HWND Ctl(int id) { return GetDlgItem(g_wnd, id); }
+// The meters, their labels and formats live in the "Signal" window, everything else in the panel.
+static bool IsSignalCtl(int id) { return id >= IDC_IN_LABEL && id <= IDC_OUT_FORMAT; }
+static HWND Ctl(int id) { return GetDlgItem(IsSignalCtl(id) ? g_sig : g_wnd, id); }
 static int S(int v) { return MulDiv(v, (int)g_dpi, 96); }
 
 static void SetText(int id, const wchar_t* text)
@@ -541,7 +544,7 @@ static void ClearEvents()
 
 static HWND Create(const wchar_t* cls, const wchar_t* text, DWORD style, int id, DWORD exStyle = 0)
 {
-    HWND h = CreateWindowExW(exStyle, cls, text, WS_CHILD | WS_VISIBLE | style, 0, 0, 10, 10, g_wnd,
+    HWND h = CreateWindowExW(exStyle, cls, text, WS_CHILD | WS_VISIBLE | style, 0, 0, 10, 10, IsSignalCtl(id) ? g_sig : g_wnd,
                              (HMENU)(INT_PTR)id, g_inst, nullptr);
     SendMessageW(h, WM_SETFONT, (WPARAM)g_font, FALSE);
     return h;
@@ -600,10 +603,10 @@ static void ApplyFonts()
                          CLEARTYPE_QUALITY, 0, L"Segoe UI");
     g_fontBold = CreateFontW(-MulDiv(9, (int)g_dpi, 72), 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0,
                              CLEARTYPE_QUALITY, 0, L"Segoe UI");
-    for (HWND c = GetWindow(g_wnd, GW_CHILD); c; c = GetWindow(c, GW_HWNDNEXT))
-    {
-        SendMessageW(c, WM_SETFONT, (WPARAM)g_font, TRUE);
-    }
+    HWND parents[2] = { g_wnd, g_sig };
+    for (HWND parent : parents)
+        for (HWND c = parent ? GetWindow(parent, GW_CHILD) : nullptr; c; c = GetWindow(c, GW_HWNDNEXT))
+            SendMessageW(c, WM_SETFONT, (WPARAM)g_font, TRUE);
     SendMessageW(Ctl(IDC_IN_DB), WM_SETFONT, (WPARAM)g_fontBold, TRUE);
     SendMessageW(Ctl(IDC_OUT_DB), WM_SETFONT, (WPARAM)g_fontBold, TRUE);
 }
@@ -634,25 +637,34 @@ static void Layout()
     Place(IDC_L_MICNAME, L1, 308, 94, 20);  Place(IDC_MICNAME, C1, 304, 272, 23);
     Place(IDC_RENAME, C2, 303, W2, 27);
 
-    Place(IDC_GROUP2, 12, 348, 576, 322);
-    Place(IDC_IN_LABEL, L1, 374, 400, 20);  Place(IDC_IN_DB, 430, 374, 142, 20);
-    Place(IDC_IN_METER, L1, 396, 548, 34);
-    Place(IDC_IN_FORMAT, L1, 434, 548, 20);
-    Place(IDC_OUT_LABEL, L1, 464, 400, 20); Place(IDC_OUT_DB, 430, 464, 142, 20);
-    Place(IDC_OUT_METER, L1, 486, 548, 34);
-    Place(IDC_OUT_FORMAT, L1, 524, 548, 36);
+    Place(IDC_GROUP2, 12, 348, 576, 166);
     // One row, text vertically centred in the same 24-px band as the checkbox and the slider's middle.
-    Place(IDC_L_MICVOL, L1, 564, 160, 24);  Place(IDC_MICVOL, 188, 562, 236, 28);
-    Place(IDC_MICVOL_VALUE, 424, 564, 62, 24);
-    Place(IDC_MICMUTE, 494, 564, 90, 24);
-    // the music folder ("Play")
-    Place(IDC_L_MUSIC, L1, 602, 96, 20);    Place(IDC_MUSICSRC, C1 + 4, 598, 160, 300);
-    Place(IDC_MUSICDIR, 290, 599, 126, 23);
-    Place(IDC_MUSIC_BROWSE, 420, 597, 74, 27);  Place(IDC_MUSIC_OPEN, 498, 597, 74, 27);
-    Place(IDC_PLAY, L1, 634, 150, 28);      // plays the chosen source (as Show2Cam's buttons: bottom left)
-    Place(IDC_IO_STATUS, L1, 676, 512, 300); // events (newest at the bottom, shown when closed)
-    Place(IDC_CLEARLOG, 542, 674, 32, 26);   // clear the event log
-    Place(IDC_AUTOSTART, L1, 708, 548, 22);  // start with Windows (in the tray)
+    Place(IDC_L_MICVOL, L1, 374, 160, 24);  Place(IDC_MICVOL, 188, 372, 236, 28);
+    Place(IDC_MICVOL_VALUE, 424, 374, 62, 24);
+    Place(IDC_MICMUTE, 494, 374, 90, 24);
+    // the source of "Play", and its folder on a row of its own (as Show2Cam's "Folder")
+    Place(IDC_L_MUSIC, L1, 412, 96, 20);    Place(IDC_MUSICSRC, C1 + 4, 408, 282, 300);
+    Place(IDC_L_MUSICDIR, L1, 446, 96, 20); Place(IDC_MUSICDIR, C1 + 4, 442, 288, 23);
+    Place(IDC_MUSIC_BROWSE, 420, 441, 74, 27);  Place(IDC_MUSIC_OPEN, 498, 441, 74, 27);
+    // "Check" (the signal window) and "Play", as Show2Cam's buttons: bottom left
+    Place(IDC_SIGNAL, L1, 478, 150, 28);    Place(IDC_PLAY, 180, 478, 110, 28);
+    Place(IDC_IO_STATUS, L1, 522, 512, 300); // events (newest at the bottom, shown when closed)
+    Place(IDC_CLEARLOG, 542, 520, 32, 26);   // clear the event log
+    Place(IDC_AUTOSTART, L1, 554, 548, 22);  // start with Windows (in the tray)
+
+    // The "Signal" window: 600 x 208 client area.
+    Place(IDC_IN_LABEL, L1, 14, 400, 20);   Place(IDC_IN_DB, 430, 14, 142, 20);
+    Place(IDC_IN_METER, L1, 36, 548, 34);
+    Place(IDC_IN_FORMAT, L1, 74, 548, 20);
+    Place(IDC_OUT_LABEL, L1, 104, 400, 20); Place(IDC_OUT_DB, 430, 104, 142, 20);
+    Place(IDC_OUT_METER, L1, 126, 548, 34);
+    Place(IDC_OUT_FORMAT, L1, 164, 548, 36);
+    if (g_sig)
+    {
+        RECT r = { 0, 0, S(600), S(208) };
+        AdjustWindowRectExForDpi(&r, (DWORD)GetWindowLongW(g_sig, GWL_STYLE), FALSE, (DWORD)GetWindowLongW(g_sig, GWL_EXSTYLE), g_dpi);
+        SetWindowPos(g_sig, nullptr, 0, 0, r.right - r.left, r.bottom - r.top, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
     if (g_eventsWidest) FitEventList(nullptr);   // new DPI: text widths changed
 
     // Bottom row: settings file.
@@ -684,7 +696,10 @@ static void CreateControls()
     Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_MICNAME, WS_EX_CLIENTEDGE);
     Create(L"BUTTON", TR(L"Переименовать"), BS_PUSHBUTTON | WS_TABSTOP, IDC_RENAME);
 
-    Create(L"BUTTON", TR(L"Индикация сигнала"), BS_GROUPBOX, IDC_GROUP2);
+    // the meters' own window (hidden until "Check"); owned by the panel, so it stays above it and closes with it
+    g_sig = CreateWindowExW(WS_EX_CONTROLPARENT, L"S2mSignal", TR(L"Индикация сигнала"), WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+                            CW_USEDEFAULT, CW_USEDEFAULT, 10, 10, g_wnd, nullptr, g_inst, nullptr);
+    Create(L"BUTTON", TR(L"Микрофон и музыка"), BS_GROUPBOX, IDC_GROUP2);
     Create(L"STATIC", L"", 0, IDC_IN_LABEL);
     Create(L"STATIC", L"", SS_RIGHT, IDC_IN_DB);
     Create(L"S2mMeter", L"", 0, IDC_IN_METER);
@@ -697,15 +712,17 @@ static void CreateControls()
     Create(TRACKBAR_CLASSW, L"", TBS_HORZ | TBS_BOTTOM | WS_TABSTOP, IDC_MICVOL);
     Create(L"STATIC", L"", SS_RIGHT | SS_CENTERIMAGE, IDC_MICVOL_VALUE);
     Create(L"BUTTON", TR(L"Без звука"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_MICMUTE);
-    Create(L"STATIC", TR(L"Музыка:"), 0, IDC_L_MUSIC);
+    Create(L"STATIC", TR(L"Источник:"), 0, IDC_L_MUSIC);
     Create(WC_COMBOBOXW, L"", CBS_DROPDOWNLIST | WS_TABSTOP, IDC_MUSICSRC);
     ComboAdd(IDC_MUSICSRC, TR(L"Проверка"), MusicTestSrc);
     ComboAdd(IDC_MUSICSRC, TR(L"Аудио из папки"), MusicFolderSrc);
     ComboAdd(IDC_MUSICSRC, TR(L"Генератор"), MusicGeneratorSrc);
+    Create(L"STATIC", TR(L"Папка:"), 0, IDC_L_MUSICDIR);
     Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_MUSICDIR, WS_EX_CLIENTEDGE);
     SendMessageW(Ctl(IDC_MUSICDIR), EM_LIMITTEXT, MAX_PATH - 1, 0);
     Create(L"BUTTON", TR(L"Обзор…"), BS_PUSHBUTTON | WS_TABSTOP, IDC_MUSIC_BROWSE);
     Create(L"BUTTON", TR(L"Открыть"), BS_PUSHBUTTON | WS_TABSTOP, IDC_MUSIC_OPEN);
+    Create(L"BUTTON", TR(L"Проверка"), BS_PUSHBUTTON | WS_TABSTOP, IDC_SIGNAL);
     Create(L"BUTTON", TR(L"Играть"), BS_PUSHBUTTON | WS_TABSTOP, IDC_PLAY);
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETRANGE, FALSE, MAKELPARAM(0, kMicMaxPercent));
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETPAGESIZE, 0, 10);
@@ -1241,9 +1258,9 @@ static void ShowMusicSource()
     g_updatingControls = true;
     ComboSelectData(IDC_MUSICSRC, src);
     g_updatingControls = false;
-    EnableWindow(Ctl(IDC_MUSICDIR), src == MusicFolderSrc);
-    EnableWindow(Ctl(IDC_MUSIC_BROWSE), src == MusicFolderSrc);
-    EnableWindow(Ctl(IDC_MUSIC_OPEN), src == MusicFolderSrc);
+    // the folder row only for "Audio from a folder"
+    const int row[4] = { IDC_L_MUSICDIR, IDC_MUSICDIR, IDC_MUSIC_BROWSE, IDC_MUSIC_OPEN };
+    for (int id : row) ShowWindow(Ctl(id), src == MusicFolderSrc ? SW_SHOW : SW_HIDE);
 }
 
 static void StopMusic();
@@ -2130,8 +2147,43 @@ static void TrayIcon(DWORD op)
     if (nid.hIcon) DestroyIcon(nid.hIcon);
 }
 
+// The "Signal" window: shown next to the panel (right of it, or left when there is no room), hidden again.
+static void ShowSignal(bool on)
+{
+    if (!g_sig) return;
+    if (on && !IsWindowVisible(g_sig))
+    {
+        RECT p, s;
+        GetWindowRect(g_wnd, &p);
+        GetWindowRect(g_sig, &s);
+        int w = s.right - s.left, h = s.bottom - s.top;
+        MONITORINFO mi = { sizeof(mi) };
+        GetMonitorInfoW(MonitorFromWindow(g_wnd, MONITOR_DEFAULTTONEAREST), &mi);
+        int x = p.right + S(4);
+        if (x + w > mi.rcWork.right) x = p.left - w - S(4);
+        if (x < mi.rcWork.left) x = p.left + (p.right - p.left - w) / 2;
+        int y = p.top;
+        if (y + h > mi.rcWork.bottom) y = mi.rcWork.bottom - h;
+        SetWindowPos(g_sig, nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+        ShowWindow(g_sig, SW_SHOWNA);
+    }
+    else if (!on) ShowWindow(g_sig, SW_HIDE);
+    SetText(IDC_SIGNAL, on ? TR(L"Закрыть проверку") : TR(L"Проверка"));
+}
+
+static LRESULT CALLBACK SignalProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+    if (msg == WM_CLOSE)
+    {
+        ShowSignal(false);                  // closing only hides it: the meters keep running for the panel
+        return 0;
+    }
+    return DefWindowProcW(hwnd, msg, wp, lp);
+}
+
 static void ToTray()
 {
+    ShowSignal(false);
     if (!g_inTray) TrayIcon(NIM_ADD);
     g_inTray = true;
     ShowWindow(g_wnd, SW_HIDE);
@@ -2190,6 +2242,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         }
         ApplyFonts();
         Layout();
+#ifdef S2M_UI_TEST
+        if (GetEnvironmentVariableW(L"S2M_TEST_SIGNAL", nullptr, 0)) PostMessageW(hwnd, WM_COMMAND, IDC_SIGNAL, 0);
+#endif
         MarkDriverLog();
         wcscpy(g_driverLogMark + 11, L"00:00:00.000");         // from midnight today
         g_driverInstalled = ReadSettings(&g_settings);
@@ -2422,6 +2477,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             }
             else if (id == IDC_EXPORT) OnExport();
             else if (id == IDC_PLAY) OnPlay();
+            else if (id == IDC_SIGNAL) ShowSignal(!IsWindowVisible(g_sig));
             else if (id == IDC_IMPORT) OnImport();
             else if (id == IDC_MUSIC_BROWSE) OnMusicBrowse();
             else if (id == IDC_MUSIC_OPEN) OnMusicOpen();
@@ -2613,6 +2669,15 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
     mc.lpszClassName = L"S2mMeter";
     RegisterClassExW(&mc);
 
+    WNDCLASSEXW sc = { sizeof(sc) };
+    sc.lpfnWndProc = SignalProc;
+    sc.hInstance = inst;
+    sc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    sc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    sc.hIcon = LoadIconW(inst, MAKEINTRESOURCEW(1));
+    sc.lpszClassName = L"S2mSignal";
+    RegisterClassExW(&sc);
+
     WNDCLASSEXW wc = { sizeof(wc) };
     wc.lpfnWndProc = WndProc;
     wc.hInstance = inst;
@@ -2622,9 +2687,9 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
     wc.lpszClassName = L"S2mPanel";
     RegisterClassExW(&wc);
 
-    // Size the window for the monitor DPI: 600x736 client area at 96 DPI.
+    // Size the window for the monitor DPI: 600x584 client area at 96 DPI.
     UINT dpi = GetDpiForSystem();
-    RECT r = { 0, 0, MulDiv(600, (int)dpi, 96), MulDiv(736, (int)dpi, 96) };
+    RECT r = { 0, 0, MulDiv(600, (int)dpi, 96), MulDiv(584, (int)dpi, 96) };
     DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
     AdjustWindowRectExForDpi(&r, style, FALSE, WS_EX_CONTROLPARENT, dpi);
     wchar_t title[160];

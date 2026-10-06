@@ -245,10 +245,13 @@ Salir
 Iniciar el panel de control con Windows (en la bandeja)
 Inicio automático del panel activado.
 Inicio automático del panel desactivado.
-Música:
+Origen:
 Examinar…
 Abrir
 Carpeta de música: %ls.
 Audio de una carpeta
 Generador
 Música: generador (sintetiza melodías).
+Cerrar comprobación
+Micrófono y música
+Carpeta:

@@ -245,10 +245,13 @@ Quitter
 Démarrer le panneau de configuration avec Windows (dans la zone de notification)
 Démarrage automatique du panneau activé.
 Démarrage automatique du panneau désactivé.
-Musique :
+Source :
 Parcourir…
 Ouvrir
 Dossier de musique : %ls.
 Audio d’un dossier
 Générateur
 Musique : générateur (synthétise des mélodies).
+Fermer la vérification
+Microphone et musique
+Dossier :

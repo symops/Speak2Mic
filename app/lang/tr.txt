@@ -245,10 +245,13 @@ Denetim masasını aç
 Denetim masasını Windows ile başlat (sistem tepsisinde)
 Denetim masasının otomatik başlatılması açık.
 Denetim masasının otomatik başlatılması kapalı.
-Müzik:
+Kaynak:
 Gözat…
 Aç
 Müzik klasörü: %ls.
 Klasördeki ses
 Üreteç
 Müzik: üreteç (melodi sentezler).
+Denetimi kapat
+Mikrofon ve müzik
+Klasör:
