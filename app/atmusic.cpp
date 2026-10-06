@@ -206,6 +206,36 @@ static int AddSamples(TestMusic* m, MusicLog log)
     return added;
 }
 
+// Folders of earlier runs whose program no longer runs (closed with the window's close box: no time to clean up).
+static void RemoveStaleFolders(const wchar_t* tmp, const wchar_t* prefix)
+{
+    wchar_t pattern[MAX_PATH];
+    _snwprintf(pattern, MAX_PATH, L"%ls\\%ls*", tmp, prefix);
+    pattern[MAX_PATH - 1] = 0;
+    WIN32_FIND_DATAW fd;
+    HANDLE h = FindFirstFileW(pattern, &fd);
+    if (h == INVALID_HANDLE_VALUE) return;
+    do
+    {
+        if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) continue;
+        DWORD pid = (DWORD)wcstoul(fd.cFileName + wcslen(prefix), nullptr, 10);
+        if (!pid || pid == GetCurrentProcessId()) continue;
+        HANDLE p = OpenProcess(SYNCHRONIZE, FALSE, pid);
+        bool alive = p && WaitForSingleObject(p, 0) == WAIT_TIMEOUT;
+        if (p) CloseHandle(p);
+        if (alive) continue;
+        wchar_t from[MAX_PATH + 2] = {};
+        _snwprintf(from, MAX_PATH, L"%ls\\%ls", tmp, fd.cFileName);
+        SHFILEOPSTRUCTW op = {};
+        op.wFunc = FO_DELETE;
+        op.pFrom = from;
+        op.fFlags = FOF_NO_UI;
+        int rc = SHFileOperationW(&op);
+        AppLog(L"left over from an earlier run: %ls removed (%d)", from, rc);
+    } while (FindNextFileW(h, &fd));
+    FindClose(h);
+}
+
 bool TestMusicCreate(TestMusic* m, MusicLog log)
 {
     ZeroMemory(m, sizeof(*m));
@@ -213,6 +243,7 @@ bool TestMusicCreate(TestMusic* m, MusicLog log)
     GetTempPathW(MAX_PATH - 40, tmp);
     size_t len = wcslen(tmp);
     if (len && tmp[len - 1] == L'\\') tmp[len - 1] = 0;
+    RemoveStaleFolders(tmp, L"s2mautotest-");
     _snwprintf(m->root, MAX_PATH, L"%ls\\s2mautotest-%lu", tmp, GetCurrentProcessId());
     m->root[MAX_PATH - 1] = 0;
     if (!CreateDirectoryW(m->root, nullptr) && GetLastError() != ERROR_ALREADY_EXISTS)
