@@ -144,9 +144,27 @@ static void WriteJunk(const wchar_t* path, const char* text, DWORD size)
     CloseHandle(f);
 }
 
-// The samples built in as resources (RCDATA 500 = manifest "music|file|-", 501.. = the files in its order).
+// One RCDATA resource into a file (an empty one is written as an empty file).
+static bool WriteResource(int id, const wchar_t* path)
+{
+    HRSRC fr = FindResourceW(nullptr, MAKEINTRESOURCEW(id), (LPCWSTR)RT_RCDATA);
+    if (!fr) return false;
+    HGLOBAL fg = LoadResource(nullptr, fr);
+    const void* data = fg ? LockResource(fg) : nullptr;
+    DWORD bytes = SizeofResource(nullptr, fr);
+    HANDLE f = CreateFileW(path, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, 0, nullptr);
+    DWORD n = 0;
+    bool ok = f != INVALID_HANDLE_VALUE && (!bytes || (data && WriteFile(f, data, bytes, &n, nullptr) && n == bytes));
+    if (f != INVALID_HANDLE_VALUE) CloseHandle(f);
+    return ok;
+}
+
+// The samples built in as resources (RCDATA 500 = manifest "music|file|-" / "broken-music|file|-", 501.. = the files in
+// its order).
 static int AddSamples(TestMusic* m, MusicLog log)
 {
+    wchar_t brokenFolder[MAX_PATH] = L"";
+    int brokenCount = 0;
     HRSRC r = FindResourceW(nullptr, MAKEINTRESOURCEW(500), (LPCWSTR)RT_RCDATA);
     HGLOBAL g = r ? LoadResource(nullptr, r) : nullptr;
     const char* text = g ? (const char*)LockResource(g) : nullptr;
@@ -172,8 +190,22 @@ static int AddSamples(TestMusic* m, MusicLog log)
             continue;
         }
         *f2 = 0;
+        *f1 = 0;
+        bool broken = !strcmp(line, "broken-music");
         wchar_t file[128], sub[160], path[MAX_PATH];
         MultiByteToWideChar(CP_UTF8, 0, f1 + 1, -1, file, 128);
+        if (broken)
+        {
+            // into the folder of broken files (with one good file, see below)
+            if (!brokenCount)
+            {
+                Join(brokenFolder, m->root, L"music-broken");
+                CreateDirectoryW(brokenFolder, nullptr);
+            }
+            Join(path, brokenFolder, file);
+            if (WriteResource(id, path)) brokenCount++;
+            continue;
+        }
         _snwprintf(sub, 160, L"sample-%ls", file);
         for (wchar_t* q = sub; *q; q++)
             if (*q == L'.') *q = L'-';
@@ -181,15 +213,7 @@ static int AddSamples(TestMusic* m, MusicLog log)
         Join(tf.folder, m->root, sub);
         CreateDirectoryW(tf.folder, nullptr);
         Join(path, tf.folder, file);
-        HRSRC fr = FindResourceW(nullptr, MAKEINTRESOURCEW(id), (LPCWSTR)RT_RCDATA);
-        HGLOBAL fg = fr ? LoadResource(nullptr, fr) : nullptr;
-        const void* data = fg ? LockResource(fg) : nullptr;
-        DWORD bytes = fr ? SizeofResource(nullptr, fr) : 0;
-        HANDLE f = data ? CreateFileW(path, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, 0, nullptr) : INVALID_HANDLE_VALUE;
-        DWORD n = 0;
-        bool ok = f != INVALID_HANDLE_VALUE && WriteFile(f, data, bytes, &n, nullptr) && n == bytes;
-        if (f != INVALID_HANDLE_VALUE) CloseHandle(f);
-        if (!ok)
+        if (!WriteResource(id, path))
         {
             LogF(log, L"  sample %ls not written", file);
             continue;
@@ -202,7 +226,21 @@ static int AddSamples(TestMusic* m, MusicLog log)
         Join(copy, m->all, name);
         CopyFileW(path, copy, FALSE);
     }
-    LogF(log, L"  built-in samples: %d", added);
+    // the broken files' folder gets one good file (the generated WAV): the player must skip the others and play it
+    if (brokenCount && m->formatCount < 24)
+    {
+        wchar_t good[MAX_PATH] = L"", copy[MAX_PATH];
+        for (int i = 0; i < m->formatCount && !good[0]; i++)
+            if (!wcscmp(m->formats[i].format, L"WAV")) Join(good, m->formats[i].folder, L"melody.wav");
+        Join(copy, brokenFolder, L"good-melody.wav");
+        if (good[0] && CopyFileW(good, copy, FALSE))
+        {
+            TestMusicFolder& tf = m->formats[m->formatCount++];
+            wcscpy(tf.folder, brokenFolder);
+            _snwprintf(tf.format, 64, L"%d broken files + a good WAV", brokenCount);
+        }
+    }
+    LogF(log, L"  built-in samples: %d, broken files: %d", added, brokenCount);
     return added;
 }
 

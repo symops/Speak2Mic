@@ -26,6 +26,9 @@ static UINT          g_msg, g_trackMsg;
 static wchar_t       g_resumeFile[MAX_PATH];
 static LONGLONG      g_resumePos;           // 100-ns units
 static wchar_t       g_lastFile[MAX_PATH];
+static wchar_t       g_bad[32][MAX_PATH];   // files that could not be played (skipped for a minute)
+static int           g_badCount;
+static DWORD         g_badReset;
 // The first track, chosen by Mp3Play (so the caller can name it), and its start position.
 static wchar_t       g_firstFile[MAX_PATH];
 static LONGLONG      g_firstPos;
@@ -146,18 +149,29 @@ static bool PickFile(wchar_t* path, LONGLONG* pos)
     }
     g_resumeFile[0] = 0;
     if (n == 0) return false;
-    // Random, but never the track just played while there is another one: draw again until it differs (at most one
-    // of the n files is the last one, so this ends). A single file simply plays again.
-    int pick;
-    for (;;)
+    // The files that can be played (not remembered as broken), the last one played only when it is the only one.
+    // Random among them.
+    DWORD now = GetTickCount();
+    if ((int)(now - g_badReset) >= 0)
     {
-        pick = RandomIndex(n);
-        if (n == 1) break;
-        wchar_t candidate[MAX_PATH];
-        _snwprintf(candidate, MAX_PATH, L"%ls\\%ls", g_folder, names[pick]);
-        candidate[MAX_PATH - 1] = 0;
-        if (_wcsicmp(candidate, g_lastFile) != 0) break;
+        g_badCount = 0;                         // files may have been replaced: tried again after a minute
+        g_badReset = now + 60000;
     }
+    static int ok[512];
+    int good = 0, last = -1;
+    for (int i = 0; i < n; i++)
+    {
+        wchar_t candidate[MAX_PATH];
+        _snwprintf(candidate, MAX_PATH, L"%ls\\%ls", g_folder, names[i]);
+        candidate[MAX_PATH - 1] = 0;
+        bool bad = false;
+        for (int b = 0; b < g_badCount && !bad; b++) bad = _wcsicmp(g_bad[b], candidate) == 0;
+        if (bad) continue;
+        if (_wcsicmp(candidate, g_lastFile) == 0) last = i;
+        else ok[good++] = i;
+    }
+    if (!good && last < 0) return false;        // every file is one that cannot be played
+    int pick = good ? ok[RandomIndex(good)] : last;
     _snwprintf(path, MAX_PATH, L"%ls\\%ls", g_folder, names[pick]);
     path[MAX_PATH - 1] = 0;
     return true;
@@ -540,11 +554,11 @@ static DWORD WINAPI PlayThread(LPVOID)
         UINT32 srcCh = dec.ch, srcRate = dec.rate;
         if (FAILED(fr))
         {
-            AppLog(L"mp3: cannot play %ls (0x%08lX), skipping it", path, (unsigned long)fr);
+            AppLog(L"mp3: cannot play %ls (0x%08lX), skipped for a minute", path, (unsigned long)fr);
             DecClose(&dec);
-            wcscpy(g_lastFile, path);
-            Sleep(200);
-            continue;
+            if (g_badCount < 32) wcscpy(g_bad[g_badCount++], path);
+            if (g_badCount == 1) g_badReset = GetTickCount() + 60000;
+            continue;                           // the next file at once (no gap of silence)
         }
         AppLog(L"mp3: playing %ls%ls (%u Hz, %u ch)", path, pos > 0 ? L" (continued)" : L"", srcRate, srcCh);
         wcscpy(g_lastFile, path);
