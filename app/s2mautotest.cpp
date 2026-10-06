@@ -642,7 +642,33 @@ static void ActionSignal()
     float quietLimit = QuietLimit(q);
     SignalResult quiet = RunSignal(g_spk.id, g_mic.id, -1, 0.0f, 300, (int)q.latency);
     if (Check(SUCCEEDED(quiet.hr), L"silence run opened both streams (0x%08lX)", (unsigned long)quiet.hr))
-        Check(Db(quiet.peakAll) < quietLimit, L"silence: microphone peak %.1f dBFS < %.1f", Db(quiet.peakAll), quietLimit);
+    {
+        float peak = Db(quiet.peakAll);
+        if (peak >= quietLimit)
+        {
+            // Something else reached the microphone (another program's sound, a recorder that raised the volume, an
+            // old buffer): log who uses the endpoints and the volume now, then listen once more. A clean repeat is a
+            // passing glitch (warning); only a repeated one fails.
+            float vdb = 0, vmn = 0, vmx = 0;
+            bool vmute = false;
+            GetEndpointVolumeDb(g_mic.id, &vdb, &vmn, &vmx);
+            GetEndpointMute(g_mic.id, &vmute);
+            Out(L"  info silence first attempt: peak %.1f dBFS, %d/%d windows dropped; microphone volume now %.2f dB%ls", peak,
+                quiet.dropouts, quiet.windows, vdb, vmute ? L", muted" : L"");
+            LogMicSessions();
+            MicToUnity();
+            Sleep(300);
+            SignalResult again = RunSignal(g_spk.id, g_mic.id, -1, 0.0f, 300, (int)q.latency);
+            float peak2 = SUCCEEDED(again.hr) ? Db(again.peakAll) : 0.0f;
+            if (peak2 < quietLimit)
+                Warn(L"silence: the first measurement had %.1f dBFS, the repeat is clean (%.1f dBFS; passing glitch, see above)", peak,
+                     peak2);
+            else
+                Check(false, L"silence: microphone peak %.1f dBFS, again %.1f dBFS (< %.1f wanted)", peak, peak2, quietLimit);
+        }
+        else
+            Check(true, L"silence: microphone peak %.1f dBFS < %.1f", peak, quietLimit);
+    }
     for (int ch = 0; ch < spkChannels && !g_stop; ch++)
     {
         SignalResult r = RunSignal(g_spk.id, g_mic.id, ch, 0.1f, 700, (int)q.latency);
@@ -1162,7 +1188,18 @@ static void ActionMusic()
         Check(!Mp3Playing(), L"paused");
         float off = level();
         float quietLimit = QuietLimit(q);      // the dither of a 16-bit speaker is no music
-        Check(off < quietLimit, L"paused: microphone peak %.1f dBFS < %.1f", off, quietLimit);
+        if (off >= quietLimit)
+        {
+            // As the silence of [signal]: a recorder may have raised the volume meanwhile; once more at unity gain.
+            Out(L"  info paused first attempt: %.1f dBFS", off);
+            LogMicSessions();
+            MicToUnity();
+            float again = level();
+            if (again < quietLimit) Warn(L"paused: the first measurement had %.1f dBFS, the repeat is clean (%.1f dBFS)", off, again);
+            else Check(false, L"paused: microphone peak %.1f dBFS, again %.1f dBFS (< %.1f wanted)", off, again, quietLimit);
+        }
+        else
+            Check(true, L"paused: microphone peak %.1f dBFS < %.1f", off, quietLimit);
 
         Check(Mp3Play(g_spk.id, folder, nullptr, 0) && Mp3Playing(), L"playback continued");
         Sleep(300);
