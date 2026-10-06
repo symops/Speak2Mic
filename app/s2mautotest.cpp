@@ -39,6 +39,9 @@
 #include <io.h>
 #include <fcntl.h>
 #include <wtsapi32.h>
+#include <mmdeviceapi.h>
+#include <functiondiscoverykeys_devpkey.h>
+#include "setupcore.h"
 
 // ---------------------------------------------------------------------------
 // Output and checks
@@ -204,6 +207,120 @@ static bool ApplyQuality(const Quality& q)
     AudioStartServices(&svc);
     if (ok && found && !reboot) S2mCleanupOrphanEndpoints(8000);     // as the panel / s2mctl do
     return ok && found && !reboot;
+}
+
+// ---------------------------------------------------------------------------
+// Endpoints that do not come back after a restart: what is going on (device node, endpoint states, audio service, the
+// driver's last lines), a longer wait, then one more restart, so a 10-hour run does not end at the first stall.
+
+static AudioDevice g_spk, g_mic;        // the cable's endpoints (found again after every restart)
+
+static void LogEndpointStates()
+{
+    IMMDeviceEnumerator* en = nullptr;
+    IMMDeviceCollection* list = nullptr;
+    if (FAILED(CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&en)))) return;
+    UINT n = 0;
+    if (SUCCEEDED(en->EnumAudioEndpoints(eAll, DEVICE_STATEMASK_ALL, &list))) list->GetCount(&n);
+    int shown = 0;
+    for (UINT i = 0; i < n; i++)
+    {
+        IMMDevice* d = nullptr;
+        IPropertyStore* ps = nullptr;
+        if (SUCCEEDED(list->Item(i, &d)) && SUCCEEDED(d->OpenPropertyStore(STGM_READ, &ps)))
+        {
+            PROPVARIANT name, adapter;
+            PropVariantInit(&name);
+            PropVariantInit(&adapter);
+            ps->GetValue(PKEY_Device_FriendlyName, &name);
+            ps->GetValue(PKEY_DeviceInterface_FriendlyName, &adapter);
+            bool ours = (adapter.vt == VT_LPWSTR && wcsstr(adapter.pwszVal, L"Speak2Mic")) ||
+                        (name.vt == VT_LPWSTR && wcsstr(name.pwszVal, L"Speak2Mic"));
+            DWORD state = 0;
+            d->GetState(&state);
+            if (ours && shown < 12)
+            {
+                shown++;
+                Out(L"  info endpoint \"%ls\": state %ls", name.vt == VT_LPWSTR ? name.pwszVal : L"?",
+                    state == DEVICE_STATE_ACTIVE ? L"active" : state == DEVICE_STATE_DISABLED ? L"DISABLED" :
+                    state == DEVICE_STATE_NOTPRESENT ? L"NOT PRESENT" : L"UNPLUGGED");
+            }
+            PropVariantClear(&name);
+            PropVariantClear(&adapter);
+        }
+        if (ps) ps->Release();
+        if (d) d->Release();
+    }
+    if (!shown) Out(L"  info no Speak2Mic endpoint records at all");
+    if (list) list->Release();
+    en->Release();
+}
+
+static void LogDriverTail(int maxLines)
+{
+    DWORD size = 0;
+    if (RegGetValueW(HKEY_LOCAL_MACHINE, S2M_PARAMS_KEY, L"DriverLog", RRF_RT_REG_SZ, nullptr, nullptr, &size) != ERROR_SUCCESS || !size)
+        return;
+    wchar_t* text = (wchar_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size + 2);
+    if (!text) return;
+    if (RegGetValueW(HKEY_LOCAL_MACHINE, S2M_PARAMS_KEY, L"DriverLog", RRF_RT_REG_SZ, nullptr, text, &size) == ERROR_SUCCESS)
+    {
+        const wchar_t* lines[64];
+        int n = 0;
+        for (wchar_t* p = text; *p;)
+        {
+            wchar_t* e = p;
+            while (*e && *e != L'\r' && *e != L'\n') e++;
+            wchar_t c = *e;
+            *e = 0;
+            if (*p)
+            {
+                if (n == 64) { memmove(lines, lines + 1, sizeof(lines[0]) * 63); n--; }
+                lines[n++] = p;
+            }
+            p = c ? e + 1 : e;
+        }
+        for (int i = n > maxLines ? n - maxLines : 0; i < n; i++) Out(L"  driver: %ls", lines[i]);
+    }
+    HeapFree(GetProcessHeap(), 0, text);
+}
+
+static void LogWhyMissing()
+{
+    ULONG status = 0, problem = 0;
+    wchar_t inst[200] = L"";
+    if (SetupGetDeviceState(&status, &problem, inst, 200))
+        Out(L"  info device %ls: status 0x%08lX, problem %lu%ls", inst, status, problem, problem ? L" (see CM_PROB_*)" : L"");
+    else
+        Out(L"  info no Speak2Mic device node");
+    SC_HANDLE scm = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
+    SC_HANDLE svc = scm ? OpenServiceW(scm, L"Audiosrv", SERVICE_QUERY_STATUS) : nullptr;
+    SERVICE_STATUS ss = {};
+    if (svc && QueryServiceStatus(svc, &ss)) Out(L"  info Windows Audio service state %lu (4 = running)", ss.dwCurrentState);
+    if (svc) CloseServiceHandle(svc);
+    if (scm) CloseServiceHandle(scm);
+    LogEndpointStates();
+    LogDriverTail(15);
+}
+
+// After the first 20 s: diagnostics, 40 s more, then one more restart with the current settings. true: back.
+static bool RecoverEndpoints(const wchar_t* when)
+{
+    Out(L"  info Speak2Mic endpoints not back 20 s after %ls:", when);
+    LogWhyMissing();
+    DWORD t0 = GetTickCount();
+    if (WaitOurs(&g_spk, &g_mic, 40000))
+    {
+        Warn(L"endpoints came back late: %lu s after %ls", 20 + (GetTickCount() - t0) / 1000, when);
+        return true;
+    }
+    Out(L"  info still missing after 60 s: one more device restart");
+    LogWhyMissing();
+    bool restarted = ApplyQuality(ReadQuality());
+    bool back = WaitOurs(&g_spk, &g_mic, 30000);
+    Out(L"  info recovery restart: %ls, endpoints %ls", restarted ? L"done" : L"FAILED", back ? L"back" : L"STILL MISSING");
+    if (!back) LogWhyMissing();
+    return back;
 }
 
 // Default formats of both endpoints (the panel's ApplyEndpointFormats), 16-bit fallback; then, like s2mctl,
@@ -488,7 +605,6 @@ static SignalResult RunSignal(const wchar_t* spkId, const wchar_t* micId, int on
 // ---------------------------------------------------------------------------
 // Actions
 
-static AudioDevice g_spk, g_mic;
 
 // Audio processing objects (APOs) Windows runs for an endpoint before the driver: CLSIDs under the endpoint's
 // FxProperties, with the DLL that implements each. Third-party ones can change or silence the sound.
@@ -773,7 +889,14 @@ static void ActionApply()
     bool muteBefore = false;
     bool level = GetEndpointVolumeDb(g_mic.id, &volBefore, &vmn, &vmx) && GetEndpointMute(g_mic.id, &muteBefore);
     if (!Check(ApplyQuality(q), L"device restarted")) return;
-    if (!Check(WaitOurs(&g_spk, &g_mic, 20000), L"both endpoints back")) return;
+    if (!WaitOurs(&g_spk, &g_mic, 20000))
+    {
+        // a stall (seen once at 192 kHz / 32 bit / 8 ch): a failure, but the run goes on once they are back
+        Check(false, L"both endpoints back within 20 s");
+        if (!RecoverEndpoints(L"the restart")) return;
+    }
+    else
+        Check(true, L"both endpoints back");
     WatchMic();
     wchar_t cfg[256];
     wchar_t want[128];
@@ -1446,9 +1569,9 @@ int wmain(int argc, wchar_t** argv)
     int iteration = 0;
     while (!g_stop && (LONG)(end - GetTickCount()) > 0)
     {
-        if (!FindOurs(&g_spk, &g_mic) && !WaitOurs(&g_spk, &g_mic, 20000))
+        if (!FindOurs(&g_spk, &g_mic) && !WaitOurs(&g_spk, &g_mic, 20000) && !RecoverEndpoints(L"the last action"))
         {
-            Check(false, L"Speak2Mic endpoints disappeared");
+            Check(false, L"Speak2Mic endpoints disappeared (also after a recovery restart)");
             break;
         }
         WatchMic();
