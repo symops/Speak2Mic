@@ -29,3 +29,5 @@ BEGIN
         VALUE "Translation", 0x0409, 1200
     END
 END
+
+#include "autotest_media.rc"

@@ -6,17 +6,19 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-struct TestMusicFolder { wchar_t folder[MAX_PATH]; const wchar_t* format; };
+struct TestMusicFolder { wchar_t folder[MAX_PATH]; wchar_t format[64]; };
 
 struct TestMusic
 {
     wchar_t         root[MAX_PATH];
-    TestMusicFolder formats[4];          // one file each
+    TestMusicFolder formats[24];         // one file each (generated, then the built-in samples)
     int             formatCount;
     wchar_t         all[MAX_PATH];       // every file + broken.mp3 + readme.txt
     wchar_t         empty[MAX_PATH];     // no music at all (only a text file)
 };
 
 typedef void (*MusicLog)(const wchar_t* line);
-bool TestMusicCreate(TestMusic* m, MusicLog log);     // false: no file could be made
+// false: no file could be made. Also writes out the samples built into the program (OGG Vorbis and MP3 / WAV / FLAC
+// variants Windows does not write: tools/make_autotest_media.py in Show2Cam), one folder each.
+bool TestMusicCreate(TestMusic* m, MusicLog log);
 void TestMusicDelete(TestMusic* m);

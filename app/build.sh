@@ -8,6 +8,9 @@ if [ "$ARCH" = x86 ]; then TRIPLE=i686-w64-mingw32; TARGET=i686-w64-windows-gnu;
 else TRIPLE=x86_64-w64-mingw32; TARGET=x86_64-w64-windows-gnu; O=.; fi
 T=${TMPDIR:-/tmp}/s2mbuild.$$
 mkdir -p "$T" "$O"
+# A new full set of the autotest's sample files (formats Windows does not write) on every build: generated with the x64
+# build (the x86 build of the same run reuses it), built into the autotest as resources.
+if [ "$ARCH" != x86 ] || [ ! -f autotest_media.rc ]; then python3 ../tools/make_autotest_media.py || exit 1; fi
 CXX="clang++ --target=$TARGET -std=c++17 -O2 -fno-exceptions -fno-rtti -municode
      -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00 -DUNICODE -D_UNICODE -Wall -Wextra -Wno-unused-parameter
      -Wno-missing-field-initializers -isystem /usr/$TRIPLE/include"

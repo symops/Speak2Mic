@@ -144,6 +144,68 @@ static void WriteJunk(const wchar_t* path, const char* text, DWORD size)
     CloseHandle(f);
 }
 
+// The samples built in as resources (RCDATA 500 = manifest "music|file|-", 501.. = the files in its order).
+static int AddSamples(TestMusic* m, MusicLog log)
+{
+    HRSRC r = FindResourceW(nullptr, MAKEINTRESOURCEW(500), (LPCWSTR)RT_RCDATA);
+    HGLOBAL g = r ? LoadResource(nullptr, r) : nullptr;
+    const char* text = g ? (const char*)LockResource(g) : nullptr;
+    DWORD size = r ? SizeofResource(nullptr, r) : 0;
+    int added = 0;
+    const char* p = text;
+    const char* end = text ? text + size : nullptr;
+    for (int id = 501; p && p < end && m->formatCount < 24; id++)
+    {
+        const char* eol = p;
+        while (eol < end && *eol != '\n') eol++;
+        char line[256];
+        size_t len = (size_t)(eol - p) < sizeof(line) - 1 ? (size_t)(eol - p) : sizeof(line) - 1;
+        memcpy(line, p, len);
+        line[len] = 0;
+        p = eol + 1;
+        if (len && line[len - 1] == '\r') line[--len] = 0;
+        char* f1 = strchr(line, '|');
+        char* f2 = f1 ? strchr(f1 + 1, '|') : nullptr;
+        if (!f1 || !f2)
+        {
+            id--;
+            continue;
+        }
+        *f2 = 0;
+        wchar_t file[128], sub[160], path[MAX_PATH];
+        MultiByteToWideChar(CP_UTF8, 0, f1 + 1, -1, file, 128);
+        _snwprintf(sub, 160, L"sample-%ls", file);
+        for (wchar_t* q = sub; *q; q++)
+            if (*q == L'.') *q = L'-';
+        TestMusicFolder& tf = m->formats[m->formatCount];
+        Join(tf.folder, m->root, sub);
+        CreateDirectoryW(tf.folder, nullptr);
+        Join(path, tf.folder, file);
+        HRSRC fr = FindResourceW(nullptr, MAKEINTRESOURCEW(id), (LPCWSTR)RT_RCDATA);
+        HGLOBAL fg = fr ? LoadResource(nullptr, fr) : nullptr;
+        const void* data = fg ? LockResource(fg) : nullptr;
+        DWORD bytes = fr ? SizeofResource(nullptr, fr) : 0;
+        HANDLE f = data ? CreateFileW(path, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, 0, nullptr) : INVALID_HANDLE_VALUE;
+        DWORD n = 0;
+        bool ok = f != INVALID_HANDLE_VALUE && WriteFile(f, data, bytes, &n, nullptr) && n == bytes;
+        if (f != INVALID_HANDLE_VALUE) CloseHandle(f);
+        if (!ok)
+        {
+            LogF(log, L"  sample %ls not written", file);
+            continue;
+        }
+        _snwprintf(tf.format, 64, L"%ls (sample)", file);
+        m->formatCount++;
+        added++;
+        wchar_t copy[MAX_PATH], name[140];
+        _snwprintf(name, 140, L"s-%ls", file);
+        Join(copy, m->all, name);
+        CopyFileW(path, copy, FALSE);
+    }
+    LogF(log, L"  built-in samples: %d", added);
+    return added;
+}
+
 bool TestMusicCreate(TestMusic* m, MusicLog log)
 {
     ZeroMemory(m, sizeof(*m));
@@ -192,7 +254,7 @@ bool TestMusicCreate(TestMusic* m, MusicLog log)
             RemoveDirectoryW(tf.folder);
             continue;
         }
-        tf.format = k.name;
+        wcsncpy(tf.format, k.name, 63);
         m->formatCount++;
         wchar_t copy[MAX_PATH];
         _snwprintf(name, 32, L"all.%ls", k.ext);
@@ -208,6 +270,7 @@ bool TestMusicCreate(TestMusic* m, MusicLog log)
         WriteJunk(f, "not music", 0);
     }
     LogF(log, L"  %d music format(s)", m->formatCount);
+    AddSamples(m, log);
     return m->formatCount > 0;
 }
 

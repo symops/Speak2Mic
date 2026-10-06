@@ -21,3 +21,7 @@ tools/infverif/*.exe
 
 # Python bytecode
 __pycache__/
+
+# autotest samples, generated on every build (tools/make_autotest_media.py)
+app/autotest-media/
+app/autotest_media.rc
