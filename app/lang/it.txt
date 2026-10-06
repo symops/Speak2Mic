@@ -249,6 +249,6 @@ Musica:
 Sfoglia…
 Apri
 Cartella della musica: %ls.
-Cartella (mp3, wav, flac, ogg)
+Audio da una cartella
 Generatore
 Musica: generatore (sintetizza melodie).

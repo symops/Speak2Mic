@@ -249,7 +249,7 @@ Music:
 Browse…
 Open
 Music folder: %ls.
-Folder (mp3, wav, flac, ogg)
+Audio from a folder
 Generator
 Music: generator (synthesizes melodies).
 [driver] the driver log is empty: the driver has never started

@@ -628,27 +628,28 @@ static void Layout()
     Place(IDC_SETTINGS_STATUS, L1, 204, 548, 28);
     SendMessageW(Ctl(IDC_LATENCY_UD), UDM_SETBUDDY, (WPARAM)Ctl(IDC_LATENCY), 0);
 
-    Place(IDC_GROUP2, 12, 246, 576, 322);
-    Place(IDC_IN_LABEL, L1, 272, 400, 20);  Place(IDC_IN_DB, 430, 272, 142, 20);
-    Place(IDC_IN_METER, L1, 294, 548, 34);
-    Place(IDC_IN_FORMAT, L1, 332, 548, 20);
-    Place(IDC_OUT_LABEL, L1, 362, 400, 20); Place(IDC_OUT_DB, 430, 362, 142, 20);
-    Place(IDC_OUT_METER, L1, 384, 548, 34);
-    Place(IDC_OUT_FORMAT, L1, 422, 548, 36);
-    // One row, text vertically centred in the same 24-px band as the checkbox and the slider's middle.
-    Place(IDC_L_MICVOL, L1, 462, 160, 24);  Place(IDC_MICVOL, 188, 460, 236, 28);
-    Place(IDC_MICVOL_VALUE, 424, 462, 62, 24);
-    Place(IDC_MICMUTE, 494, 462, 90, 24);
-    // the music folder ("Play")
-    Place(IDC_L_MUSIC, L1, 500, 96, 20);    Place(IDC_MUSICSRC, C1 + 4, 496, 132, 300);
-    Place(IDC_MUSICDIR, 260, 497, 156, 23);
-    Place(IDC_MUSIC_BROWSE, 420, 495, 74, 27);  Place(IDC_MUSIC_OPEN, 498, 495, 74, 27);
-    Place(IDC_PLAY, L1, 532, 150, 28);      // plays the chosen source (as Show2Cam's buttons: bottom left)
+    // the endpoint names right under the signal quality
+    Place(IDC_GROUP3, 12, 246, 576, 94);
+    Place(IDC_L_SPKNAME, L1, 274, 94, 20);  Place(IDC_SPKNAME, C1, 270, 272, 23);
+    Place(IDC_L_MICNAME, L1, 308, 94, 20);  Place(IDC_MICNAME, C1, 304, 272, 23);
+    Place(IDC_RENAME, C2, 303, W2, 27);
 
-    Place(IDC_GROUP3, 12, 576, 576, 94);
-    Place(IDC_L_SPKNAME, L1, 604, 94, 20);  Place(IDC_SPKNAME, C1, 600, 272, 23);
-    Place(IDC_L_MICNAME, L1, 638, 94, 20);  Place(IDC_MICNAME, C1, 634, 272, 23);
-    Place(IDC_RENAME, C2, 633, W2, 27);
+    Place(IDC_GROUP2, 12, 348, 576, 322);
+    Place(IDC_IN_LABEL, L1, 374, 400, 20);  Place(IDC_IN_DB, 430, 374, 142, 20);
+    Place(IDC_IN_METER, L1, 396, 548, 34);
+    Place(IDC_IN_FORMAT, L1, 434, 548, 20);
+    Place(IDC_OUT_LABEL, L1, 464, 400, 20); Place(IDC_OUT_DB, 430, 464, 142, 20);
+    Place(IDC_OUT_METER, L1, 486, 548, 34);
+    Place(IDC_OUT_FORMAT, L1, 524, 548, 36);
+    // One row, text vertically centred in the same 24-px band as the checkbox and the slider's middle.
+    Place(IDC_L_MICVOL, L1, 564, 160, 24);  Place(IDC_MICVOL, 188, 562, 236, 28);
+    Place(IDC_MICVOL_VALUE, 424, 564, 62, 24);
+    Place(IDC_MICMUTE, 494, 564, 90, 24);
+    // the music folder ("Play")
+    Place(IDC_L_MUSIC, L1, 602, 96, 20);    Place(IDC_MUSICSRC, C1 + 4, 598, 160, 300);
+    Place(IDC_MUSICDIR, 290, 599, 126, 23);
+    Place(IDC_MUSIC_BROWSE, 420, 597, 74, 27);  Place(IDC_MUSIC_OPEN, 498, 597, 74, 27);
+    Place(IDC_PLAY, L1, 634, 150, 28);      // plays the chosen source (as Show2Cam's buttons: bottom left)
     Place(IDC_IO_STATUS, L1, 676, 512, 300); // events (newest at the bottom, shown when closed)
     Place(IDC_CLEARLOG, 542, 674, 32, 26);   // clear the event log
     Place(IDC_AUTOSTART, L1, 708, 548, 22);  // start with Windows (in the tray)
@@ -676,6 +677,13 @@ static void CreateControls()
     Create(L"BUTTON", TR(L"Применить"), BS_PUSHBUTTON | WS_TABSTOP, IDC_APPLY);
     Create(L"STATIC", L"", 0, IDC_SETTINGS_STATUS);
 
+    Create(L"BUTTON", TR(L"Имена устройств"), BS_GROUPBOX, IDC_GROUP3);
+    Create(L"STATIC", TR(L"Динамик:"), 0, IDC_L_SPKNAME);
+    Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_SPKNAME, WS_EX_CLIENTEDGE);
+    Create(L"STATIC", TR(L"Микрофон:"), 0, IDC_L_MICNAME);
+    Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_MICNAME, WS_EX_CLIENTEDGE);
+    Create(L"BUTTON", TR(L"Переименовать"), BS_PUSHBUTTON | WS_TABSTOP, IDC_RENAME);
+
     Create(L"BUTTON", TR(L"Индикация сигнала"), BS_GROUPBOX, IDC_GROUP2);
     Create(L"STATIC", L"", 0, IDC_IN_LABEL);
     Create(L"STATIC", L"", SS_RIGHT, IDC_IN_DB);
@@ -692,7 +700,7 @@ static void CreateControls()
     Create(L"STATIC", TR(L"Музыка:"), 0, IDC_L_MUSIC);
     Create(WC_COMBOBOXW, L"", CBS_DROPDOWNLIST | WS_TABSTOP, IDC_MUSICSRC);
     ComboAdd(IDC_MUSICSRC, TR(L"Проверка"), MusicTestSrc);
-    ComboAdd(IDC_MUSICSRC, TR(L"Папка (mp3, wav, flac, ogg)"), MusicFolderSrc);
+    ComboAdd(IDC_MUSICSRC, TR(L"Аудио из папки"), MusicFolderSrc);
     ComboAdd(IDC_MUSICSRC, TR(L"Генератор"), MusicGeneratorSrc);
     Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_MUSICDIR, WS_EX_CLIENTEDGE);
     SendMessageW(Ctl(IDC_MUSICDIR), EM_LIMITTEXT, MAX_PATH - 1, 0);
@@ -703,12 +711,6 @@ static void CreateControls()
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETPAGESIZE, 0, 10);
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETTIC, 0, 100);     // mark at 100 % = unchanged signal
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETTIC, 0, 200);     // and at 200 % (0 and 300 % are the ends)
-    Create(L"BUTTON", TR(L"Имена устройств"), BS_GROUPBOX, IDC_GROUP3);
-    Create(L"STATIC", TR(L"Динамик:"), 0, IDC_L_SPKNAME);
-    Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_SPKNAME, WS_EX_CLIENTEDGE);
-    Create(L"STATIC", TR(L"Микрофон:"), 0, IDC_L_MICNAME);
-    Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_MICNAME, WS_EX_CLIENTEDGE);
-    Create(L"BUTTON", TR(L"Переименовать"), BS_PUSHBUTTON | WS_TABSTOP, IDC_RENAME);
     Create(WC_COMBOBOXW, L"", CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, IDC_IO_STATUS);     // event log
     Create(L"BUTTON", TR(L"Запускать панель управления вместе с Windows (в трее)"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_AUTOSTART);
     g_eventTip = CreateWindowExW(WS_EX_TOPMOST, TOOLTIPS_CLASSW, nullptr, WS_POPUP | TTS_ALWAYSTIP | TTS_NOPREFIX,

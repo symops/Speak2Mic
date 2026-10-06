@@ -249,6 +249,6 @@ Nhạc:
 Duyệt…
 Mở
 Thư mục nhạc: %ls.
-Thư mục (mp3, wav, flac, ogg)
+Âm thanh từ thư mục
 Trình tạo
 Nhạc: trình tạo (tổng hợp giai điệu).

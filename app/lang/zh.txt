@@ -249,6 +249,6 @@ Speak2Mic 不支持 ARM 处理器上的 Windows。
 浏览…
 打开
 音乐文件夹：%ls。
-文件夹（mp3、wav、flac、ogg）
+文件夹中的音频
 生成器
 音乐：生成器（合成旋律）。

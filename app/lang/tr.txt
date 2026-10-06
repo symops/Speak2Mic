@@ -249,6 +249,6 @@ Müzik:
 Gözat…
 Aç
 Müzik klasörü: %ls.
-Klasör (mp3, wav, flac, ogg)
+Klasördeki ses
 Üreteç
 Müzik: üreteç (melodi sentezler).
