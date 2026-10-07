@@ -79,8 +79,11 @@ static void FlushEvents()
     }
 }
 
+static volatile LONG g_outsideChanges;      // microphone volume changes made outside Speak2Mic (all of them)
+
 static void OnForeignVolume(float db, float scalar, bool mute, const GUID& c, void*)
 {
+    InterlockedIncrement(&g_outsideChanges);
     SYSTEMTIME t;
     GetLocalTime(&t);
     EnterCriticalSection(&g_eventLock);
@@ -1156,6 +1159,7 @@ static void ActionCli()
         wcsncat(file, L"s2m_autotest.ini", MAX_PATH - wcslen(file) - 1);
         float db0 = 0, mn = 0, mx = 0;
         GetEndpointVolumeDb(g_mic.id, &db0, &mn, &mx);
+        LONG outsideBefore = g_outsideChanges;
         wchar_t name0[256];
         wcscpy(name0, g_spk.desc);
         Out(L"[cli] export / change / import (%ls)", file);
@@ -1170,7 +1174,11 @@ static void ActionCli()
         float db = 0;
         GetEndpointVolumeDb(g_mic.id, &db, &mn, &mx);
         float was = DbToPercentF(db0) > 300.0f ? 300.0f : DbToPercentF(db0);     // import clamps to the panel's 0..300 %
-        Check(fabsf(DbToPercentF(db) - was) <= 1.0f, L"volume back: %.1f %% (was %.1f %%)", DbToPercentF(db), DbToPercentF(db0));
+        if (fabsf(DbToPercentF(db) - was) > 1.0f && g_outsideChanges != outsideBefore)
+            Warn(L"volume back: %.1f %% (was %.1f %%), but another program changed the microphone volume meanwhile (%ld "
+                 L"time(s), see the audio sessions above)", DbToPercentF(db), DbToPercentF(db0), g_outsideChanges - outsideBefore);
+        else
+            Check(fabsf(DbToPercentF(db) - was) <= 1.0f, L"volume back: %.1f %% (was %.1f %%)", DbToPercentF(db), DbToPercentF(db0));
         if (FindOurs(&s, &m))
         {
             Check(wcscmp(s.desc, name0) == 0, L"speaker name back: \"%ls\"", s.desc);
@@ -1336,10 +1344,13 @@ static void ActionMusic()
 
         // The track may have ended during the measurement (a continued one near its end): the player then went on to
         // the next one - that is the track Pause / Play must keep.
+        // The track paused is the one the player was on when it stopped (a short track may have ended a moment
+        // before the pause and the next one begun): read after the pause.
+        Mp3Pause();
         wcsncpy(track, Mp3LastFile(), MAX_PATH - 1);
         track[MAX_PATH - 1] = 0;
-        Mp3Pause();
         Check(!Mp3Playing(), L"paused");
+        LONG outsideBefore = g_outsideChanges;
         float off = level();
         float quietLimit = QuietLimit(q);      // the dither of a 16-bit speaker is no music
         if (off >= quietLimit)
@@ -1350,6 +1361,10 @@ static void ActionMusic()
             MicToUnity();
             float again = level();
             if (again < quietLimit) Warn(L"paused: the first measurement had %.1f dBFS, the repeat is clean (%.1f dBFS)", off, again);
+            else if (g_outsideChanges != outsideBefore)
+                Warn(L"paused: microphone peak %.1f dBFS, again %.1f dBFS (< %.1f wanted), but another program changed the "
+                     L"microphone volume meanwhile (%ld time(s), see the audio sessions above)", off, again, quietLimit,
+                     g_outsideChanges - outsideBefore);
             else Check(false, L"paused: microphone peak %.1f dBFS, again %.1f dBFS (< %.1f wanted)", off, again, quietLimit);
         }
         else
