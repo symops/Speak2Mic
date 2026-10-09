@@ -183,7 +183,7 @@ Accesos directos y programas quitados de %ls.
 Idioma:
 Versión %ls
 Instalación de Speak2Mic %ls
-Nombres de los dispositivos
+Dispositivos y origen
 Altavoz:
 Micrófono:
 Cambiar nombre
@@ -253,5 +253,5 @@ Audio de una carpeta
 Generador
 Música: generador (sintetiza melodías).
 Cerrar comprobación
-Micrófono y música
+Volumen del micrófono
 Carpeta:

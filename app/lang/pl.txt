@@ -183,7 +183,7 @@ Skróty i programy usunięte z %ls.
 Język:
 Wersja %ls
 Instalacja Speak2Mic %ls
-Nazwy urządzeń
+Urządzenia i źródło
 Głośnik:
 Mikrofon:
 Zmień nazwy
@@ -253,5 +253,5 @@ Audio z folderu
 Generator
 Muzyka: generator (syntetyzuje melodie).
 Zamknij podgląd
-Mikrofon i muzyka
+Głośność mikrofonu
 Folder:

@@ -183,7 +183,7 @@ Collegamenti e programmi rimossi da %ls.
 Lingua:
 Versione %ls
 Installazione di Speak2Mic %ls
-Nomi dei dispositivi
+Dispositivi e sorgente
 Altoparlante:
 Microfono:
 Rinomina
@@ -253,5 +253,5 @@ Audio da una cartella
 Generatore
 Musica: generatore (sintetizza melodie).
 Chiudi verifica
-Microfono e musica
+Volume del microfono
 Cartella:

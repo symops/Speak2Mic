@@ -183,7 +183,7 @@ Kısayollar ve programlar %ls konumundan kaldırıldı.
 Dil:
 Sürüm %ls
 Speak2Mic Kurulumu %ls
-Aygıt adları
+Aygıtlar ve kaynak
 Hoparlör:
 Mikrofon:
 Yeniden adlandır
@@ -253,5 +253,5 @@ Klasördeki ses
 Üreteç
 Müzik: üreteç (melodi sentezler).
 Denetimi kapat
-Mikrofon ve müzik
+Mikrofon ses düzeyi
 Klasör:

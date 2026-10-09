@@ -183,7 +183,7 @@ Raccourcis et programmes supprimés de %ls.
 Langue :
 Version %ls
 Installation de Speak2Mic %ls
-Noms des périphériques
+Périphériques et source
 Haut-parleur :
 Microphone :
 Renommer
@@ -253,5 +253,5 @@ Audio d’un dossier
 Générateur
 Musique : générateur (synthétise des mélodies).
 Fermer la vérification
-Microphone et musique
+Volume du micro
 Dossier :

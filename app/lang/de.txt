@@ -183,7 +183,7 @@ Verknüpfungen und Programme aus %ls entfernt.
 Sprache:
 Version %ls
 Speak2Mic-Installation %ls
-Gerätenamen
+Geräte und Quelle
 Lautsprecher:
 Mikrofon:
 Umbenennen
@@ -253,5 +253,5 @@ Audio aus einem Ordner
 Generator
 Musik: Generator (erzeugt Melodien).
 Prüfung schließen
-Mikrofon und Musik
+Mikrofonlautstärke
 Ordner:

@@ -183,7 +183,7 @@ Pintasan dan program dihapus dari %ls.
 Bahasa:
 Versi %ls
 Instalasi Speak2Mic %ls
-Nama perangkat
+Perangkat dan sumber
 Speaker:
 Mikrofon:
 Ganti nama
@@ -253,5 +253,5 @@ Audio dari folder
 Generator
 Musik: generator (menyintesis melodi).
 Tutup pemeriksaan
-Mikrofon dan musik
+Volume mikrofon
 Folder:

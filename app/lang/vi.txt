@@ -183,7 +183,7 @@ Không xóa được %ls (mã %lu): hãy đóng Speak2Mic.
 Ngôn ngữ:
 Phiên bản %ls
 Cài đặt Speak2Mic %ls
-Tên thiết bị
+Thiết bị và nguồn
 Loa:
 Micrô:
 Đổi tên
@@ -253,5 +253,5 @@ Thư mục nhạc: %ls.
 Trình tạo
 Nhạc: trình tạo (tổng hợp giai điệu).
 Đóng kiểm tra
-Micrô và nhạc
+Âm lượng micrô
 Thư mục:

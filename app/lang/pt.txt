@@ -183,7 +183,7 @@ Atalhos e programas removidos de %ls.
 Idioma:
 Versão %ls
 Instalação do Speak2Mic %ls
-Nomes dos dispositivos
+Dispositivos e origem
 Alto-falante:
 Microfone:
 Renomear
@@ -253,5 +253,5 @@ Pasta de música: %ls.
 Gerador
 Música: gerador (sintetiza melodias).
 Fechar verificação
-Microfone e música
+Volume do microfone
 Pasta:

@@ -183,7 +183,7 @@ Snelkoppelingen en programma's verwijderd uit %ls.
 Taal:
 Versie %ls
 Speak2Mic-installatie %ls
-Apparaatnamen
+Apparaten en bron
 Luidspreker:
 Microfoon:
 Naam wijzigen
@@ -253,5 +253,5 @@ Audio uit een map
 Generator
 Muziek: generator (maakt melodieën).
 Controle sluiten
-Microfoon en muziek
+Microfoonvolume
 Map:

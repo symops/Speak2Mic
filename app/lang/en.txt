@@ -183,7 +183,7 @@ Shortcuts and programs removed from %ls.
 Language:
 Version %ls
 Speak2Mic Setup %ls
-Device names
+Devices and source
 Speaker:
 Microphone:
 Rename
@@ -253,7 +253,7 @@ Audio from a folder
 Generator
 Music: generator (synthesizes melodies).
 Close check
-Microphone and music
+Microphone volume
 Folder:
 [driver] the driver log is empty: the driver has never started
 [driver] ---- driver log (DriverLog) ----

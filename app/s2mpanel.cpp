@@ -33,7 +33,7 @@ enum
     IDC_GROUP1, IDC_GROUP2,
     IDC_L_PRESET, IDC_L_RATE, IDC_L_BITS, IDC_L_CHANNELS, IDC_L_LATENCY, IDC_L_LANG, IDC_LANG,
     IDC_L_MICCHANNELS, IDC_MICCHANNELS,
-    IDC_GROUP3, IDC_L_SPKNAME, IDC_SPKNAME, IDC_L_MICNAME, IDC_MICNAME, IDC_RENAME, IDC_RENAME_STATUS,
+    IDC_GROUP3, IDC_L_SPKNAME, IDC_SPKNAME, IDC_L_MICNAME, IDC_MICNAME, IDC_DEV_APPLY, IDC_RENAME_STATUS,
     IDC_RESET_ALL, IDC_MIXER, IDC_CLEARLOG, IDC_L_MICVOL, IDC_MICVOL, IDC_MICVOL_VALUE, IDC_MICMUTE,
     IDC_EXPORT, IDC_IMPORT, IDC_IO_STATUS, IDC_PLAY, IDC_AUTOSTART,
     IDC_L_MUSIC, IDC_MUSICDIR, IDC_MUSIC_BROWSE, IDC_MUSIC_OPEN, IDC_MUSICSRC, IDC_SIGNAL, IDC_L_MUSICDIR,
@@ -44,7 +44,7 @@ static const wchar_t kDefaultName[2][32] = { L"Speak2Mic Speaker", L"Speak2Mic M
 static const int kMicMaxPercent = 300;    // microphone slider: 100 % = 0 dB, 300 % = +9.5 dB
 #define S2M_USER_KEY L"Software\\Speak2Mic"
 
-enum { TIMER_METERS = 1, TIMER_REFRESH = 2, TIMER_FORMAT = 3, TIMER_MP3 = 4, TIMER_MUSICDIR = 5 };
+enum { TIMER_METERS = 1, TIMER_REFRESH = 2, TIMER_FORMAT = 3, TIMER_MP3 = 4 };
 
 // ---------------------------------------------------------------------------
 // Settings
@@ -631,23 +631,23 @@ static void Layout()
     Place(IDC_SETTINGS_STATUS, L1, 204, 548, 28);
     SendMessageW(Ctl(IDC_LATENCY_UD), UDM_SETBUDDY, (WPARAM)Ctl(IDC_LATENCY), 0);
 
-    // the endpoint names right under the signal quality
-    Place(IDC_GROUP3, 12, 246, 576, 94);
-    Place(IDC_L_SPKNAME, L1, 274, 94, 20);  Place(IDC_SPKNAME, C1, 270, 272, 23);
-    Place(IDC_L_MICNAME, L1, 308, 94, 20);  Place(IDC_MICNAME, C1, 304, 272, 23);
-    Place(IDC_RENAME, C2, 303, W2, 27);
+    // Devices and source, as Show2Cam's camera block: the endpoint names, the source of "Play" and its folder (a row
+    // of its own, as Show2Cam's "Folder"); taken with "Apply" (bottom right), "Check" and "Play" bottom left.
+    Place(IDC_GROUP3, 12, 246, 576, 200);
+    Place(IDC_L_SPKNAME, L1, 274, 94, 20);  Place(IDC_SPKNAME, C1 + 4, 270, 448, 23);
+    Place(IDC_L_MICNAME, L1, 308, 94, 20);  Place(IDC_MICNAME, C1 + 4, 304, 448, 23);
+    Place(IDC_L_MUSIC, L1, 342, 96, 20);    Place(IDC_MUSICSRC, C1 + 4, 338, 282, 300);
+    Place(IDC_L_MUSICDIR, L1, 376, 96, 20); Place(IDC_MUSICDIR, C1 + 4, 372, 288, 23);
+    Place(IDC_MUSIC_BROWSE, 420, 371, 74, 27);  Place(IDC_MUSIC_OPEN, 498, 371, 74, 27);
+    Place(IDC_SIGNAL, L1, 408, 150, 28);    Place(IDC_PLAY, 180, 408, 110, 28);
+    Place(IDC_DEV_APPLY, C2, 408, W2, 28);
 
-    Place(IDC_GROUP2, 12, 348, 576, 166);
-    // One row, text vertically centred in the same 24-px band as the checkbox and the slider's middle.
-    Place(IDC_L_MICVOL, L1, 374, 160, 24);  Place(IDC_MICVOL, 188, 372, 236, 28);
-    Place(IDC_MICVOL_VALUE, 424, 374, 62, 24);
-    Place(IDC_MICMUTE, 494, 374, 90, 24);
-    // the source of "Play", and its folder on a row of its own (as Show2Cam's "Folder")
-    Place(IDC_L_MUSIC, L1, 412, 96, 20);    Place(IDC_MUSICSRC, C1 + 4, 408, 282, 300);
-    Place(IDC_L_MUSICDIR, L1, 446, 96, 20); Place(IDC_MUSICDIR, C1 + 4, 442, 288, 23);
-    Place(IDC_MUSIC_BROWSE, 420, 441, 74, 27);  Place(IDC_MUSIC_OPEN, 498, 441, 74, 27);
-    // "Check" (the signal window) and "Play", as Show2Cam's buttons: bottom left
-    Place(IDC_SIGNAL, L1, 478, 150, 28);    Place(IDC_PLAY, 180, 478, 110, 28);
+    // The microphone volume (works at once). One row, text vertically centred in the same 24-px band as the
+    // checkbox and the slider's middle.
+    Place(IDC_GROUP2, 12, 454, 576, 60);
+    Place(IDC_L_MICVOL, L1, 480, 160, 24);  Place(IDC_MICVOL, 188, 478, 236, 28);
+    Place(IDC_MICVOL_VALUE, 424, 480, 62, 24);
+    Place(IDC_MICMUTE, 494, 480, 90, 24);
     Place(IDC_IO_STATUS, L1, 522, 512, 300); // events (newest at the bottom, shown when closed)
     Place(IDC_CLEARLOG, 542, 520, 32, 26);   // clear the event log
     Place(IDC_AUTOSTART, L1, 554, 548, 22);  // start with Windows (in the tray)
@@ -689,29 +689,11 @@ static void CreateControls()
     Create(L"BUTTON", TR(L"Применить"), BS_PUSHBUTTON | WS_TABSTOP, IDC_APPLY);
     Create(L"STATIC", L"", 0, IDC_SETTINGS_STATUS);
 
-    Create(L"BUTTON", TR(L"Имена устройств"), BS_GROUPBOX, IDC_GROUP3);
+    Create(L"BUTTON", TR(L"Устройства и источник"), BS_GROUPBOX, IDC_GROUP3);
     Create(L"STATIC", TR(L"Динамик:"), 0, IDC_L_SPKNAME);
     Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_SPKNAME, WS_EX_CLIENTEDGE);
     Create(L"STATIC", TR(L"Микрофон:"), 0, IDC_L_MICNAME);
     Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_MICNAME, WS_EX_CLIENTEDGE);
-    Create(L"BUTTON", TR(L"Переименовать"), BS_PUSHBUTTON | WS_TABSTOP, IDC_RENAME);
-
-    // the meters' own window (hidden until "Check"); owned by the panel, so it stays above it and closes with it
-    g_sig = CreateWindowExW(WS_EX_CONTROLPARENT, L"S2mSignal", TR(L"Индикация сигнала"), WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-                            CW_USEDEFAULT, CW_USEDEFAULT, 10, 10, g_wnd, nullptr, g_inst, nullptr);
-    Create(L"BUTTON", TR(L"Микрофон и музыка"), BS_GROUPBOX, IDC_GROUP2);
-    Create(L"STATIC", L"", 0, IDC_IN_LABEL);
-    Create(L"STATIC", L"", SS_RIGHT, IDC_IN_DB);
-    Create(L"S2mMeter", L"", 0, IDC_IN_METER);
-    Create(L"STATIC", L"", 0, IDC_IN_FORMAT);
-    Create(L"STATIC", L"", 0, IDC_OUT_LABEL);
-    Create(L"STATIC", L"", SS_RIGHT, IDC_OUT_DB);
-    Create(L"S2mMeter", L"", 0, IDC_OUT_METER);
-    Create(L"STATIC", L"", 0, IDC_OUT_FORMAT);
-    Create(L"STATIC", TR(L"Громкость микрофона:"), SS_CENTERIMAGE, IDC_L_MICVOL);
-    Create(TRACKBAR_CLASSW, L"", TBS_HORZ | TBS_BOTTOM | WS_TABSTOP, IDC_MICVOL);
-    Create(L"STATIC", L"", SS_RIGHT | SS_CENTERIMAGE, IDC_MICVOL_VALUE);
-    Create(L"BUTTON", TR(L"Без звука"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_MICMUTE);
     Create(L"STATIC", TR(L"Источник:"), 0, IDC_L_MUSIC);
     Create(WC_COMBOBOXW, L"", CBS_DROPDOWNLIST | WS_TABSTOP, IDC_MUSICSRC);
     ComboAdd(IDC_MUSICSRC, TR(L"Проверка"), MusicTestSrc);
@@ -724,6 +706,24 @@ static void CreateControls()
     Create(L"BUTTON", TR(L"Открыть"), BS_PUSHBUTTON | WS_TABSTOP, IDC_MUSIC_OPEN);
     Create(L"BUTTON", TR(L"Проверка"), BS_PUSHBUTTON | WS_TABSTOP, IDC_SIGNAL);
     Create(L"BUTTON", TR(L"Играть"), BS_PUSHBUTTON | WS_TABSTOP, IDC_PLAY);
+    Create(L"BUTTON", TR(L"Применить"), BS_PUSHBUTTON | WS_TABSTOP, IDC_DEV_APPLY);
+
+    // the meters' own window (hidden until "Check"); owned by the panel, so it stays above it and closes with it
+    g_sig = CreateWindowExW(WS_EX_CONTROLPARENT, L"S2mSignal", TR(L"Индикация сигнала"), WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+                            CW_USEDEFAULT, CW_USEDEFAULT, 10, 10, g_wnd, nullptr, g_inst, nullptr);
+    Create(L"BUTTON", TR(L"Громкость микрофона"), BS_GROUPBOX, IDC_GROUP2);
+    Create(L"STATIC", L"", 0, IDC_IN_LABEL);
+    Create(L"STATIC", L"", SS_RIGHT, IDC_IN_DB);
+    Create(L"S2mMeter", L"", 0, IDC_IN_METER);
+    Create(L"STATIC", L"", 0, IDC_IN_FORMAT);
+    Create(L"STATIC", L"", 0, IDC_OUT_LABEL);
+    Create(L"STATIC", L"", SS_RIGHT, IDC_OUT_DB);
+    Create(L"S2mMeter", L"", 0, IDC_OUT_METER);
+    Create(L"STATIC", L"", 0, IDC_OUT_FORMAT);
+    Create(L"STATIC", TR(L"Громкость микрофона:"), SS_CENTERIMAGE, IDC_L_MICVOL);
+    Create(TRACKBAR_CLASSW, L"", TBS_HORZ | TBS_BOTTOM | WS_TABSTOP, IDC_MICVOL);
+    Create(L"STATIC", L"", SS_RIGHT | SS_CENTERIMAGE, IDC_MICVOL_VALUE);
+    Create(L"BUTTON", TR(L"Без звука"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_MICMUTE);
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETRANGE, FALSE, MAKELPARAM(0, kMicMaxPercent));
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETPAGESIZE, 0, 10);
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETTIC, 0, 100);     // mark at 100 % = unchanged signal
@@ -1292,15 +1292,23 @@ static void TrackTitle(const wchar_t* path, wchar_t* out, size_t len)
     out[len - 1] = 0;
 }
 
+// the folder row only for "Audio from a folder" (as chosen in the form)
+static void ShowMusicFolderRow(int src)
+{
+    const int row[4] = { IDC_L_MUSICDIR, IDC_MUSICDIR, IDC_MUSIC_BROWSE, IDC_MUSIC_OPEN };
+    for (int id : row) ShowWindow(Ctl(id), src == MusicFolderSrc ? SW_SHOW : SW_HIDE);
+}
+
+static void UpdateDevApply();
+
 static void ShowMusicSource()
 {
     int src = MusicSource();
     g_updatingControls = true;
     ComboSelectData(IDC_MUSICSRC, src);
     g_updatingControls = false;
-    // the folder row only for "Audio from a folder"
-    const int row[4] = { IDC_L_MUSICDIR, IDC_MUSICDIR, IDC_MUSIC_BROWSE, IDC_MUSIC_OPEN };
-    for (int id : row) ShowWindow(Ctl(id), src == MusicFolderSrc ? SW_SHOW : SW_HIDE);
+    ShowMusicFolderRow(src);
+    UpdateDevApply();
 }
 
 static void StopMusic();
@@ -1372,18 +1380,20 @@ static void ShowMusicFolder()
     g_updatingControls = true;
     SetWindowTextW(Ctl(IDC_MUSICDIR), folder);
     g_updatingControls = false;
+    UpdateDevApply();
 }
 
-static void ApplyMusicFolderEdit()
+// The folder typed (spaces and a trailing backslash dropped; empty = the default folder).
+static void TypedMusicFolder(wchar_t* out)
 {
-    KillTimer(g_wnd, TIMER_MUSICDIR);
     wchar_t t[MAX_PATH];
     GetWindowTextW(Ctl(IDC_MUSICDIR), t, MAX_PATH);
     wchar_t* b = t;
     while (*b == L' ') b++;
     size_t n = wcslen(b);
     while (n && (b[n - 1] == L' ' || b[n - 1] == L'\\')) b[--n] = 0;
-    SetMusicFolder(b, true);
+    wcscpy(out, b);
+    if (!out[0]) Mp3DefaultFolder(out);
 }
 
 static void OnMusicBrowse()
@@ -1394,7 +1404,7 @@ static void OnMusicBrowse()
     dlg->GetOptions(&opts);
     dlg->SetOptions(opts | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM);
     wchar_t cur[MAX_PATH];
-    Mp3Folder(cur);
+    TypedMusicFolder(cur);
     IShellItem* start = nullptr;
     if (SUCCEEDED(SHCreateItemFromParsingName(cur, nullptr, IID_PPV_ARGS(&start))))
     {
@@ -1407,8 +1417,7 @@ static void OnMusicBrowse()
         PWSTR path = nullptr;
         if (SUCCEEDED(dlg->GetResult(&item)) && SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &path)))
         {
-            SetMusicFolder(path, true);
-            ShowMusicFolder();
+            SetWindowTextW(Ctl(IDC_MUSICDIR), path);     // taken with "Apply"
             CoTaskMemFree(path);
         }
         if (item) item->Release();
@@ -1419,7 +1428,7 @@ static void OnMusicBrowse()
 static void OnMusicOpen()
 {
     wchar_t folder[MAX_PATH];
-    Mp3Folder(folder);
+    TypedMusicFolder(folder);
     ShellExecuteW(g_wnd, L"open", folder, nullptr, nullptr, SW_SHOWNORMAL);
 }
 
@@ -1513,8 +1522,9 @@ static void GetEditName(int id, wchar_t* out, size_t len)
         if (*c == L'"') *c = L'\'';    // keeps the elevated command line simple
 }
 
-// Enabled only while a name box differs from the endpoint's current name.
-static void UpdateRenameButton()
+// "Apply" of the devices block: enabled while a name box differs from the endpoint's current name, or the source or
+// its folder from the stored one.
+static bool DevDirty()
 {
     bool changed = false;
     const int ids[2] = { IDC_SPKNAME, IDC_MICNAME };
@@ -1526,7 +1536,21 @@ static void UpdateRenameButton()
         if (!want[0]) wcscpy(want, kDefaultName[side]);
         if (wcscmp(want, g_shownName[side]) != 0) changed = true;
     }
-    EnableWindow(Ctl(IDC_RENAME), changed);
+    int src = (int)ComboData(IDC_MUSICSRC);
+    if (src >= 0 && src != MusicSource()) changed = true;
+    if (src == MusicFolderSrc)
+    {
+        wchar_t typed[MAX_PATH], cur[MAX_PATH];
+        TypedMusicFolder(typed);
+        Mp3Folder(cur);
+        if (_wcsicmp(typed, cur) != 0) changed = true;
+    }
+    return changed;
+}
+
+static void UpdateDevApply()
+{
+    EnableWindow(Ctl(IDC_DEV_APPLY), DevDirty());
 }
 
 // Puts the current endpoint names into the edit boxes (unless the user is editing them).
@@ -1550,7 +1574,7 @@ static void ShowNames()
         }
         EnableWindow(Ctl(ids[side]), i >= 0);
     }
-    UpdateRenameButton();
+    UpdateDevApply();
 }
 
 static void SaveName(int side, const wchar_t* name)
@@ -1645,6 +1669,23 @@ static void OnRename()
     AddEvent( t);
     g_shownName[0][0] = g_shownName[1][0] = 0;      // take the new names from Windows
     RefreshDevices();
+}
+
+// "Apply" of the devices block: new names, then the folder and the source.
+static void OnDevApply()
+{
+    OnRename();
+    int src = (int)ComboData(IDC_MUSICSRC);
+    if (src == MusicFolderSrc)
+    {
+        wchar_t folder[MAX_PATH];
+        TypedMusicFolder(folder);
+        SetMusicFolder(folder, src == MusicSource());     // a new source announces its folder itself
+    }
+    if (src >= 0) SetMusicSource(src, true);
+    ShowMusicFolder();
+    ShowMusicSource();
+    UpdateDevApply();
 }
 
 // After a reinstall Windows may bring the endpoints back with their default names: put the user's back.
@@ -2325,11 +2366,6 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     }
 
     case WM_TIMER:
-        if (wp == TIMER_MUSICDIR)
-        {
-            ApplyMusicFolderEdit();
-            return 0;
-        }
         if (wp == TIMER_MP3)
         {
             UpdatePlayButton();             // .mp3 files added to / removed from the folder
@@ -2457,7 +2493,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         {
             if (id == IDC_MUSICSRC)
             {
-                SetMusicSource((int)ComboData(IDC_MUSICSRC), true);
+                ShowMusicFolderRow((int)ComboData(IDC_MUSICSRC));     // taken with "Apply"
+                UpdateDevApply();
             }
             else if (id == IDC_LANG)
             {
@@ -2487,22 +2524,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         {
             UpdateApplyButton();    // typed or changed with the up/down arrows
         }
-        else if (code == EN_CHANGE && id == IDC_MUSICDIR && !g_updatingControls)
+        else if (code == EN_CHANGE && (id == IDC_MUSICDIR || id == IDC_SPKNAME || id == IDC_MICNAME) && !g_updatingControls)
         {
-            SetTimer(hwnd, TIMER_MUSICDIR, 1200, nullptr);      // applied after a pause in typing
-        }
-        else if (code == EN_KILLFOCUS && id == IDC_MUSICDIR)
-        {
-            ApplyMusicFolderEdit();
-        }
-        else if (code == EN_CHANGE && (id == IDC_SPKNAME || id == IDC_MICNAME) && !g_updatingControls)
-        {
-            UpdateRenameButton();
+            UpdateDevApply();
         }
         else if (code == BN_CLICKED)
         {
             if (id == IDC_APPLY) OnApply();
-            else if (id == IDC_RENAME) OnRename();
+            else if (id == IDC_DEV_APPLY) OnDevApply();
             else if (id == IDC_RESET_ALL) OnResetAll();
             else if (id == IDC_MIXER) OnMixer();
             else if (id == IDC_CLEARLOG) ClearEvents();
