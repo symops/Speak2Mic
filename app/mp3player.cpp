@@ -103,6 +103,11 @@ bool Mp3FolderHasFiles(const wchar_t* folder)
     return ListMp3(folder, one, 1) > 0;
 }
 
+const wchar_t* Mp3ResumeFile()
+{
+    return g_resumeFile;
+}
+
 const wchar_t* Mp3LastFile()
 {
     return g_lastFile;

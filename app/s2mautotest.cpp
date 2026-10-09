@@ -1349,6 +1349,9 @@ static void ActionMusic()
         Mp3Pause();
         wcsncpy(track, Mp3LastFile(), MAX_PATH - 1);
         track[MAX_PATH - 1] = 0;
+        // paused between two tracks (one ended, the next not started yet): Play starts a new one, nothing to continue
+        bool resumable = Mp3ResumeFile()[0] != 0;
+        if (!resumable) Out(L"  info paused between two tracks (after %ls): Play starts a new one", track);
         Check(!Mp3Playing(), L"paused");
         LONG outsideBefore = g_outsideChanges;
         float off = level();
@@ -1376,7 +1379,7 @@ static void ActionMusic()
         wcsncpy(first, Mp3LastFile(), MAX_PATH - 1);
         first[MAX_PATH - 1] = 0;
         Check(resumed && (Mp3Playing() || _wcsicmp(Mp3LastFile(), first) != 0), L"playback continued");
-        Check(_wcsicmp(first, track) == 0, L"continues the same track (%ls; paused: %ls)", first, track);
+        if (resumable) Check(_wcsicmp(first, track) == 0, L"continues the same track (%ls; paused: %ls)", first, track);
         // Another folder chosen meanwhile: Play starts a track of that one, not the paused one of the old folder.
         if (g_music.formatCount > 1 && _wcsicmp(folder, MP3_GENERATOR) != 0)
         {

@@ -23,3 +23,4 @@ bool Mp3Play(const wchar_t* deviceId, const wchar_t* folder, HWND hwnd, UINT msg
 void Mp3Pause();            // stops (returns when the thread has ended) and remembers the position
 bool Mp3Playing();
 const wchar_t* Mp3LastFile();   // full path of the track playing / played last ("" = none yet)
+const wchar_t* Mp3ResumeFile(); // the track Play continues after a pause ("" = a new one: paused between two tracks)
