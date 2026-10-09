@@ -27,7 +27,7 @@
 enum
 {
     IDC_PRESET = 100, IDC_RATE, IDC_BITS, IDC_CHANNELS, IDC_LATENCY, IDC_LATENCY_UD, IDC_APPLY,
-    IDC_SETTINGS_STATUS,
+    IDC_SETTINGS_STATUS, IDC_L_STATE,
     IDC_IN_LABEL, IDC_IN_DB, IDC_IN_METER, IDC_IN_FORMAT,
     IDC_OUT_LABEL, IDC_OUT_DB, IDC_OUT_METER, IDC_OUT_FORMAT,
     IDC_GROUP1,
@@ -493,6 +493,7 @@ static void FitEventList(const wchar_t* added)
 
 // Tooltip of the closed event list: the full text of the shown event when it does not fit.
 static HWND    g_eventTip;
+static HWND    g_stateTip;     // the state line's tooltip: the driver settings
 static wchar_t g_eventTipText[700];
 static void EventTipText(NMTTDISPINFOW* info)
 {
@@ -611,6 +612,8 @@ static void ApplyFonts()
     SendMessageW(Ctl(IDC_OUT_DB), WM_SETFONT, (WPARAM)g_fontBold, TRUE);
 }
 
+static void PlaceStateRow(bool force);
+
 static void Layout()
 {
     const int L1 = 24, C1 = 120, W1 = 160, L2 = 304, C2 = 408, W2 = 164;
@@ -628,7 +631,7 @@ static void Layout()
     Place(IDC_L_LATENCY, L2, 138, 100, 20); Place(IDC_LATENCY, C2, 134, 70, 23);
     Place(IDC_L_MICCHANNELS, L1, 172, 150, 20); Place(IDC_MICCHANNELS, 180, 168, 170, 300);
     Place(IDC_APPLY, C2, 167, W2, 27);
-    Place(IDC_SETTINGS_STATUS, L1, 204, 548, 20);
+    PlaceStateRow(true);
     // the microphone volume (works at once): one row, text vertically centred in the same 24-px band as the
     // checkbox and the slider's middle
     Place(IDC_L_MICVOL, L1, 232, 160, 24);  Place(IDC_MICVOL, 188, 230, 236, 28);
@@ -685,7 +688,8 @@ static void CreateControls()
     Create(L"EDIT", L"30", ES_NUMBER | WS_TABSTOP, IDC_LATENCY, WS_EX_CLIENTEDGE);
     Create(UPDOWN_CLASSW, L"", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_NOTHOUSANDS, IDC_LATENCY_UD);
     Create(L"BUTTON", TR(L"Применить"), BS_PUSHBUTTON | WS_TABSTOP, IDC_APPLY);
-    Create(L"STATIC", L"", 0, IDC_SETTINGS_STATUS);
+    Create(L"STATIC", TR(L"Состояние:"), SS_NOTIFY, IDC_L_STATE);
+    Create(L"STATIC", L"", SS_NOTIFY, IDC_SETTINGS_STATUS);
     Create(L"STATIC", TR(L"Громкость микрофона:"), SS_CENTERIMAGE, IDC_L_MICVOL);
     Create(TRACKBAR_CLASSW, L"", TBS_HORZ | TBS_BOTTOM | WS_TABSTOP, IDC_MICVOL);
     Create(L"STATIC", L"", SS_RIGHT | SS_CENTERIMAGE, IDC_MICVOL_VALUE);
@@ -767,6 +771,21 @@ static void CreateControls()
         SendMessageW(tip, TTM_ADDTOOLW, 0, (LPARAM)&ti);
     }
     ApplyToolIcons();
+    // the driver settings as the tooltip of the state line
+    g_stateTip = CreateWindowExW(WS_EX_TOPMOST, TOOLTIPS_CLASSW, nullptr, WS_POPUP | TTS_ALWAYSTIP | TTS_NOPREFIX,
+                                 CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, g_wnd, nullptr, g_inst, nullptr);
+    const int stateIds[2] = { IDC_L_STATE, IDC_SETTINGS_STATUS };
+    for (int id : stateIds)
+    {
+        if (!g_stateTip) break;
+        TOOLINFOW ti = {};
+        ti.cbSize = sizeof(ti);
+        ti.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
+        ti.hwnd = g_wnd;
+        ti.uId = (UINT_PTR)Ctl(id);
+        ti.lpszText = LPSTR_TEXTCALLBACKW;
+        SendMessageW(g_stateTip, TTM_ADDTOOLW, 0, (LPARAM)&ti);
+    }
     Create(L"STATIC", TR(L"Язык:"), SS_RIGHT, IDC_L_LANG);
     Create(WC_COMBOBOXW, L"", CBS_DROPDOWNLIST | WS_TABSTOP | WS_VSCROLL, IDC_LANG);
     LangFillCombo(Ctl(IDC_LANG));
@@ -834,6 +853,34 @@ static void ShowSettings(const Settings& s)
 static int   g_useShown = -1;           // -1: a message is shown, 0: not in use, 1: in use
 static DWORD g_useLastSound;            // GetTickCount of the last sound in the microphone
 
+// "State:" (normal colour) and the state after it, or a message over the whole row (no label).
+static void PlaceStateRow(bool force)
+{
+    static int placed = -1;             // 1: label + state, 0: message
+    int mode = g_useShown >= 0 ? 1 : 0;
+    if (!force && mode == placed) return;
+    placed = mode;
+    HWND label = Ctl(IDC_L_STATE);
+    int x = S(24), y = S(204), w = S(548), h = S(20);
+    ShowWindow(label, mode ? SW_SHOW : SW_HIDE);
+    if (mode)
+    {
+        wchar_t t[64];
+        GetWindowTextW(label, t, 64);
+        SIZE sz = {};
+        HDC dc = GetDC(label);
+        HGDIOBJ old = SelectObject(dc, g_font);
+        GetTextExtentPoint32W(dc, t, (int)wcslen(t), &sz);
+        SelectObject(dc, old);
+        ReleaseDC(label, dc);
+        int lw = sz.cx + S(5);
+        SetWindowPos(label, nullptr, x, y, lw, h, SWP_NOZORDER | SWP_NOACTIVATE);
+        x += lw;
+        w -= lw;
+    }
+    SetWindowPos(Ctl(IDC_SETTINGS_STATUS), nullptr, x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
 static void ShowUseState(bool sound)
 {
     DWORD now = GetTickCount();
@@ -842,10 +889,8 @@ static void ShowUseState(bool sound)
     int use = g_useLastSound && now - g_useLastSound < 1500 ? 1 : 0;     // short pauses in the sound do not blink
     if (use == g_useShown) return;
     g_useShown = use;
-    wchar_t t[160];
-    _snwprintf(t, 160, L"%ls %ls", TR(L"Состояние:"), use ? TR(L"● используется") : TR(L"○ не используется"));
-    t[159] = 0;
-    SetText(IDC_SETTINGS_STATUS, t);
+    PlaceStateRow(false);
+    SetText(IDC_SETTINGS_STATUS, use ? TR(L"● используется") : TR(L"○ не используется"));
     InvalidateRect(Ctl(IDC_SETTINGS_STATUS), nullptr, TRUE);
 }
 
@@ -853,8 +898,26 @@ static void ShowUseState(bool sound)
 static void ShowSettingsMessage(const wchar_t* t)
 {
     g_useShown = -1;
+    PlaceStateRow(false);
     SetText(IDC_SETTINGS_STATUS, t);
     InvalidateRect(Ctl(IDC_SETTINGS_STATUS), nullptr, TRUE);
+}
+
+// The tooltip of the state line: what the driver runs with.
+static void DriverParamsTip(NMTTDISPINFOW* info)
+{
+    static wchar_t t[256];
+    t[0] = 0;
+    if (g_driverInstalled)
+    {
+        wchar_t bits[32];
+        if (g_settings.bits) _snwprintf(bits, 32, TR(L"%lu бит"), g_settings.bits);
+        else wcscpy(bits, TR(L"16–32 бит"));
+        _snwprintf(t, 256, TR(L"Сейчас в драйвере: %lu Гц · %ls · до %lu кан. · задержка %lu мс"),
+                   g_settings.rate, bits, g_settings.channels, g_settings.latency);
+        t[255] = 0;
+    }
+    info->lpszText = t;
 }
 
 static void ShowDriverStatus()
@@ -2512,6 +2575,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     case WM_NOTIFY:
     {
         NMHDR* h = (NMHDR*)lp;
+        if (h->code == TTN_GETDISPINFOW && g_stateTip && h->hwndFrom == g_stateTip)
+        {
+            DriverParamsTip((NMTTDISPINFOW*)lp);
+            return 0;
+        }
         if (h->code == TTN_GETDISPINFOW && h->hwndFrom == g_eventTip && h->idFrom == (UINT_PTR)Ctl(IDC_IO_STATUS))
         {
             EventTipText((NMTTDISPINFOW*)lp);
