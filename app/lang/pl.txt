@@ -259,3 +259,5 @@ Zapisać zmiany ustawień urządzeń i źródła?
 Stan:
 ● w użyciu
 ○ nieużywany
+Ten folder
+Wybierz folder

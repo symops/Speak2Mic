@@ -259,3 +259,5 @@ Aygıt ve kaynak ayarlarındaki değişiklikler kaydedilsin mi?
 Durum:
 ● kullanımda
 ○ kullanılmıyor
+Bu klasör
+Klasörü seç

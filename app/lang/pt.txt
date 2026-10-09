@@ -259,3 +259,5 @@ Salvar as alterações dos dispositivos e da origem?
 Estado:
 ● em uso
 ○ fora de uso
+Esta pasta
+Selecionar pasta

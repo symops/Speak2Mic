@@ -259,3 +259,5 @@ Lưu các thay đổi của thiết bị và nguồn?
 Trạng thái:
 ● đang dùng
 ○ không dùng
+Thư mục này
+Chọn thư mục

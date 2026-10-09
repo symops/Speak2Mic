@@ -259,3 +259,5 @@ Wijzigingen in apparaten en bron opslaan?
 Status:
 ● in gebruik
 ○ niet in gebruik
+Deze map
+Map selecteren

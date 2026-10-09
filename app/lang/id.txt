@@ -259,3 +259,5 @@ Simpan perubahan pengaturan perangkat dan sumber?
 Status:
 ● dipakai
 ○ tidak dipakai
+Folder ini
+Pilih folder

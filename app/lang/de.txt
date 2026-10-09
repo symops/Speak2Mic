@@ -259,3 +259,5 @@ Ordner:
 Status:
 ● in Verwendung
 ○ nicht in Verwendung
+Dieser Ordner
+Ordner auswählen

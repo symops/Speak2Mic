@@ -36,7 +36,7 @@ enum
     IDC_GROUP3, IDC_L_SPKNAME, IDC_SPKNAME, IDC_L_MICNAME, IDC_MICNAME, IDC_DEV_APPLY, IDC_RENAME_STATUS,
     IDC_RESET_ALL, IDC_MIXER, IDC_CLEARLOG, IDC_L_MICVOL, IDC_MICVOL, IDC_MICVOL_VALUE, IDC_MICMUTE,
     IDC_EXPORT, IDC_IMPORT, IDC_IO_STATUS, IDC_PLAY, IDC_AUTOSTART,
-    IDC_L_MUSIC, IDC_MUSICDIR, IDC_MUSIC_BROWSE, IDC_MUSIC_OPEN, IDC_MUSICSRC, IDC_SIGNAL, IDC_L_MUSICDIR,
+    IDC_L_MUSIC, IDC_MUSICDIR, IDC_MUSIC_BROWSE, IDC_MUSICSRC, IDC_SIGNAL, IDC_L_MUSICDIR,
 };
 
 // Default endpoint names (driver pin names, see gen.py); the user can rename them in the panel.
@@ -647,8 +647,8 @@ static void Layout()
     Place(IDC_L_SPKNAME, L1, 304, 130, 20); Place(IDC_SPKNAME, C1, 300, 300, 23);
     Place(IDC_L_MICNAME, L1, 338, 130, 20); Place(IDC_MICNAME, C1, 334, 300, 23);
     Place(IDC_L_MUSIC, L1, 372, 130, 20);   Place(IDC_MUSICSRC, C1, 368, 200, 300);
-    Place(IDC_L_MUSICDIR, L1, 406, 130, 20); Place(IDC_MUSICDIR, C1, 402, R - 160 - C1, 23);
-    Place(IDC_MUSIC_BROWSE, R - 154, 400, 74, 27);  Place(IDC_MUSIC_OPEN, R - 74, 400, 74, 27);
+    Place(IDC_L_MUSICDIR, L1, 406, 130, 20); Place(IDC_MUSICDIR, C1, 402, R - 80 - C1, 23);
+    Place(IDC_MUSIC_BROWSE, R - 74, 400, 74, 27);
     Place(IDC_SIGNAL, L1, 438, 150, 28);    Place(IDC_PLAY, L1 + 156, 438, 110, 28);
     Place(IDC_DEV_APPLY, C2, 438, W2, 28);
     Place(IDC_IO_STATUS, L1, 486, R - 38 - L1, 300); // events (newest at the bottom, shown when closed)
@@ -711,7 +711,6 @@ static void CreateControls()
     Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_MUSICDIR, WS_EX_CLIENTEDGE);
     SendMessageW(Ctl(IDC_MUSICDIR), EM_LIMITTEXT, MAX_PATH - 1, 0);
     Create(L"BUTTON", TR(L"Обзор…"), BS_PUSHBUTTON | WS_TABSTOP, IDC_MUSIC_BROWSE);
-    Create(L"BUTTON", TR(L"Открыть"), BS_PUSHBUTTON | WS_TABSTOP, IDC_MUSIC_OPEN);
     Create(L"BUTTON", TR(L"Проверка"), BS_PUSHBUTTON | WS_TABSTOP, IDC_SIGNAL);
     Create(L"BUTTON", TR(L"Играть"), BS_PUSHBUTTON | WS_TABSTOP, IDC_PLAY);
     Create(L"BUTTON", TR(L"Применить"), BS_PUSHBUTTON | WS_TABSTOP, IDC_DEV_APPLY);
@@ -1376,7 +1375,7 @@ static void TrackTitle(const wchar_t* path, wchar_t* out, size_t len)
 // the folder row only for "Audio from a folder" (as chosen in the form)
 static void ShowMusicFolderRow(int src)
 {
-    const int row[4] = { IDC_L_MUSICDIR, IDC_MUSICDIR, IDC_MUSIC_BROWSE, IDC_MUSIC_OPEN };
+    const int row[3] = { IDC_L_MUSICDIR, IDC_MUSICDIR, IDC_MUSIC_BROWSE };
     for (int id : row) ShowWindow(Ctl(id), src == MusicFolderSrc ? SW_SHOW : SW_HIDE);
 }
 
@@ -1477,40 +1476,60 @@ static void TypedMusicFolder(wchar_t* out)
     if (!out[0]) Mp3DefaultFolder(out);
 }
 
-static void OnMusicBrowse()
+// "Browse…" for a folder, showing the files in it too (a folder picker shows folders only): a file chosen gives its
+// folder; "Select folder" with the name box at "This folder" takes the folder shown (an empty one too).
+static bool BrowseFolder(const wchar_t* startFolder, wchar_t* out)
 {
     IFileOpenDialog* dlg = nullptr;
-    if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dlg)))) return;
+    if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dlg)))) return false;
     DWORD opts = 0;
     dlg->GetOptions(&opts);
-    dlg->SetOptions(opts | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM);
-    wchar_t cur[MAX_PATH];
-    TypedMusicFolder(cur);
+    dlg->SetOptions((opts | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST | FOS_NOTESTFILECREATE | FOS_NOVALIDATE) & ~FOS_FILEMUSTEXIST);
     IShellItem* start = nullptr;
-    if (SUCCEEDED(SHCreateItemFromParsingName(cur, nullptr, IID_PPV_ARGS(&start))))
+    if (startFolder[0] && SUCCEEDED(SHCreateItemFromParsingName(startFolder, nullptr, IID_PPV_ARGS(&start))))
     {
         dlg->SetFolder(start);
         start->Release();
     }
+    dlg->SetFileName(TR(L"Эта папка"));
+    dlg->SetOkButtonLabel(TR(L"Выбрать папку"));
+    bool ok = false;
     if (SUCCEEDED(dlg->Show(g_wnd)))
     {
         IShellItem* item = nullptr;
         PWSTR path = nullptr;
-        if (SUCCEEDED(dlg->GetResult(&item)) && SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &path)))
+        bool file = SUCCEEDED(dlg->GetResult(&item)) && SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &path));
+        if (!file)
         {
-            SetWindowTextW(Ctl(IDC_MUSICDIR), path);     // taken with "Apply"
+            // no item for the name typed: the folder shown
+            if (item) item->Release();
+            item = nullptr;
+            if (SUCCEEDED(dlg->GetFolder(&item))) item->GetDisplayName(SIGDN_FILESYSPATH, &path);
+        }
+        if (path)
+        {
+            wcsncpy(out, path, MAX_PATH - 1);
+            out[MAX_PATH - 1] = 0;
+            DWORD a = GetFileAttributesW(out);
+            if (file && (a == INVALID_FILE_ATTRIBUTES || !(a & FILE_ATTRIBUTE_DIRECTORY)))
+            {
+                wchar_t* slash = wcsrchr(out, L'\\');     // a file (or "This folder"): its folder
+                if (slash) *(slash == out + 2 && out[1] == L':' ? slash + 1 : slash) = 0;
+            }
+            ok = out[0] != 0;
             CoTaskMemFree(path);
         }
         if (item) item->Release();
     }
     dlg->Release();
+    return ok;
 }
 
-static void OnMusicOpen()
+static void OnMusicBrowse()
 {
-    wchar_t folder[MAX_PATH];
-    TypedMusicFolder(folder);
-    ShellExecuteW(g_wnd, L"open", folder, nullptr, nullptr, SW_SHOWNORMAL);
+    wchar_t cur[MAX_PATH], path[MAX_PATH];
+    TypedMusicFolder(cur);
+    if (BrowseFolder(cur, path)) SetWindowTextW(Ctl(IDC_MUSICDIR), path);     // taken with "Apply"
 }
 
 // "Play" without files in the folder is disabled; while playing it is "Pause" ("Stop" for the test).
@@ -2660,7 +2679,6 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             else if (id == IDC_SIGNAL) ShowSignal(!IsWindowVisible(g_sig));
             else if (id == IDC_IMPORT) OnImport();
             else if (id == IDC_MUSIC_BROWSE) OnMusicBrowse();
-            else if (id == IDC_MUSIC_OPEN) OnMusicOpen();
         }
         return 0;
     }

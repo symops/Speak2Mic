@@ -259,3 +259,5 @@ Salvare le modifiche ai dispositivi e alla sorgente?
 Stato:
 ● in uso
 ○ non in uso
+Questa cartella
+Seleziona cartella

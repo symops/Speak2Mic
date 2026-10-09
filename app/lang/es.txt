@@ -259,3 +259,5 @@ Carpeta:
 Estado:
 ● en uso
 ○ sin usar
+Esta carpeta
+Seleccionar carpeta
