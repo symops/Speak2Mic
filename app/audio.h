@@ -61,6 +61,9 @@ extern const GUID kS2mVolumeContext;
 typedef void (*ForeignVolumeFn)(float db, float scalar, bool mute, const GUID& context, void* ctx);
 void* WatchEndpointVolume(const wchar_t* deviceId, ForeignVolumeFn fn, void* ctx);
 void  UnwatchEndpointVolume(void* watch);
+// The volume the watch last saw (any change, Speak2Mic's own too). A different current volume means it missed a
+// change: the audio service restarted and the watch went deaf while the endpoint (and its id) stayed.
+bool  WatchedVolumeDb(void* watch, float* db);
 // The audio sessions open on an endpoint right now: "name.exe (pid N, active|inactive)", "; "-separated. Programs that
 // adjust a microphone's volume (WebRTC/Teams/Zoom automatic gain, ...) normally keep a session open on it.
 void DescribeAudioSessions(const wchar_t* deviceId, wchar_t* out, size_t len);

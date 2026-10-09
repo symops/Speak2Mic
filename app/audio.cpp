@@ -967,7 +967,10 @@ namespace {
 class VolumeWatch final : public IAudioEndpointVolumeCallback
 {
 public:
-    VolumeWatch(IAudioEndpointVolume* vol, ForeignVolumeFn fn, void* ctx) : m_vol(vol), m_refs(1), m_fn(fn), m_ctx(ctx) {}
+    VolumeWatch(IAudioEndpointVolume* vol, ForeignVolumeFn fn, void* ctx) : m_vol(vol), m_refs(1), m_fn(fn), m_ctx(ctx)
+    {
+        Remember();
+    }
     ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&m_refs); }
     ULONG STDMETHODCALLTYPE Release() override
     {
@@ -992,13 +995,22 @@ public:
     }
     HRESULT STDMETHODCALLTYPE OnNotify(PAUDIO_VOLUME_NOTIFICATION_DATA d) override
     {
-        if (!d || IsEqualGUID(d->guidEventContext, kS2mVolumeContext)) return S_OK;
-        float db = -1000.0f;
-        if (FAILED(m_vol->GetMasterVolumeLevel(&db)) && d->nChannels > 0) m_vol->GetChannelVolumeLevel(0, &db);
+        if (!d) return S_OK;
+        float db = Remember();          // every change, ours too: WatchedVolumeDb tells whether one was missed
+        if (IsEqualGUID(d->guidEventContext, kS2mVolumeContext)) return S_OK;
+        if (db <= -999.0f && d->nChannels > 0) m_vol->GetChannelVolumeLevel(0, &db);
         m_fn(db, d->fMasterVolume, d->bMuted != FALSE, d->guidEventContext, m_ctx);
         return S_OK;
     }
+    float Remember()
+    {
+        float db = -1000.0f;
+        if (SUCCEEDED(m_vol->GetMasterVolumeLevel(&db))) InterlockedExchange(&m_seen, (LONG)floorf(db * 100.0f + 0.5f));
+        else db = -1000.0f;
+        return db;
+    }
     IAudioEndpointVolume* m_vol;
+    volatile LONG         m_seen = -100000;     // the last volume seen, hundredths of a dB
 
 private:
     LONG            m_refs;
@@ -1025,6 +1037,15 @@ void* WatchEndpointVolume(const wchar_t* deviceId, ForeignVolumeFn fn, void* ctx
         return nullptr;
     }
     return w;
+}
+
+bool WatchedVolumeDb(void* watch, float* db)
+{
+    if (!watch) return false;
+    LONG v = InterlockedCompareExchange(&((VolumeWatch*)watch)->m_seen, 0, 0);
+    if (v == -100000) return false;
+    *db = v / 100.0f;
+    return true;
 }
 
 void UnwatchEndpointVolume(void* watch)

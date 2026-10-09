@@ -1072,6 +1072,7 @@ static void*   g_micWatch;
 static wchar_t g_micWatchId[256];
 static DWORD   g_protectLogged;         // GetTickCount of the last event log line about it
 static int     g_protectCount;          // set back since that line
+static bool    g_protectRetry;          // a change could not be set back yet
 
 static void OnForeignMicVolumeThread(float db, float, bool, const GUID&, void*)
 {
@@ -1096,8 +1097,15 @@ static void OnForeignMicVolume(float db)
     int i = FindCableDevice(false);
     if (i < 0) return;
     float want = LoadMicVolume(), now = 0, mn = 0, mx = 0;
-    if (!GetEndpointVolumeDb(g_devs[i].id, &now, &mn, &mx) || fabsf(now - want) < 0.05f) return;   // already back
+    g_protectRetry = true;          // until it is set back (CheckMicWatch tries again)
+    if (!GetEndpointVolumeDb(g_devs[i].id, &now, &mn, &mx)) return;
+    if (fabsf(now - want) < 0.05f)
+    {
+        g_protectRetry = false;     // already back
+        return;
+    }
     if (!SetEndpointVolumeDb(g_devs[i].id, want)) return;
+    g_protectRetry = false;
     {
         wchar_t who[300];
         ActiveSessionPrograms(g_devs[i].id, who, 300);
@@ -1126,6 +1134,38 @@ static void OnForeignMicVolume(float db)
     }
     g_micVolShown = -1;
     SyncMicVolume();
+}
+
+// Every 2 s: a watch that saw a different volume than the endpoint has now missed a change (it goes deaf when the
+// audio service restarts and the endpoint keeps its id). Two checks in a row, so a change whose notification is
+// still on its way is not taken for one; then watch again and handle the change as another program's.
+static void CheckMicWatch()
+{
+    static int missed;
+    static float missedDb;
+    int i = FindCableDevice(false);
+    float seen = 0, now = 0, mn = 0, mx = 0;
+    if (g_protectRetry && i >= 0 && GetEndpointVolumeDb(g_devs[i].id, &now, &mn, &mx))
+        OnForeignMicVolume(now);
+    if (i < 0 || !g_micWatch || !WatchedVolumeDb(g_micWatch, &seen) || !GetEndpointVolumeDb(g_devs[i].id, &now, &mn, &mx) ||
+        fabsf(now - seen) < 0.05f || GetCapture() == Ctl(IDC_MICVOL))
+    {
+        missed = 0;
+        return;
+    }
+    if (!missed++ || fabsf(now - missedDb) >= 0.05f)
+    {
+        missed = 1;
+        missedDb = now;
+        return;
+    }
+    missed = 0;
+    AppLog(L"microphone volume watch missed a change (seen %.2f dB, now %.2f dB): watching again", seen, now);
+    UnwatchEndpointVolume(g_micWatch);
+    g_micWatch = nullptr;
+    g_micWatchId[0] = 0;
+    EnsureMicWatch();
+    OnForeignMicVolume(now);
 }
 
 static void OnMicMute()
@@ -2294,6 +2334,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         {
             UpdatePlayButton();             // .mp3 files added to / removed from the folder
             EnsureMicWatch();               // the microphone endpoint may have been recreated
+            CheckMicWatch();                // or the audio service restarted under the same endpoint
             return 0;
         }
         if (wp == TIMER_METERS)
