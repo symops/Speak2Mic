@@ -616,42 +616,44 @@ static void PlaceStateRow(bool force);
 
 static void Layout()
 {
-    const int L1 = 24, C1 = 120, W1 = 160, L2 = 304, C2 = 408, W2 = 164;
+    // Grid: labels at L1 / L2, fields at C1 (W1 wide) / C2 (W2 wide, ending at R, the right edge of every row). Buttons
+    // next to a 23-px field are 27 px high and centred on it (2 px above).
+    const int L1 = 24, C1 = 158, W1 = 140, L2 = 330, C2 = 436, W2 = 140, R = C2 + W2;
 
-    // Top row: reset everything (left), language (right).
+    // Top row: reset everything (left), language (right, in the right column).
     Place(IDC_RESET_ALL, 12, 7, 32, 28);    Place(IDC_EXPORT, 48, 7, 32, 28);    Place(IDC_IMPORT, 84, 7, 32, 28);
     Place(IDC_MIXER, 128, 7, 32, 28);
-    Place(IDC_L_LANG, 300, 12, 120, 20);    Place(IDC_LANG, 428, 8, 160, 400);
+    Place(IDC_L_LANG, 300, 12, C2 - 6 - 300, 20);  Place(IDC_LANG, C2, 8, W2, 400);
 
     Place(IDC_GROUP1, 12, 42, 576, 226);
-    Place(IDC_L_PRESET, L1, 70, 90, 20);    Place(IDC_PRESET, C1, 66, 452, 300);
-    Place(IDC_L_RATE, L1, 104, 90, 20);     Place(IDC_RATE, C1, 100, W1, 300);
+    Place(IDC_L_PRESET, L1, 70, 130, 20);   Place(IDC_PRESET, C1, 66, 300, 300);
+    Place(IDC_L_RATE, L1, 104, 130, 20);    Place(IDC_RATE, C1, 100, W1, 300);
     Place(IDC_L_BITS, L2, 104, 100, 20);    Place(IDC_BITS, C2, 100, W2, 300);
-    Place(IDC_L_CHANNELS, L1, 138, 90, 20); Place(IDC_CHANNELS, C1, 134, W1, 300);
+    Place(IDC_L_CHANNELS, L1, 138, 130, 20); Place(IDC_CHANNELS, C1, 134, W1, 300);
     Place(IDC_L_LATENCY, L2, 138, 100, 20); Place(IDC_LATENCY, C2, 134, 70, 23);
-    Place(IDC_L_MICCHANNELS, L1, 172, 150, 20); Place(IDC_MICCHANNELS, 180, 168, 170, 300);
-    Place(IDC_APPLY, C2, 167, W2, 27);
+    Place(IDC_L_MICCHANNELS, L1, 172, 130, 20); Place(IDC_MICCHANNELS, C1, 168, W1, 300);
+    Place(IDC_APPLY, C2, 166, W2, 27);
     PlaceStateRow(true);
     // the microphone volume (works at once): one row, text vertically centred in the same 24-px band as the
     // checkbox and the slider's middle
-    Place(IDC_L_MICVOL, L1, 232, 160, 24);  Place(IDC_MICVOL, 188, 230, 236, 28);
-    Place(IDC_MICVOL_VALUE, 424, 232, 62, 24);
-    Place(IDC_MICMUTE, 494, 232, 90, 24);
+    Place(IDC_L_MICVOL, L1, 232, 130, 24);  Place(IDC_MICVOL, C1 - 4, 230, 230, 28);
+    Place(IDC_MICVOL_VALUE, 384, 232, 46, 24);
+    Place(IDC_MICMUTE, C2, 232, W2, 24);
     SendMessageW(Ctl(IDC_LATENCY_UD), UDM_SETBUDDY, (WPARAM)Ctl(IDC_LATENCY), 0);
 
     // Devices and source, as Show2Cam's camera block: the endpoint names, the source of "Play" and its folder (a row
     // of its own, as Show2Cam's "Folder"); taken with "Apply" (bottom right), "Check" and "Play" bottom left.
     Place(IDC_GROUP3, 12, 276, 576, 200);
-    Place(IDC_L_SPKNAME, L1, 304, 94, 20);  Place(IDC_SPKNAME, C1 + 4, 300, 448, 23);
-    Place(IDC_L_MICNAME, L1, 338, 94, 20);  Place(IDC_MICNAME, C1 + 4, 334, 448, 23);
-    Place(IDC_L_MUSIC, L1, 372, 96, 20);    Place(IDC_MUSICSRC, C1 + 4, 368, 282, 300);
-    Place(IDC_L_MUSICDIR, L1, 406, 96, 20); Place(IDC_MUSICDIR, C1 + 4, 402, 288, 23);
-    Place(IDC_MUSIC_BROWSE, 420, 401, 74, 27);  Place(IDC_MUSIC_OPEN, 498, 401, 74, 27);
-    Place(IDC_SIGNAL, L1, 438, 150, 28);    Place(IDC_PLAY, 180, 438, 110, 28);
+    Place(IDC_L_SPKNAME, L1, 304, 130, 20); Place(IDC_SPKNAME, C1, 300, 300, 23);
+    Place(IDC_L_MICNAME, L1, 338, 130, 20); Place(IDC_MICNAME, C1, 334, 300, 23);
+    Place(IDC_L_MUSIC, L1, 372, 130, 20);   Place(IDC_MUSICSRC, C1, 368, 200, 300);
+    Place(IDC_L_MUSICDIR, L1, 406, 130, 20); Place(IDC_MUSICDIR, C1, 402, R - 160 - C1, 23);
+    Place(IDC_MUSIC_BROWSE, R - 154, 400, 74, 27);  Place(IDC_MUSIC_OPEN, R - 74, 400, 74, 27);
+    Place(IDC_SIGNAL, L1, 438, 150, 28);    Place(IDC_PLAY, L1 + 156, 438, 110, 28);
     Place(IDC_DEV_APPLY, C2, 438, W2, 28);
-    Place(IDC_IO_STATUS, L1, 486, 512, 300); // events (newest at the bottom, shown when closed)
-    Place(IDC_CLEARLOG, 542, 484, 32, 26);   // clear the event log
-    Place(IDC_AUTOSTART, L1, 518, 548, 22);  // start with Windows (in the tray)
+    Place(IDC_IO_STATUS, L1, 486, R - 38 - L1, 300); // events (newest at the bottom, shown when closed)
+    Place(IDC_CLEARLOG, R - 32, 484, 32, 26);        // clear the event log
+    Place(IDC_AUTOSTART, L1, 518, R - L1, 22);       // start with Windows (in the tray)
 
     // The "Signal" window: 600 x 208 client area.
     Place(IDC_IN_LABEL, L1, 14, 400, 20);   Place(IDC_IN_DB, 430, 14, 142, 20);
@@ -861,7 +863,7 @@ static void PlaceStateRow(bool force)
     if (!force && mode == placed) return;
     placed = mode;
     HWND label = Ctl(IDC_L_STATE);
-    int x = S(24), y = S(204), w = S(548), h = S(20);
+    int x = S(24), y = S(204), w = S(552), h = S(20);
     ShowWindow(label, mode ? SW_SHOW : SW_HIDE);
     if (mode)
     {
