@@ -30,7 +30,7 @@ enum
     IDC_SETTINGS_STATUS,
     IDC_IN_LABEL, IDC_IN_DB, IDC_IN_METER, IDC_IN_FORMAT,
     IDC_OUT_LABEL, IDC_OUT_DB, IDC_OUT_METER, IDC_OUT_FORMAT,
-    IDC_GROUP1, IDC_GROUP2,
+    IDC_GROUP1,
     IDC_L_PRESET, IDC_L_RATE, IDC_L_BITS, IDC_L_CHANNELS, IDC_L_LATENCY, IDC_L_LANG, IDC_LANG,
     IDC_L_MICCHANNELS, IDC_MICCHANNELS,
     IDC_GROUP3, IDC_L_SPKNAME, IDC_SPKNAME, IDC_L_MICNAME, IDC_MICNAME, IDC_DEV_APPLY, IDC_RENAME_STATUS,
@@ -620,7 +620,7 @@ static void Layout()
     Place(IDC_MIXER, 128, 7, 32, 28);
     Place(IDC_L_LANG, 300, 12, 120, 20);    Place(IDC_LANG, 428, 8, 160, 400);
 
-    Place(IDC_GROUP1, 12, 42, 576, 196);
+    Place(IDC_GROUP1, 12, 42, 576, 226);
     Place(IDC_L_PRESET, L1, 70, 90, 20);    Place(IDC_PRESET, C1, 66, 452, 300);
     Place(IDC_L_RATE, L1, 104, 90, 20);     Place(IDC_RATE, C1, 100, W1, 300);
     Place(IDC_L_BITS, L2, 104, 100, 20);    Place(IDC_BITS, C2, 100, W2, 300);
@@ -628,29 +628,27 @@ static void Layout()
     Place(IDC_L_LATENCY, L2, 138, 100, 20); Place(IDC_LATENCY, C2, 134, 70, 23);
     Place(IDC_L_MICCHANNELS, L1, 172, 150, 20); Place(IDC_MICCHANNELS, 180, 168, 170, 300);
     Place(IDC_APPLY, C2, 167, W2, 27);
-    Place(IDC_SETTINGS_STATUS, L1, 204, 548, 28);
+    Place(IDC_SETTINGS_STATUS, L1, 204, 548, 20);
+    // the microphone volume (works at once): one row, text vertically centred in the same 24-px band as the
+    // checkbox and the slider's middle
+    Place(IDC_L_MICVOL, L1, 232, 160, 24);  Place(IDC_MICVOL, 188, 230, 236, 28);
+    Place(IDC_MICVOL_VALUE, 424, 232, 62, 24);
+    Place(IDC_MICMUTE, 494, 232, 90, 24);
     SendMessageW(Ctl(IDC_LATENCY_UD), UDM_SETBUDDY, (WPARAM)Ctl(IDC_LATENCY), 0);
 
     // Devices and source, as Show2Cam's camera block: the endpoint names, the source of "Play" and its folder (a row
     // of its own, as Show2Cam's "Folder"); taken with "Apply" (bottom right), "Check" and "Play" bottom left.
-    Place(IDC_GROUP3, 12, 246, 576, 200);
-    Place(IDC_L_SPKNAME, L1, 274, 94, 20);  Place(IDC_SPKNAME, C1 + 4, 270, 448, 23);
-    Place(IDC_L_MICNAME, L1, 308, 94, 20);  Place(IDC_MICNAME, C1 + 4, 304, 448, 23);
-    Place(IDC_L_MUSIC, L1, 342, 96, 20);    Place(IDC_MUSICSRC, C1 + 4, 338, 282, 300);
-    Place(IDC_L_MUSICDIR, L1, 376, 96, 20); Place(IDC_MUSICDIR, C1 + 4, 372, 288, 23);
-    Place(IDC_MUSIC_BROWSE, 420, 371, 74, 27);  Place(IDC_MUSIC_OPEN, 498, 371, 74, 27);
-    Place(IDC_SIGNAL, L1, 408, 150, 28);    Place(IDC_PLAY, 180, 408, 110, 28);
-    Place(IDC_DEV_APPLY, C2, 408, W2, 28);
-
-    // The microphone volume (works at once). One row, text vertically centred in the same 24-px band as the
-    // checkbox and the slider's middle.
-    Place(IDC_GROUP2, 12, 454, 576, 60);
-    Place(IDC_L_MICVOL, L1, 480, 160, 24);  Place(IDC_MICVOL, 188, 478, 236, 28);
-    Place(IDC_MICVOL_VALUE, 424, 480, 62, 24);
-    Place(IDC_MICMUTE, 494, 480, 90, 24);
-    Place(IDC_IO_STATUS, L1, 522, 512, 300); // events (newest at the bottom, shown when closed)
-    Place(IDC_CLEARLOG, 542, 520, 32, 26);   // clear the event log
-    Place(IDC_AUTOSTART, L1, 554, 548, 22);  // start with Windows (in the tray)
+    Place(IDC_GROUP3, 12, 276, 576, 200);
+    Place(IDC_L_SPKNAME, L1, 304, 94, 20);  Place(IDC_SPKNAME, C1 + 4, 300, 448, 23);
+    Place(IDC_L_MICNAME, L1, 338, 94, 20);  Place(IDC_MICNAME, C1 + 4, 334, 448, 23);
+    Place(IDC_L_MUSIC, L1, 372, 96, 20);    Place(IDC_MUSICSRC, C1 + 4, 368, 282, 300);
+    Place(IDC_L_MUSICDIR, L1, 406, 96, 20); Place(IDC_MUSICDIR, C1 + 4, 402, 288, 23);
+    Place(IDC_MUSIC_BROWSE, 420, 401, 74, 27);  Place(IDC_MUSIC_OPEN, 498, 401, 74, 27);
+    Place(IDC_SIGNAL, L1, 438, 150, 28);    Place(IDC_PLAY, 180, 438, 110, 28);
+    Place(IDC_DEV_APPLY, C2, 438, W2, 28);
+    Place(IDC_IO_STATUS, L1, 486, 512, 300); // events (newest at the bottom, shown when closed)
+    Place(IDC_CLEARLOG, 542, 484, 32, 26);   // clear the event log
+    Place(IDC_AUTOSTART, L1, 518, 548, 22);  // start with Windows (in the tray)
 
     // The "Signal" window: 600 x 208 client area.
     Place(IDC_IN_LABEL, L1, 14, 400, 20);   Place(IDC_IN_DB, 430, 14, 142, 20);
@@ -688,6 +686,10 @@ static void CreateControls()
     Create(UPDOWN_CLASSW, L"", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_NOTHOUSANDS, IDC_LATENCY_UD);
     Create(L"BUTTON", TR(L"Применить"), BS_PUSHBUTTON | WS_TABSTOP, IDC_APPLY);
     Create(L"STATIC", L"", 0, IDC_SETTINGS_STATUS);
+    Create(L"STATIC", TR(L"Громкость микрофона:"), SS_CENTERIMAGE, IDC_L_MICVOL);
+    Create(TRACKBAR_CLASSW, L"", TBS_HORZ | TBS_BOTTOM | WS_TABSTOP, IDC_MICVOL);
+    Create(L"STATIC", L"", SS_RIGHT | SS_CENTERIMAGE, IDC_MICVOL_VALUE);
+    Create(L"BUTTON", TR(L"Без звука"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_MICMUTE);
 
     Create(L"BUTTON", TR(L"Устройства и источник"), BS_GROUPBOX, IDC_GROUP3);
     Create(L"STATIC", TR(L"Динамик:"), 0, IDC_L_SPKNAME);
@@ -711,7 +713,6 @@ static void CreateControls()
     // the meters' own window (hidden until "Check"); owned by the panel, so it stays above it and closes with it
     g_sig = CreateWindowExW(WS_EX_CONTROLPARENT, L"S2mSignal", TR(L"Индикация сигнала"), WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
                             CW_USEDEFAULT, CW_USEDEFAULT, 10, 10, g_wnd, nullptr, g_inst, nullptr);
-    Create(L"BUTTON", TR(L"Громкость микрофона"), BS_GROUPBOX, IDC_GROUP2);
     Create(L"STATIC", L"", 0, IDC_IN_LABEL);
     Create(L"STATIC", L"", SS_RIGHT, IDC_IN_DB);
     Create(L"S2mMeter", L"", 0, IDC_IN_METER);
@@ -720,10 +721,6 @@ static void CreateControls()
     Create(L"STATIC", L"", SS_RIGHT, IDC_OUT_DB);
     Create(L"S2mMeter", L"", 0, IDC_OUT_METER);
     Create(L"STATIC", L"", 0, IDC_OUT_FORMAT);
-    Create(L"STATIC", TR(L"Громкость микрофона:"), SS_CENTERIMAGE, IDC_L_MICVOL);
-    Create(TRACKBAR_CLASSW, L"", TBS_HORZ | TBS_BOTTOM | WS_TABSTOP, IDC_MICVOL);
-    Create(L"STATIC", L"", SS_RIGHT | SS_CENTERIMAGE, IDC_MICVOL_VALUE);
-    Create(L"BUTTON", TR(L"Без звука"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_MICMUTE);
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETRANGE, FALSE, MAKELPARAM(0, kMicMaxPercent));
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETPAGESIZE, 0, 10);
     SendMessageW(Ctl(IDC_MICVOL), TBM_SETTIC, 0, 100);     // mark at 100 % = unchanged signal
@@ -832,23 +829,42 @@ static void ShowSettings(const Settings& s)
     UpdateApplyButton();
 }
 
+// The line under the quality settings: "State: in use / not in use" (sound goes into the microphone or not, from
+// the microphone's meter), coloured as Show2Cam's list; or a message while the driver is missing or being set up.
+static int   g_useShown = -1;           // -1: a message is shown, 0: not in use, 1: in use
+static DWORD g_useLastSound;            // GetTickCount of the last sound in the microphone
+
+static void ShowUseState(bool sound)
+{
+    DWORD now = GetTickCount();
+    if (sound) g_useLastSound = now ? now : 1;
+    if (g_useShown < 0) return;
+    int use = g_useLastSound && now - g_useLastSound < 1500 ? 1 : 0;     // short pauses in the sound do not blink
+    if (use == g_useShown) return;
+    g_useShown = use;
+    wchar_t t[160];
+    _snwprintf(t, 160, L"%ls %ls", TR(L"Состояние:"), use ? TR(L"● используется") : TR(L"○ не используется"));
+    t[159] = 0;
+    SetText(IDC_SETTINGS_STATUS, t);
+    InvalidateRect(Ctl(IDC_SETTINGS_STATUS), nullptr, TRUE);
+}
+
+// A message in place of the state (until ShowDriverStatus).
+static void ShowSettingsMessage(const wchar_t* t)
+{
+    g_useShown = -1;
+    SetText(IDC_SETTINGS_STATUS, t);
+    InvalidateRect(Ctl(IDC_SETTINGS_STATUS), nullptr, TRUE);
+}
+
 static void ShowDriverStatus()
 {
-    wchar_t t[256];
-    if (!g_driverInstalled)
-    {
-        wcscpy(t, TR(L"Драйвер Speak2Mic не установлен: настройки применить нельзя."));
-    }
+    if (!g_driverInstalled) ShowSettingsMessage(TR(L"Драйвер Speak2Mic не установлен: настройки применить нельзя."));
     else
     {
-        wchar_t bits[32];
-        if (g_settings.bits) _snwprintf(bits, 32, TR(L"%lu бит"), g_settings.bits);
-        else wcscpy(bits, TR(L"16–32 бит"));
-        _snwprintf(t, 256, TR(L"Сейчас в драйвере: %lu Гц · %ls · до %lu кан. · задержка %lu мс"),
-                   g_settings.rate, bits, g_settings.channels, g_settings.latency);
+        g_useShown = 2;                 // shown at once
+        ShowUseState(false);
     }
-    t[255] = 0;
-    SetText(IDC_SETTINGS_STATUS, t);
     UpdateApplyButton();
 }
 
@@ -1752,7 +1768,8 @@ static void RefreshDevices(bool startMeters)
     if (startMeters) StartMeters();
 }
 
-static void UpdateMeterUi(LevelMeter& m, bool found, int meterId, int dbId, int fmtId)
+// Returns whether there is sound (above -60 dB).
+static bool UpdateMeterUi(LevelMeter& m, bool found, int meterId, int dbId, int fmtId)
 {
     float peaks[S2M_MAX_METER_CHANNELS];
     int n = found ? m.TakePeaks(peaks, S2M_MAX_METER_CHANNELS) : 0;
@@ -1762,7 +1779,7 @@ static void UpdateMeterUi(LevelMeter& m, bool found, int meterId, int dbId, int 
         ClearMeter(Ctl(meterId));
         SetText(dbId, L"—");
         SetText(fmtId, TR(L"Устройство не найдено: драйвер не установлен или перезапускается."));
-        return;
+        return false;
     }
     float level = n ? UpdateMeter(Ctl(meterId), peaks, n) : 0;
     if (level < 0.001f)
@@ -1779,6 +1796,7 @@ static void UpdateMeterUi(LevelMeter& m, bool found, int meterId, int dbId, int 
         if (wcsstr(t, L"0x") && g_driverLogMark[0]) DumpDriverLog(L"meter error");
     }
     SetText(fmtId, t);
+    return level >= 0.001f;
 }
 
 // ---------------------------------------------------------------------------
@@ -1938,7 +1956,7 @@ static void OnApply()
     StopTest();
     StopMusic();
     StopMeters();
-    SetText(IDC_SETTINGS_STATUS, TR(L"Применение настроек, устройство перезапускается…"));
+    ShowSettingsMessage(TR(L"Применение настроек, устройство перезапускается…"));
     UpdateWindow(g_wnd);
 
     MarkDriverLog();
@@ -2386,7 +2404,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         if (wp == TIMER_METERS)
         {
             UpdateMeterUi(g_meterIn, g_inFound, IDC_IN_METER, IDC_IN_DB, IDC_IN_FORMAT);
-            UpdateMeterUi(g_meterOut, g_outFound, IDC_OUT_METER, IDC_OUT_DB, IDC_OUT_FORMAT);
+            ShowUseState(UpdateMeterUi(g_meterOut, g_outFound, IDC_OUT_METER, IDC_OUT_DB, IDC_OUT_FORMAT));
             // No "refresh" button: while a Speak2Mic device is missing (driver installed or restarted after
             // the panel started), look for it every ~3 s and connect the meters once it is there.
             static int tick;
@@ -2414,7 +2432,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             RefreshDevices(g_formatTries <= 0);
             if (g_formatTries > 0)
             {
-                SetText(IDC_SETTINGS_STATUS, TR(L"Установка формата по умолчанию для устройств Speak2Mic…"));
+                ShowSettingsMessage(TR(L"Установка формата по умолчанию для устройств Speak2Mic…"));
                 SetTimer(hwnd, TIMER_FORMAT, 100, nullptr);
             }
         }
@@ -2434,6 +2452,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                 }
                 g_levelBeforeApply.ok = false;
                 StartMeters();
+                ShowDriverStatus();
             }
             else
             {
@@ -2441,6 +2460,17 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             }
         }
         return 0;
+
+    case WM_CTLCOLORSTATIC:
+        if ((HWND)lp == Ctl(IDC_SETTINGS_STATUS) && g_useShown >= 0)
+        {
+            // as Show2Cam's list: green in use, grey not in use
+            HDC dc = (HDC)wp;
+            SetTextColor(dc, g_useShown == 1 ? RGB(16, 140, 56) : RGB(120, 120, 120));
+            SetBkColor(dc, GetSysColor(COLOR_BTNFACE));
+            return (LRESULT)GetSysColorBrush(COLOR_BTNFACE);
+        }
+        break;
 
     case WM_APP_FOREIGN_VOLUME:
         OnForeignMicVolume((LONG)(LONG_PTR)wp / 100.0f);
@@ -2779,7 +2809,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
 
     // Size the window for the monitor DPI: 600x584 client area at 96 DPI.
     UINT dpi = GetDpiForSystem();
-    RECT r = { 0, 0, MulDiv(600, (int)dpi, 96), MulDiv(584, (int)dpi, 96) };
+    RECT r = { 0, 0, MulDiv(600, (int)dpi, 96), MulDiv(548, (int)dpi, 96) };
     DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
     AdjustWindowRectExForDpi(&r, style, FALSE, WS_EX_CONTROLPARENT, dpi);
     wchar_t title[160];

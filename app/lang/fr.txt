@@ -256,3 +256,6 @@ Fermer la vérification
 Volume du micro
 Dossier :
 Enregistrer les modifications des périphériques et de la source ?
+État :
+● utilisé
+○ non utilisé

@@ -256,3 +256,6 @@ Zamknij podgląd
 Głośność mikrofonu
 Folder:
 Zapisać zmiany ustawień urządzeń i źródła?
+Stan:
+● w użyciu
+○ nieużywany

@@ -256,3 +256,6 @@ Tutup pemeriksaan
 Volume mikrofon
 Folder:
 Simpan perubahan pengaturan perangkat dan sumber?
+Status:
+● dipakai
+○ tidak dipakai

@@ -11,7 +11,7 @@ Every translation must keep the printf conversions (%ls, %lu, %08lX, ...) of its
 import os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-UI_COUNT = 258
+UI_COUNT = 261
 
 # code, native name, Windows primary language id (winnt.h LANG_*); the order is the table column order.
 LANGS = [

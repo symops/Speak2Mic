@@ -256,3 +256,6 @@ Nhạc: trình tạo (tổng hợp giai điệu).
 Âm lượng micrô
 Thư mục:
 Lưu các thay đổi của thiết bị và nguồn?
+Trạng thái:
+● đang dùng
+○ không dùng

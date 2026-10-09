@@ -256,3 +256,6 @@ Prüfung schließen
 Mikrofonlautstärke
 Ordner:
 Änderungen an den Geräte- und Quelleneinstellungen speichern?
+Status:
+● in Verwendung
+○ nicht in Verwendung

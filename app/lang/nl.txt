@@ -256,3 +256,6 @@ Controle sluiten
 Microfoonvolume
 Map:
 Wijzigingen in apparaten en bron opslaan?
+Status:
+● in gebruik
+○ niet in gebruik
