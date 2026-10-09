@@ -255,3 +255,4 @@ Muziek: generator (maakt melodieën).
 Controle sluiten
 Microfoonvolume
 Map:
+Wijzigingen in apparaten en bron opslaan?

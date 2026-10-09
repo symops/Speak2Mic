@@ -255,3 +255,4 @@ Nhạc: trình tạo (tổng hợp giai điệu).
 Đóng kiểm tra
 Âm lượng micrô
 Thư mục:
+Lưu các thay đổi của thiết bị và nguồn?

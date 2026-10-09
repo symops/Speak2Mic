@@ -255,3 +255,4 @@ Musik: generator (menyintesis melodi).
 Tutup pemeriksaan
 Volume mikrofon
 Folder:
+Simpan perubahan pengaturan perangkat dan sumber?

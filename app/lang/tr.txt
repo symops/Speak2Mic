@@ -255,3 +255,4 @@ Müzik: üreteç (melodi sentezler).
 Denetimi kapat
 Mikrofon ses düzeyi
 Klasör:
+Aygıt ve kaynak ayarlarındaki değişiklikler kaydedilsin mi?

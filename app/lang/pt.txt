@@ -255,3 +255,4 @@ Música: gerador (sintetiza melodias).
 Fechar verificação
 Volume do microfone
 Pasta:
+Salvar as alterações dos dispositivos e da origem?

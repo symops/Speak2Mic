@@ -255,3 +255,4 @@ Musica: generatore (sintetizza melodie).
 Chiudi verifica
 Volume del microfono
 Cartella:
+Salvare le modifiche ai dispositivi e alla sorgente?

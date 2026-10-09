@@ -196,7 +196,7 @@ static void CloseRunningPanel()
         DWORD pid = 0;
         GetWindowThreadProcessId(panel, &pid);
         HANDLE proc = OpenProcess(SYNCHRONIZE, FALSE, pid);
-        PostMessageW(panel, WM_CLOSE, 0, 0);
+        PostMessageW(panel, WM_CLOSE, S2M_CLOSE_FOR_SETUP, 0);     // no question about unsaved settings
         DWORD w = proc ? WaitForSingleObject(proc, 5000) : WAIT_FAILED;
         if (proc) CloseHandle(proc);
         AppLog(L"control panel (pid %lu) closed: %ls", pid, w == WAIT_OBJECT_0 ? L"yes" : L"not in time");

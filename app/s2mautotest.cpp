@@ -1558,7 +1558,7 @@ int wmain(int argc, wchar_t** argv)
     if (panel)
     {
         Out(L"Closing the Speak2Mic control panel.");
-        PostMessageW(panel, WM_CLOSE, 0, 0);
+        PostMessageW(panel, WM_CLOSE, 0x53324D31 /* S2M_CLOSE_FOR_SETUP */, 0);
         Sleep(1500);
     }
 

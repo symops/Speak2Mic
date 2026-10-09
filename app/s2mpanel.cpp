@@ -1688,6 +1688,16 @@ static void OnDevApply()
     UpdateDevApply();
 }
 
+// Unsaved changes of the devices block on closing: apply them (Yes), drop them (No) or stay (Cancel: returns false).
+static bool AskSaveDev()
+{
+    if (!DevDirty()) return true;
+    int r = MessageBoxW(g_wnd, TR(L"Сохранить изменения настроек устройств и источника?"), L"Speak2Mic", MB_YESNOCANCEL | MB_ICONQUESTION);
+    if (r == IDCANCEL) return false;
+    if (r == IDYES) OnDevApply();
+    return true;
+}
+
 // After a reinstall Windows may bring the endpoints back with their default names: put the user's back.
 static void RestoreSavedNames()
 {
@@ -2498,7 +2508,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             }
             else if (id == IDC_LANG)
             {
-                if (LangApplyCombo(Ctl(IDC_LANG))) PostMessageW(hwnd, WM_CLOSE, 0, 0);   // a new copy starts
+                if (LangApplyCombo(Ctl(IDC_LANG))) PostMessageW(hwnd, WM_CLOSE, S2M_CLOSE_FOR_SETUP, 0);   // a new copy starts
             }
             else if (id == IDC_PRESET)
             {
@@ -2556,6 +2566,16 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     }
 
     case WM_CLOSE:
+        if (wp == S2M_CLOSE_FOR_SETUP)
+        {
+            // The installer or a language change (a new copy is already starting): no question, unsaved settings are kept.
+            if (DevDirty()) OnDevApply();
+        }
+        else
+        {
+            if (g_inTray) FromTray();            // (from the tray menu: the question needs the window)
+            if (!AskSaveDev()) return 0;         // Cancel: the panel stays open
+        }
         if (g_inTray) TrayIcon(NIM_DELETE);
         g_inTray = false;
         UnwatchEndpointVolume(g_micWatch);

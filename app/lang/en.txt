@@ -255,6 +255,7 @@ Music: generator (synthesizes melodies).
 Close check
 Microphone volume
 Folder:
+Save the changes to the devices and source settings?
 [driver] the driver log is empty: the driver has never started
 [driver] ---- driver log (DriverLog) ----
 [setupapi] cannot open %ls (%lu)

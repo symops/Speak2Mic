@@ -255,3 +255,4 @@ Musik: Generator (erzeugt Melodien).
 Prüfung schließen
 Mikrofonlautstärke
 Ordner:
+Änderungen an den Geräte- und Quelleneinstellungen speichern?

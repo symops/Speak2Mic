@@ -255,3 +255,4 @@ Musique : générateur (synthétise des mélodies).
 Fermer la vérification
 Volume du micro
 Dossier :
+Enregistrer les modifications des périphériques et de la source ?

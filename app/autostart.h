@@ -9,6 +9,8 @@
 
 #define S2M_RUN_KEY   L"Software\\Microsoft\\Windows\\CurrentVersion\\Run"
 #define S2M_RUN_VALUE L"Speak2Mic"
+// WM_CLOSE wParam: the installer (or a language change) closes the panel: no question, unsaved settings are applied
+#define S2M_CLOSE_FOR_SETUP 0x53324D31
 
 inline bool S2mAutostartEnabled()
 {

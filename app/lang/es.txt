@@ -255,3 +255,4 @@ Música: generador (sintetiza melodías).
 Cerrar comprobación
 Volumen del micrófono
 Carpeta:
+¿Guardar los cambios de los dispositivos y del origen?
