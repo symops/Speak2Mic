@@ -256,6 +256,9 @@ extern "C" NTSTATUS NTAPI DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUN
 {
     S2mLogInit();
     S2mLog("DriverEntry: Speak2Mic " S2M_VER_STR ", built " __DATE__ " " __TIME__);
+    // The running version for the installer (the log's DriverEntry line may have rotated out of the saved log).
+    static const WCHAR kVersion[] = L"" S2M_VER_STR;
+    RtlWriteRegistryValue(RTL_REGISTRY_SERVICES, L"Speak2Mic\\Parameters", L"RunningVersion", REG_SZ, (PVOID)kVersion, sizeof(kVersion));
     NTSTATUS status = PcInitializeAdapterDriver(DriverObject, RegistryPath, (PDRIVER_ADD_DEVICE)AddDevice);
     S2mLog("DriverEntry: PcInitializeAdapterDriver 0x%08lX", (ULONG)status);
     S2mLogFlush();

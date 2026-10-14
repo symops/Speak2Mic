@@ -3,6 +3,7 @@
 #include "lang.h"
 #include "applog.h"
 #include <cfgmgr32.h>
+#include <setupapi.h>
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
 #include <stdio.h>
@@ -115,8 +116,43 @@ static DWORD ReadDword(const wchar_t* name, DWORD def)
     return v;
 }
 
+static const DEVPROPKEY kDriverVersionKey = { { 0xa8b865dd, 0x2e3d, 0x4094, { 0xad, 0x97, 0xe5, 0x93, 0xa7, 0x0c, 0x75, 0xd6 } }, 3 };
+
+// The driver version Windows installed on the first ROOT\Speak2Mic device (DEVPKEY_Device_DriverVersion).
+static bool InstalledDriverVersion(wchar_t* out, size_t len)
+{
+    out[0] = 0;
+    HDEVINFO set = SetupDiGetClassDevsW(nullptr, L"ROOT", nullptr, DIGCF_ALLCLASSES | DIGCF_PRESENT);
+    if (set == INVALID_HANDLE_VALUE) return false;
+    SP_DEVINFO_DATA d = { sizeof(d) };
+    bool found = false;
+    for (DWORD i = 0; !found && SetupDiEnumDeviceInfo(set, i, &d); i++)
+    {
+        wchar_t ids[512] = L"";
+        if (!SetupDiGetDeviceRegistryPropertyW(set, &d, SPDRP_HARDWAREID, nullptr, (BYTE*)ids, sizeof(ids) - 4, nullptr)) continue;
+        if (_wcsicmp(ids, L"ROOT\\Speak2Mic")) continue;
+        DEVPROPTYPE type = 0;
+        wchar_t ver[64] = L"";
+        if (SetupDiGetDevicePropertyW(set, &d, &kDriverVersionKey, &type, (BYTE*)ver, sizeof(ver) - 2, nullptr, 0) && ver[0])
+        {
+            wcsncpy(out, ver, len - 1);
+            out[len - 1] = 0;
+            found = true;
+        }
+    }
+    SetupDiDestroyDeviceInfoList(set);
+    return found;
+}
+
+// The version of the running driver: the value it writes when it loads, else the last DriverEntry line of its saved
+// log (older drivers), else the version Windows installed on the device (as Show2Cam).
 bool DiagRunningDriverVersion(wchar_t* running, size_t len)
 {
+    running[0] = 0;
+    DWORD vsize = (DWORD)(len * sizeof(wchar_t));
+    if (RegGetValueW(HKEY_LOCAL_MACHINE, PARAMS_KEY, L"RunningVersion", RRF_RT_REG_SZ, nullptr, running, &vsize) == ERROR_SUCCESS &&
+        running[0])
+        return true;
     running[0] = 0;
     bool found = false;
     DWORD size = 0;
@@ -140,6 +176,7 @@ bool DiagRunningDriverVersion(wchar_t* running, size_t len)
         }
         if (text) HeapFree(GetProcessHeap(), 0, text);
     }
+    if (!found) found = InstalledDriverVersion(running, len);
     return found;
 }
 
