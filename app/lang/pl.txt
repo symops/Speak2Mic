@@ -261,3 +261,4 @@ Stan:
 ○ nieużywany
 Ten folder
 Wybierz folder
+✔  Sterownik Speak2Mic zaktualizowany do wersji %ls — uruchom ponownie komputer (do tego czasu działa %ls)

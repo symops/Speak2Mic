@@ -261,3 +261,4 @@ Estado:
 ○ sin usar
 Esta carpeta
 Seleccionar carpeta
+✔  Controlador Speak2Mic actualizado a la versión %ls — reinicie el equipo (hasta entonces funciona la %ls)

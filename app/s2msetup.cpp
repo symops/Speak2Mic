@@ -12,6 +12,7 @@
 #include "audiosvc.h"
 #include "devctl.h"
 #include <commctrl.h>
+#include <cfgmgr32.h>
 #include <shellapi.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,6 +43,7 @@ static bool      g_testOk, g_secureOk, g_driverOk, g_filesOk;
 static bool      g_testNext;        // test signing as configured for the next start (may differ until a restart)
 static bool      g_testTarget;      // what the "test mode" button is switching to
 static bool      g_updateAvail;     // the installed driver is another version than this installer's ("Update")
+static bool      g_rebootPending;   // a driver was installed on the device but the old one runs until a restart
 
 static HWND Ctl(int id) { return GetDlgItem(g_wnd, id); }
 static int S(int v) { return MulDiv(v, (int)g_dpi, 96); }
@@ -263,10 +265,25 @@ static void RefreshState()
         : TR(L"✖  Secure Boot включён"));
     // Installed = the version of the driver that last started (its log); the build of this installer
     // is shown under the title.
-    wchar_t running[64] = L"", text[200];
+    wchar_t running[64] = L"", installed[64] = L"", text[200];
+    g_rebootPending = false;
+    if (g_driverOk)
+    {
+        DiagRunningDriverVersion(running, 64);
+        DiagInstalledDriverVersion(installed, 64);
+        ULONG status = 0, problem = 0;
+        wchar_t id[256];
+        bool needRestart = SetupGetDeviceState(&status, &problem, id, 256) &&
+                           ((status & DN_NEED_RESTART) || problem == CM_PROB_NEED_RESTART);
+        // Updated, but Windows keeps the old driver running until a restart: the device has the new version already.
+        g_rebootPending = g_reboot || needRestart || (installed[0] && running[0] && wcscmp(installed, running) != 0);
+    }
     if (!g_driverOk)
         wcscpy(text, TR(L"•  Драйвер Speak2Mic не установлен"));
-    else if (!DiagRunningDriverVersion(running, 64))
+    else if (g_rebootPending && installed[0])
+        _snwprintf(text, 200, TR(L"✔  Драйвер Speak2Mic обновлён до версии %ls — перезагрузите компьютер (до перезагрузки работает %ls)"),
+                   installed, running[0] ? running : L"?");
+    else if (!running[0])
         wcscpy(text, TR(L"✔  Драйвер Speak2Mic установлен"));
     else if (wcscmp(running, L"" S2M_VER_STR) == 0)
         _snwprintf(text, 200, TR(L"✔  Драйвер Speak2Mic установлен, версия %ls (как в установщике)"), running);
@@ -285,8 +302,10 @@ static void RefreshState()
     EnableWindow(Ctl(IDC_CLOSE), !busy);
     EnableWindow(Ctl(IDC_DIAG), !busy);
     EnableWindow(Ctl(IDC_LANG), !busy);
-    // Another version installed: "Update"; the same (or unknown) version: "Reinstall".
-    bool otherVersion = g_driverOk && running[0] && wcscmp(running, L"" S2M_VER_STR) != 0;
+    // Another version installed: "Update"; the same (or unknown) version: "Reinstall" - also when this version is on the
+    // device already and only waits for a restart.
+    const wchar_t* onDevice = installed[0] ? installed : running;
+    bool otherVersion = g_driverOk && onDevice[0] && wcscmp(onDevice, L"" S2M_VER_STR) != 0;
     g_updateAvail = otherVersion;
     SetWindowTextW(Ctl(IDC_INSTALL), !g_driverOk ? TR(L"Установить") : otherVersion ? TR(L"Обновить") : TR(L"Переустановить"));
     InvalidateRect(g_wnd, nullptr, FALSE);
@@ -467,8 +486,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         if (id == IDC_ST_TEST || id == IDC_ST_SECURE || id == IDC_ST_DRIVER)
         {
             bool ok = id == IDC_ST_TEST ? g_testOk : id == IDC_ST_SECURE ? g_secureOk : g_driverOk;
-            // Driver of another version than this installer's: amber ("Update" is possible); dark enough to read on grey.
-            COLORREF color = id == IDC_ST_DRIVER && g_updateAvail ? RGB(200, 140, 0)
+            // Driver of another version than this installer's ("Update" is possible) or one waiting for a restart: amber;
+            // dark enough to read on grey.
+            COLORREF color = id == IDC_ST_DRIVER && (g_updateAvail || g_rebootPending) ? RGB(200, 140, 0)
                            : ok ? RGB(0, 128, 60) : (id == IDC_ST_DRIVER ? RGB(90, 90, 100) : RGB(190, 30, 30));
             SetTextColor(dc, color);
             SetBkColor(dc, GetSysColor(COLOR_BTNFACE));

@@ -261,3 +261,4 @@ Trạng thái:
 ○ không dùng
 Thư mục này
 Chọn thư mục
+✔  Trình điều khiển Speak2Mic đã cập nhật lên phiên bản %ls — hãy khởi động lại máy (đến lúc đó vẫn chạy %ls)

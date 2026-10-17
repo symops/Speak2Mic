@@ -261,3 +261,4 @@ Status:
 ○ tidak dipakai
 Folder ini
 Pilih folder
+✔  Driver Speak2Mic diperbarui ke versi %ls — mulai ulang komputer (sampai itu versi %ls yang berjalan)

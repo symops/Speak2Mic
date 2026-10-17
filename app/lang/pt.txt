@@ -261,3 +261,4 @@ Estado:
 ○ fora de uso
 Esta pasta
 Selecionar pasta
+✔  Driver Speak2Mic atualizado para a versão %ls — reinicie o computador (até lá funciona a %ls)

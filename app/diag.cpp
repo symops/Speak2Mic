@@ -180,6 +180,11 @@ bool DiagRunningDriverVersion(wchar_t* running, size_t len)
     return found;
 }
 
+bool DiagInstalledDriverVersion(wchar_t* out, size_t len)
+{
+    return InstalledDriverVersion(out, len);
+}
+
 bool DiagPackageDriverVersion(wchar_t* packaged, size_t len)
 {
     wchar_t inf[MAX_PATH], ver[128] = L"";

@@ -261,3 +261,4 @@ Durum:
 ○ kullanılmıyor
 Bu klasör
 Klasörü seç
+✔  Speak2Mic sürücüsü %ls sürümüne güncellendi — bilgisayarı yeniden başlatın (o zamana kadar %ls çalışır)
