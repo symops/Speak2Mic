@@ -261,4 +261,4 @@ Stato:
 ○ non in uso
 Questa cartella
 Seleziona cartella
-✔  Driver Speak2Mic aggiornato alla versione %ls — riavviare il computer (fino ad allora è attiva la %ls)
+✔  Driver Speak2Mic aggiornato a %ls — riavvio necessario

@@ -261,7 +261,7 @@ State:
 ○ not in use
 This folder
 Select folder
-✔  Speak2Mic driver updated to version %ls — restart the computer (version %ls runs until then)
+✔  Speak2Mic driver updated to %ls — restart needed
 [driver] the driver log is empty: the driver has never started
 [driver] ---- driver log (DriverLog) ----
 [setupapi] cannot open %ls (%lu)

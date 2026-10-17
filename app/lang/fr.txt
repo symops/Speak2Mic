@@ -261,4 +261,4 @@ Enregistrer les modifications des périphériques et de la source ?
 ○ non utilisé
 Ce dossier
 Choisir le dossier
-✔  Pilote Speak2Mic mis à jour en version %ls — redémarrez l’ordinateur (la version %ls tourne jusque-là)
+✔  Pilote Speak2Mic mis à jour en %ls — redémarrage requis

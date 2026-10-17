@@ -261,4 +261,4 @@ Status:
 ○ niet in gebruik
 Deze map
 Map selecteren
-✔  Speak2Mic-stuurprogramma bijgewerkt naar versie %ls — start de computer opnieuw op (tot dan draait %ls)
+✔  Speak2Mic-stuurprogramma bijgewerkt naar %ls — herstart nodig

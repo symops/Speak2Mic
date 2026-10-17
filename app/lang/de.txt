@@ -261,4 +261,4 @@ Status:
 ○ nicht in Verwendung
 Dieser Ordner
 Ordner auswählen
-✔  Speak2Mic-Treiber auf Version %ls aktualisiert — Computer neu starten (bis dahin läuft %ls)
+✔  Speak2Mic-Treiber auf %ls aktualisiert — Neustart nötig
