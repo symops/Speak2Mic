@@ -262,3 +262,6 @@ Durum:
 Bu klasör
 Klasörü seç
 ✔  Speak2Mic sürücüsü %ls sürümüne güncellendi — yeniden başlatma gerekli
+Kurulum klasörü:
+Gözat…
+Kurulum konumunu seçin (içinde %ls klasörü oluşturulur)

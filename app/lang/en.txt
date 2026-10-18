@@ -262,6 +262,9 @@ State:
 This folder
 Select folder
 ✔  Speak2Mic driver updated to %ls — restart needed
+Install folder:
+Browse…
+Choose the install location (a %ls folder is created in it)
 [driver] the driver log is empty: the driver has never started
 [driver] ---- driver log (DriverLog) ----
 [setupapi] cannot open %ls (%lu)

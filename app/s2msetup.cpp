@@ -14,6 +14,7 @@
 #include <commctrl.h>
 #include <cfgmgr32.h>
 #include <shellapi.h>
+#include <shlobj.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
@@ -22,7 +23,7 @@ enum
 {
     IDC_TITLE = 100, IDC_SUBTITLE, IDC_GROUP, IDC_ST_TEST, IDC_ST_SECURE, IDC_ST_DRIVER,
     IDC_ENABLE_TEST, IDC_INSTALL, IDC_REMOVE, IDC_LOG, IDC_LAUNCH, IDC_CLOSE, IDC_DIAG, IDC_OPENLOG,
-    IDC_LINK_DESKTOP, IDC_LINK_START, IDC_VERSION, IDC_LANG,
+    IDC_LINK_DESKTOP, IDC_LINK_START, IDC_VERSION, IDC_LANG, IDC_DIR_LABEL, IDC_DIR, IDC_DIR_BROWSE,
 };
 enum { ACT_INSTALL = 1, ACT_REMOVE, ACT_TESTSIGN, ACT_DIAG };
 #define WM_APP_LOG  (WM_APP + 1)
@@ -44,6 +45,8 @@ static bool      g_testNext;        // test signing as configured for the next s
 static bool      g_testTarget;      // what the "test mode" button is switching to
 static bool      g_updateAvail;     // the installed driver is another version than this installer's ("Update")
 static bool      g_rebootPending;   // a driver was installed on the device but the old one runs until a restart
+
+static wchar_t   g_dir[MAX_PATH];   // the program folder: chosen (before the installation) or the installed one
 
 static HWND Ctl(int id) { return GetDlgItem(g_wnd, id); }
 static int S(int v) { return MulDiv(v, (int)g_dpi, 96); }
@@ -301,6 +304,11 @@ static void RefreshState()
     EnableWindow(Ctl(IDC_CLOSE), !busy);
     EnableWindow(Ctl(IDC_DIAG), !busy);
     EnableWindow(Ctl(IDC_LANG), !busy);
+    // The folder is chosen before the programs are installed; an installation stays where it is.
+    bool programsHere = SetupProgramsInstalled();
+    if (programsHere) SetupProgramDir(g_dir);
+    SetWindowTextW(Ctl(IDC_DIR), g_dir);
+    EnableWindow(Ctl(IDC_DIR_BROWSE), !busy && !programsHere);
     // Another version installed: "Update"; the same (or unknown) version: "Reinstall" - also when this version is on the
     // device already and only waits for a restart.
     const wchar_t* onDevice = installed[0] ? installed : running;
@@ -381,7 +389,10 @@ static void ApplyDpi()
     Place(IDC_ST_DRIVER, 26, 178, 550, 20);
     Place(IDC_INSTALL, 322, 222, 144, 30);
     Place(IDC_REMOVE, 472, 222, 116, 30);
-    Place(IDC_LOG, 12, 264, 576, 124);
+    Place(IDC_LOG, 12, 264, 576, 96);
+    Place(IDC_DIR_LABEL, 14, 369, 150, 20);
+    Place(IDC_DIR, 166, 366, 320, 23);
+    Place(IDC_DIR_BROWSE, 492, 364, 96, 27);
     Place(IDC_LINK_DESKTOP, 14, 394, 270, 22);
     Place(IDC_LINK_START, 300, 394, 280, 22);
     Place(IDC_LAUNCH, 14, 418, 400, 22);
@@ -410,6 +421,11 @@ static void CreateControls()
     Create(L"BUTTON", TR(L"Удалить"), BS_PUSHBUTTON | WS_TABSTOP, IDC_REMOVE);
     Create(L"EDIT", L"", ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL | WS_TABSTOP, IDC_LOG, WS_EX_CLIENTEDGE);
     Create(L"BUTTON", TR(L"Запустить Speak2Mic после установки"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_LAUNCH);
+    Create(L"STATIC", TR(L"Папка установки:"), SS_ENDELLIPSIS, IDC_DIR_LABEL);
+    Create(L"EDIT", L"", ES_READONLY | ES_AUTOHSCROLL | WS_TABSTOP, IDC_DIR, WS_EX_CLIENTEDGE);
+    Create(L"BUTTON", TR(L"Обзор…"), BS_PUSHBUTTON | WS_TABSTOP, IDC_DIR_BROWSE);
+    SetupProgramDir(g_dir);
+    SetWindowTextW(Ctl(IDC_DIR), g_dir);
     Create(L"BUTTON", TR(L"Ярлык на рабочем столе"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_LINK_DESKTOP);
     Create(L"BUTTON", TR(L"Ярлыки в меню «Пуск»"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_LINK_START);
     Create(L"BUTTON", TR(L"Диагностика"), BS_PUSHBUTTON | WS_TABSTOP, IDC_DIAG);
@@ -576,7 +592,31 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         {
             switch (LOWORD(wp))
             {
-            case IDC_INSTALL: Start(ACT_INSTALL); break;
+            case IDC_INSTALL:
+                if (!SetupProgramsInstalled()) SetupSetProgramDir(g_dir);
+                Start(ACT_INSTALL);
+                break;
+            case IDC_DIR_BROWSE:
+            {
+                wchar_t title[300], picked[MAX_PATH] = L"";
+                _snwprintf(title, 300, TR(L"Выберите папку для установки (в ней создаётся папка %ls)"), L"Speak2Mic");
+                title[299] = 0;
+                BROWSEINFOW bi = {};
+                bi.hwndOwner = hwnd;
+                bi.lpszTitle = title;
+                bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+                bool com = SUCCEEDED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED));
+                PIDLIST_ABSOLUTE pidl = SHBrowseForFolderW(&bi);
+                if (pidl && SHGetPathFromIDListW(pidl, picked) && picked[0])
+                {
+                    SetupProgramDirFromPick(picked, g_dir);
+                    SetWindowTextW(Ctl(IDC_DIR), g_dir);
+                    AppLog(L"program folder chosen: %ls", g_dir);
+                }
+                if (pidl) CoTaskMemFree(pidl);
+                if (com) CoUninitialize();
+                break;
+            }
             case IDC_REMOVE:
                 if (MessageBoxW(hwnd, TR(L"Удалить драйвер Speak2Mic и его устройства?"), L"Speak2Mic",
                                 MB_YESNO | MB_ICONQUESTION) == IDYES)

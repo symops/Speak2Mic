@@ -262,3 +262,6 @@ Estado:
 Esta pasta
 Selecionar pasta
 ✔  Driver Speak2Mic atualizado para %ls — reinício necessário
+Pasta de instalação:
+Procurar…
+Escolha o local de instalação (nele é criada a pasta %ls)

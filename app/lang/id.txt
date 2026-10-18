@@ -262,3 +262,6 @@ Status:
 Folder ini
 Pilih folder
 ✔  Driver Speak2Mic diperbarui ke %ls — perlu mulai ulang
+Folder instalasi:
+Telusuri…
+Pilih lokasi instalasi (folder %ls dibuat di dalamnya)

@@ -262,3 +262,6 @@ Status:
 Dieser Ordner
 Ordner auswählen
 ✔  Speak2Mic-Treiber auf %ls aktualisiert — Neustart nötig
+Installationsordner:
+Durchsuchen…
+Installationsort wählen (darin wird der Ordner %ls angelegt)

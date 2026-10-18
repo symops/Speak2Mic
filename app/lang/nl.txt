@@ -262,3 +262,6 @@ Status:
 Deze map
 Map selecteren
 ✔  Speak2Mic-stuurprogramma bijgewerkt naar %ls — herstart nodig
+Installatiemap:
+Bladeren…
+Kies de installatielocatie (daarin wordt de map %ls gemaakt)

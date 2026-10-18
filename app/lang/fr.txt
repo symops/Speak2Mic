@@ -262,3 +262,6 @@ Enregistrer les modifications des périphériques et de la source ?
 Ce dossier
 Choisir le dossier
 ✔  Pilote Speak2Mic mis à jour en %ls — redémarrage requis
+Dossier d’installation :
+Parcourir…
+Choisissez l’emplacement d’installation (un dossier %ls y est créé)

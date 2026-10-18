@@ -59,9 +59,75 @@ static bool KnownFolder(const GUID& id, wchar_t* out, const wchar_t* sub)
     return true;
 }
 
-bool SetupProgramDir(wchar_t* dir)
+static const wchar_t kRegKey[] = L"SOFTWARE\\Speak2Mic";     // InstallDir: the program folder (64-bit registry view)
+static wchar_t g_programDir[MAX_PATH];                  // chosen in the installer
+
+bool SetupDefaultProgramDir(wchar_t* dir)
 {
     return KnownFolder(kFolderProgramFiles, dir, L"Speak2Mic");
+}
+
+void SetupSetProgramDir(const wchar_t* dir)
+{
+    wcsncpy(g_programDir, dir, MAX_PATH - 1);
+    g_programDir[MAX_PATH - 1] = 0;
+}
+
+bool SetupProgramDir(wchar_t* dir)
+{
+    if (g_programDir[0])
+    {
+        wcscpy(dir, g_programDir);
+        return true;
+    }
+    DWORD size = MAX_PATH * sizeof(wchar_t);
+    if (RegGetValueW(HKEY_LOCAL_MACHINE, kRegKey, L"InstallDir", RRF_RT_REG_SZ | RRF_SUBKEY_WOW6464KEY, nullptr, dir,
+                     &size) == ERROR_SUCCESS && dir[0])
+        return true;
+    return SetupDefaultProgramDir(dir);
+}
+
+void SetupProgramDirFromPick(const wchar_t* picked, wchar_t* dir)
+{
+    wchar_t p[MAX_PATH];
+    wcsncpy(p, picked, MAX_PATH - 1);
+    p[MAX_PATH - 1] = 0;
+    size_t n = wcslen(p);
+    while (n > 0 && p[n - 1] == L'\\') p[--n] = 0;
+    const wchar_t* last = wcsrchr(p, L'\\');
+    if (last && _wcsicmp(last + 1, L"Speak2Mic") == 0) wcscpy(dir, p);
+    else _snwprintf(dir, MAX_PATH, L"%ls\\Speak2Mic", p);
+    dir[MAX_PATH - 1] = 0;
+}
+
+bool SetupProgramsInstalled()
+{
+    wchar_t dir[MAX_PATH], exe[MAX_PATH];
+    if (!SetupProgramDir(dir)) return false;
+    _snwprintf(exe, MAX_PATH, L"%ls\\Speak2Mic.exe", dir);
+    exe[MAX_PATH - 1] = 0;
+    return GetFileAttributesW(exe) != INVALID_FILE_ATTRIBUTES;
+}
+
+static void RememberProgramDir(const wchar_t* dir)
+{
+    HKEY key;
+    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, kRegKey, 0, nullptr, 0, KEY_SET_VALUE | KEY_WOW64_64KEY, nullptr, &key, nullptr) !=
+        ERROR_SUCCESS)
+        return;
+    RegSetValueExW(key, L"InstallDir", 0, REG_SZ, (const BYTE*)dir, (DWORD)((wcslen(dir) + 1) * sizeof(wchar_t)));
+    RegCloseKey(key);
+}
+
+static void ForgetProgramDir()
+{
+    HKEY key;
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, kRegKey, 0, KEY_SET_VALUE | KEY_WOW64_64KEY, &key) == ERROR_SUCCESS)
+    {
+        RegDeleteValueW(key, L"InstallDir");
+        RegCloseKey(key);
+    }
+    RegDeleteKeyExW(HKEY_LOCAL_MACHINE, kRegKey, KEY_WOW64_64KEY, 0);     // only if nothing else is in it
 }
 
 bool SetupInstallFiles(const wchar_t* sourceDir, SetupLog log, void* ctx)
@@ -149,7 +215,11 @@ bool SetupInstallFiles(const wchar_t* sourceDir, SetupLog log, void* ctx)
             FindClose(h);
         }
     }
-    if (ok) Log(log, ctx, TR(L"Программы установлены в %ls."), dest);
+    if (ok)
+    {
+        RememberProgramDir(dest);
+        Log(log, ctx, TR(L"Программы установлены в %ls."), dest);
+    }
     return ok;
 }
 
@@ -288,6 +358,8 @@ bool SetupRemoveFiles(bool* deleteLater, SetupLog log, void* ctx)
         RemoveDirectoryW(mp3Dir);
     }
     if (!*deleteLater) RemoveDirectoryW(dir);
+    SetupSetProgramDir(dir);        // SetupScheduleSelfDelete still needs it after the registry value is gone
+    ForgetProgramDir();
     Log(log, ctx, *deleteLater ? TR(L"Ярлыки и программы удалены; папка %ls удалится после закрытия установщика.")
                                : TR(L"Ярлыки и программы удалены из %ls."), dir);
     return ok;
@@ -295,12 +367,15 @@ bool SetupRemoveFiles(bool* deleteLater, SetupLog log, void* ctx)
 
 void SetupScheduleSelfDelete()
 {
-    // A hidden cmd waits for this process to exit, then removes the Program Files folder.
-    wchar_t dir[MAX_PATH], cmd[MAX_PATH * 2], sys[MAX_PATH];
+    // A hidden cmd waits for this process to exit, then deletes the installer and the then empty program folder - only
+    // those (no "rmdir /s": the folder is the user's choice, other files there stay).
+    wchar_t dir[MAX_PATH], self[MAX_PATH], cmd[MAX_PATH * 3], sys[MAX_PATH];
     if (!SetupProgramDir(dir)) return;
+    GetModuleFileNameW(nullptr, self, MAX_PATH);
     GetSystemDirectoryW(sys, MAX_PATH);
-    _snwprintf(cmd, MAX_PATH * 2, L"\"%ls\\cmd.exe\" /c ping -n 3 127.0.0.1 >nul & rmdir /s /q \"%ls\"", sys, dir);
-    cmd[MAX_PATH * 2 - 1] = 0;
+    _snwprintf(cmd, MAX_PATH * 3, L"\"%ls\\cmd.exe\" /c ping -n 3 127.0.0.1 >nul & del /f /q \"%ls\" & rmdir \"%ls\"", sys, self,
+               dir);
+    cmd[MAX_PATH * 3 - 1] = 0;
     STARTUPINFOW si = { sizeof(si) };
     PROCESS_INFORMATION pi = {};
     wchar_t temp[MAX_PATH];

@@ -262,3 +262,6 @@ Stan:
 Ten folder
 Wybierz folder
 ✔  Sterownik Speak2Mic zaktualizowany do %ls — wymagany restart
+Folder instalacji:
+Przeglądaj…
+Wybierz miejsce instalacji (zostanie w nim utworzony folder %ls)

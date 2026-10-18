@@ -43,6 +43,14 @@ bool SetupGetDeviceState(ULONG* status, ULONG* problem, wchar_t* instanceId, siz
 
 // Program files (setupfiles.cpp): %ProgramFiles%\Speak2Mic
 bool SetupProgramDir(wchar_t* dir);                                         // MAX_PATH buffer
+// The folder chosen in the installer (set before SetupInstallFiles, which remembers it in HKLM\SOFTWARE\Speak2Mic).
+// SetupProgramDir gives that choice, else the remembered folder, else %ProgramFiles%\Speak2Mic.
+void SetupSetProgramDir(const wchar_t* dir);
+bool SetupDefaultProgramDir(wchar_t* dir);                                  // %ProgramFiles%\Speak2Mic
+// A folder the user picked becomes <folder>\Speak2Mic unless it already ends with it: never a bare drive or Program Files
+// itself (the removal deletes the program folder).
+void SetupProgramDirFromPick(const wchar_t* picked, wchar_t* dir);
+bool SetupProgramsInstalled();                                              // Speak2Mic.exe is in the program folder
 bool SetupInstallFiles(const wchar_t* sourceDir, SetupLog log, void* ctx);  // copies the package there
 bool SetupCreateShortcuts(bool desktop, bool startMenu, SetupLog log, void* ctx);   // all-users shortcuts
 // Removes shortcuts and program files; *deleteLater = the running installer is inside the folder,

@@ -262,3 +262,6 @@ Estado:
 Esta carpeta
 Seleccionar carpeta
 ✔  Controlador Speak2Mic actualizado a %ls — reinicio necesario
+Carpeta de instalación:
+Examinar…
+Elija la ubicación de instalación (se crea en ella la carpeta %ls)

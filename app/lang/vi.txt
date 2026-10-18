@@ -262,3 +262,6 @@ Trạng thái:
 Thư mục này
 Chọn thư mục
 ✔  Trình điều khiển Speak2Mic đã cập nhật lên %ls — cần khởi động lại
+Thư mục cài đặt:
+Duyệt…
+Chọn vị trí cài đặt (thư mục %ls sẽ được tạo trong đó)

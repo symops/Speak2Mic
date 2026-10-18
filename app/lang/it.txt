@@ -262,3 +262,6 @@ Stato:
 Questa cartella
 Seleziona cartella
 ✔  Driver Speak2Mic aggiornato a %ls — riavvio necessario
+Cartella di installazione:
+Sfoglia…
+Scegliere il percorso di installazione (vi viene creata la cartella %ls)
