@@ -20,5 +20,6 @@ struct AudioServices
 // Needs administrator rights. Details go to the program log.
 void AudioStopServices(bool includeBuilder, AudioServices* stopped);
 
-// Starts the services stopped by AudioStopServices again (reverse order).
+// Starts the services stopped by AudioStopServices again (reverse order), retrying a failed start; then makes sure
+// AudioEndpointBuilder and Audiosrv run even if they were stopped before.
 void AudioStartServices(const AudioServices* stopped);
