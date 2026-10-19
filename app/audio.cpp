@@ -60,6 +60,33 @@ static DWORD ChannelMask(WORD channels)
     }
 }
 
+// The speaker layout Windows keeps for a playback endpoint ("Configure speakers"):
+// PKEY_AudioEndpoint_PhysicalSpeakers / PKEY_AudioEndpoint_FullRangeSpeakers.
+static const PROPERTYKEY kPhysicalSpeakers = { { 0x1da5d803, 0xd492, 0x4edd, { 0x8c, 0x23, 0xe0, 0xc0, 0xff, 0xee, 0x7f, 0x0e } }, 3 };
+static const PROPERTYKEY kFullRangeSpeakers = { { 0x1da5d803, 0xd492, 0x4edd, { 0x8c, 0x23, 0xe0, 0xc0, 0xff, 0xee, 0x7f, 0x0e } }, 6 };
+
+// A layout left from an earlier channel count (5.1 after 6 channels) made the audio engine try only that many channels:
+// a stereo cable then refused every format and the speaker stayed unusable ("0 Hz 0 bit 0 ch", 0x88890008) until the
+// layout matched again. Set it to the cable's channels, as the Sound control panel does.
+static void MatchSpeakerLayout(IPolicyConfig* pc, const wchar_t* deviceId, WORD channels)
+{
+    DWORD want = ChannelMask(channels);
+    if (!want || wcsncmp(deviceId, L"{0.0.0.", 7) != 0) return;     // playback endpoints only
+    PROPVARIANT v;
+    PropVariantInit(&v);
+    HRESULT hr = pc->GetPropertyValue(deviceId, FALSE, kPhysicalSpeakers, &v);
+    DWORD have = SUCCEEDED(hr) && v.vt == VT_UI4 ? v.ulVal : 0;
+    PropVariantClear(&v);
+    if (have == want) return;
+    PROPVARIANT n;
+    PropVariantInit(&n);
+    n.vt = VT_UI4;
+    n.ulVal = want;
+    HRESULT a = pc->SetPropertyValue(deviceId, FALSE, kPhysicalSpeakers, &n);
+    HRESULT b = pc->SetPropertyValue(deviceId, FALSE, kFullRangeSpeakers, &n);
+    AppLog(L"speaker layout 0x%lX -> 0x%lX (%u ch): 0x%08lX / 0x%08lX", have, want, channels, (unsigned long)a, (unsigned long)b);
+}
+
 void MakeWaveFormat(WAVEFORMATEXTENSIBLE* f, DWORD rate, WORD container, WORD valid, WORD channels, bool isFloat,
                     bool extensible)
 {
@@ -487,6 +514,7 @@ bool SetEndpointFormat(const wchar_t* deviceId, DWORD rate, WORD bits, WORD chan
     WAVEFORMATEX* oldMix = nullptr;
     pc->GetDeviceFormat(deviceId, FALSE, &oldDevice);
     pc->GetMixFormat(deviceId, &oldMix);
+    MatchSpeakerLayout(pc, deviceId, channels);
 
     // Ways to write the same bit depth: Windows is picky about which one it takes.
     struct Variant { WORD container; bool extensible; const wchar_t* name; };
