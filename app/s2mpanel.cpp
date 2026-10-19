@@ -2581,7 +2581,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return 0;
 
     case WM_SYSCOMMAND:
-        if ((wp & 0xFFF0) == SC_MINIMIZE)
+        // The window's close button / Alt+F4 also hide it in the tray (the panel keeps working there); "Exit" in the tray
+        // menu closes it for good.
+        if ((wp & 0xFFF0) == SC_MINIMIZE || (wp & 0xFFF0) == SC_CLOSE)
         {
             ToTray();
             return 0;
