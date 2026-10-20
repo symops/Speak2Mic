@@ -32,6 +32,13 @@ static bool ChangeState(HDEVINFO set, SP_DEVINFO_DATA* info, DWORD state, bool* 
     return ok;
 }
 
+static bool DeviceDisabled(DEVINST dev)
+{
+    ULONG status = 0, problem = 0;
+    return CM_Get_DevNode_Status(&status, &problem, dev, 0) == CR_SUCCESS && (status & DN_HAS_PROBLEM) &&
+           problem == CM_PROB_DISABLED;
+}
+
 bool S2mRestartDevice(bool* found, bool* reboot)
 {
     *found = false;
@@ -66,6 +73,28 @@ bool S2mRestartDevice(bool* found, bool* reboot)
         if (!ChangeState(set, &info, DICS_DISABLE, reboot)) ok = false;
         if (!ChangeState(set, &info, DICS_ENABLE, reboot)) ok = false;
         AppLog(L"restart: disable + enable %ls%ls", ok ? L"done" : L"FAILED", *reboot ? L", reboot required" : L"");
+        // Left disabled (problem 22, "reboot required": a program still had the device open when it was disabled, or
+        // the disable failed half way): no Speak2Mic until Windows restarts - the autotest lost it for the rest of its
+        // run. Enabled again, a few tries; then once more the whole restart.
+        for (int t = 0; t < 6 && DeviceDisabled(info.DevInst); t++)
+        {
+            Sleep(t < 4 ? 1000 * (t + 1) : 2000);
+            bool again = false;
+            if (t == 4) ChangeState(set, &info, DICS_DISABLE, &again);
+            bool en = ChangeState(set, &info, DICS_ENABLE, &again);
+            AppLog(L"restart: the device stayed disabled, %ls %d: %ls", t == 4 ? L"restart" : L"enable", t + 1,
+                   en && !DeviceDisabled(info.DevInst) ? L"enabled" : L"still disabled");
+        }
+        if (!DeviceDisabled(info.DevInst) && (*reboot || !ok))
+        {
+            ULONG status = 0, problem = 0;
+            if (CM_Get_DevNode_Status(&status, &problem, info.DevInst, 0) == CR_SUCCESS && (status & DN_STARTED) && !problem)
+            {
+                AppLog(L"restart: the device runs again (no reboot needed)");
+                *reboot = false;
+                ok = true;
+            }
+        }
     }
     SetupDiDestroyDeviceInfoList(set);
     return ok;

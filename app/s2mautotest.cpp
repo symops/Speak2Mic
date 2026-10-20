@@ -1442,8 +1442,15 @@ static void TakeSnapshot(Snapshot* s)
     GetEndpointVolumeDb(g_mic.id, &s->micDb, &mn, &mx);
     s->micMute = false;
     GetEndpointMute(g_mic.id, &s->micMute);
-    GetEndpointFormat(g_spk.id, &s->rate[0], &s->bits[0], &s->ch[0]);
-    GetEndpointFormat(g_mic.id, &s->rate[1], &s->bits[1], &s->ch[1]);
+    // unreadable at the start (an endpoint without a usable format): 0, not restored - the uninitialised values were
+    // "restored" as 0 Hz 32766 bit / 1637950513 Hz 0 bit 54679 ch, over and over for the 3 s hold
+    for (int i = 0; i < 2; i++)
+    {
+        s->rate[i] = 0;
+        s->bits[i] = s->ch[i] = 0;
+        if (!GetEndpointFormat(i ? g_mic.id : g_spk.id, &s->rate[i], &s->bits[i], &s->ch[i]) || !s->bits[i] || !s->ch[i])
+            s->rate[i] = 0;
+    }
     const wchar_t* values[2] = { L"SpeakerName", L"MicName" };
     for (int i = 0; i < 2; i++)
     {
@@ -1480,14 +1487,14 @@ static void Restore(const Snapshot& s)
         RegCloseKey(key);
     }
     wchar_t err[160];
-    SetEndpointFormat(g_spk.id, s.rate[0], s.bits[0], s.ch[0], err, 160);
-    SetEndpointFormat(g_mic.id, s.rate[1], s.bits[1], s.ch[1], err, 160);
+    if (s.rate[0]) SetEndpointFormat(g_spk.id, s.rate[0], s.bits[0], s.ch[0], err, 160);
+    if (s.rate[1]) SetEndpointFormat(g_mic.id, s.rate[1], s.bits[1], s.ch[1], err, 160);
     Check(SUCCEEDED(SetEndpointName(g_spk.id, s.names[0])), L"speaker name \"%ls\"", s.names[0]);
     Check(SUCCEEDED(SetEndpointName(g_mic.id, s.names[1])), L"microphone name \"%ls\"", s.names[1]);
     SetEndpointVolumeDb(g_mic.id, s.micDb);
     SetEndpointMute(g_mic.id, s.micMute);
-    EndpointHold holds[2] = { { g_spk.id, true, s.rate[0], s.bits[0], s.ch[0], false, 0, false },
-                              { g_mic.id, true, s.rate[1], s.bits[1], s.ch[1], true, s.micDb, s.micMute } };
+    EndpointHold holds[2] = { { g_spk.id, s.rate[0] != 0, s.rate[0], s.bits[0], s.ch[0], false, 0, false },
+                              { g_mic.id, s.rate[1] != 0, s.rate[1], s.bits[1], s.ch[1], true, s.micDb, s.micMute } };
     HoldEndpointSettings(holds, 2, restart ? 3000 : 500);
     HKEY user;
     if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Speak2Mic", 0, nullptr, 0, KEY_SET_VALUE, nullptr, &user, nullptr) == ERROR_SUCCESS)
