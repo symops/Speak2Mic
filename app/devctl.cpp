@@ -76,13 +76,20 @@ bool S2mRestartDevice(bool* found, bool* reboot)
         // Left disabled (problem 22, "reboot required": a program still had the device open when it was disabled, or
         // the disable failed half way): no Speak2Mic until Windows restarts - the autotest lost it for the rest of its
         // run. Enabled again, a few tries; then once more the whole restart.
+        // Still disabled after two tries (DN_NEED_RESTART: the old instance cannot unload while a handle to it is open -
+        // the Audio Endpoint Builder, just restarted by s2mctl, was still building the endpoints from it): the builder
+        // is stopped too (it lets go of the device), the device enabled, the services started again.
         for (int t = 0; t < 6 && DeviceDisabled(info.DevInst); t++)
         {
             Sleep(t < 4 ? 1000 * (t + 1) : 2000);
             bool again = false;
+            AudioServices builder = {};
+            if (t >= 2) AudioStopServices(true, &builder);
             if (t == 4) ChangeState(set, &info, DICS_DISABLE, &again);
             bool en = ChangeState(set, &info, DICS_ENABLE, &again);
-            AppLog(L"restart: the device stayed disabled, %ls %d: %ls", t == 4 ? L"restart" : L"enable", t + 1,
+            if (t >= 2) AudioStartServices(&builder);
+            AppLog(L"restart: the device stayed disabled, %ls %d%ls: %ls", t == 4 ? L"restart" : L"enable", t + 1,
+                   t >= 2 ? L" (Audio Endpoint Builder stopped)" : L"",
                    en && !DeviceDisabled(info.DevInst) ? L"enabled" : L"still disabled");
         }
         if (!DeviceDisabled(info.DevInst) && (*reboot || !ok))
