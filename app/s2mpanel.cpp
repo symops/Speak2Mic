@@ -194,6 +194,7 @@ struct MeterState
     DWORD holdUntil[S2M_MAX_METER_CHANNELS];
     wchar_t note[64];                        // shown centred over the bars ("" = none): "Muted" on the microphone
     HFONT font;
+    HFONT noteFont;                          // the note's: 1.5 x the font, semibold (owned)
 };
 
 static float DbFrac(float v)                 // -60..0 dBFS -> 0..1
@@ -223,13 +224,26 @@ static LRESULT CALLBACK MeterProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)st);
         break;
     case WM_NCDESTROY:
+        if (st && st->noteFont) DeleteObject(st->noteFont);
         free(st);
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
         break;
     case WM_ERASEBKGND:
         return 1;
     case WM_SETFONT:
-        if (st) st->font = (HFONT)wp;
+        if (st)
+        {
+            st->font = (HFONT)wp;
+            if (st->noteFont) DeleteObject(st->noteFont);
+            st->noteFont = nullptr;
+            LOGFONTW lf;
+            if (wp && GetObjectW((HFONT)wp, sizeof(lf), &lf))
+            {
+                lf.lfHeight = lf.lfHeight * 3 / 2;
+                if (lf.lfWeight < FW_SEMIBOLD) lf.lfWeight = FW_SEMIBOLD;
+                st->noteFont = CreateFontIndirectW(&lf);
+            }
+        }
         if (lp) InvalidateRect(hwnd, nullptr, FALSE);
         return 0;
     case WM_GETFONT:
@@ -282,7 +296,8 @@ static LRESULT CALLBACK MeterProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         }
         if (st && st->note[0])
         {
-            HGDIOBJ oldFont = st->font ? SelectObject(dc, st->font) : nullptr;
+            HFONT nf = st->noteFont ? st->noteFont : st->font;
+            HGDIOBJ oldFont = nf ? SelectObject(dc, nf) : nullptr;
             SetBkMode(dc, TRANSPARENT);
             RECT shadow = { 1, 1, w + 1, h + 1 };
             SetTextColor(dc, RGB(0, 0, 0));           // a shadow: readable over any bar colour
@@ -335,10 +350,11 @@ static void ClearMeter(HWND meter)
     {
         wchar_t note[64];
         wcscpy(note, st->note);
-        HFONT font = st->font;
+        HFONT font = st->font, noteFont = st->noteFont;
         ZeroMemory(st, sizeof(*st));
         wcscpy(st->note, note);
         st->font = font;
+        st->noteFont = noteFont;
     }
     InvalidateRect(meter, nullptr, FALSE);
 }
