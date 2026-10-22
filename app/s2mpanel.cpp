@@ -192,6 +192,8 @@ struct MeterState
     float level[S2M_MAX_METER_CHANNELS];     // displayed level, 0..1
     float hold[S2M_MAX_METER_CHANNELS];      // peak hold, 0..1
     DWORD holdUntil[S2M_MAX_METER_CHANNELS];
+    wchar_t note[64];                        // shown centred over the bars ("" = none): "Muted" on the microphone
+    HFONT font;
 };
 
 static float DbFrac(float v)                 // -60..0 dBFS -> 0..1
@@ -226,6 +228,12 @@ static LRESULT CALLBACK MeterProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         break;
     case WM_ERASEBKGND:
         return 1;
+    case WM_SETFONT:
+        if (st) st->font = (HFONT)wp;
+        if (lp) InvalidateRect(hwnd, nullptr, FALSE);
+        return 0;
+    case WM_GETFONT:
+        return st ? (LRESULT)st->font : 0;
     case WM_PAINT:
     {
         PAINTSTRUCT ps;
@@ -272,6 +280,18 @@ static LRESULT CALLBACK MeterProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             int x = x0 + span * (db + 60) / 60;
             FillBox(dc, x, 0, x + 1, h, RGB(0, 0, 0));
         }
+        if (st && st->note[0])
+        {
+            HGDIOBJ oldFont = st->font ? SelectObject(dc, st->font) : nullptr;
+            SetBkMode(dc, TRANSPARENT);
+            RECT shadow = { 1, 1, w + 1, h + 1 };
+            SetTextColor(dc, RGB(0, 0, 0));           // a shadow: readable over any bar colour
+            DrawTextW(dc, st->note, -1, &shadow, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+            RECT text = { 0, 0, w, h };
+            SetTextColor(dc, RGB(240, 240, 240));
+            DrawTextW(dc, st->note, -1, &text, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+            if (oldFont) SelectObject(dc, oldFont);
+        }
 
         BitBlt(hdc, 0, 0, w, h, dc, 0, 0, SRCCOPY);
         SelectObject(dc, old);
@@ -313,8 +333,23 @@ static void ClearMeter(HWND meter)
     MeterState* st = (MeterState*)GetWindowLongPtrW(meter, GWLP_USERDATA);
     if (st)
     {
+        wchar_t note[64];
+        wcscpy(note, st->note);
+        HFONT font = st->font;
         ZeroMemory(st, sizeof(*st));
+        wcscpy(st->note, note);
+        st->font = font;
     }
+    InvalidateRect(meter, nullptr, FALSE);
+}
+
+// Text over the bars (centred), "" for none.
+static void SetMeterNote(HWND meter, const wchar_t* note)
+{
+    MeterState* st = (MeterState*)GetWindowLongPtrW(meter, GWLP_USERDATA);
+    if (!st || wcscmp(st->note, note) == 0) return;
+    wcsncpy(st->note, note, 63);
+    st->note[63] = 0;
     InvalidateRect(meter, nullptr, FALSE);
 }
 
@@ -1085,6 +1120,7 @@ static void SyncMicVolume()
     {
         g_micMuteShown = muteKey;
         SendMessageW(Ctl(IDC_MICMUTE), BM_SETCHECK, mute ? BST_CHECKED : BST_UNCHECKED, 0);
+        SetMeterNote(Ctl(IDC_OUT_METER), muteKey == 1 ? TR(L"Без звука") : L"");    // the microphone's meter
     }
     if (ok && mx > 20.0f && db >= mx - 0.05f)
     {
@@ -1253,7 +1289,11 @@ static void OnMicMute()
     int i = FindCableDevice(false);
     if (i < 0) return;
     bool mute = SendMessageW(Ctl(IDC_MICMUTE), BM_GETCHECK, 0, 0) == BST_CHECKED;
-    if (SetEndpointMute(g_devs[i].id, mute)) g_micMuteShown = mute ? 1 : 0;
+    if (SetEndpointMute(g_devs[i].id, mute))
+    {
+        g_micMuteShown = mute ? 1 : 0;
+        SetMeterNote(Ctl(IDC_OUT_METER), mute ? TR(L"Без звука") : L"");
+    }
     AppLog(L"microphone mute: %ls", mute ? L"on" : L"off");
 }
 
