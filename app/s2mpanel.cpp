@@ -2900,26 +2900,34 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
         AppLog(L"repair: restart %d, endpoints not opening now: %d", rc, bad);
         if (bad > 0)
         {
-            // An endpoint without a stored format is set up by the audio engine from its own candidates (48000 / 44100
-            // Hz, 2 / 6 channels): a cable it cannot match (32000 Hz, 4 ch on the Windows 11 test PC) stays refused, also
-            // every format set on it. Once through the format Windows tries first, then the user's settings again.
-            Settings standard = s;
-            standard.rate = 48000;
-            standard.bits = 16;
-            standard.channels = 2;
-            standard.micChannels = 1;
-            AppLog(L"repair: still refused - once through 48000 Hz 16 bit stereo, then the settings again");
-            ApplySettings(standard);
-            CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-            PutSavedFormats(standard);
-            int std = FailingStreams();
-            CoUninitialize();
-            rc = ApplySettings(s);
-            CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-            PutSavedFormats(s);
-            bad = FailingStreams();
-            CoUninitialize();
-            AppLog(L"repair: with 48000 Hz stereo %d not opening; with the settings again %d (restart %d)", std, bad, rc);
+            // An endpoint without a stored device format ("0 Hz") refused every stream and every format, also after
+            // restarts (speaker 32000 Hz 32 bit 4 ch on the Windows 11 test PC; 48000 Hz 16 bit stereo did not help
+            // either). The autotest saw it come back three times, always with the cable switched to stereo at the
+            // same rate - after that the 4 channels worked too. So: once stereo at the same rate and bits, else
+            // 48000 Hz 16 bit stereo; then the user's settings again.
+            Settings tries[2] = { s, s };
+            tries[0].channels = 2;
+            tries[1].rate = 48000;
+            tries[1].bits = 16;
+            tries[1].channels = 2;
+            for (int t = 0; t < 2 && bad > 0; t++)
+            {
+                if (t == 0 && s.channels == 2) continue;        // that is the setting already
+                AppLog(L"repair: still refused - once through %lu Hz %lu bit stereo, then the settings again", tries[t].rate,
+                       tries[t].bits);
+                ApplySettings(tries[t]);
+                CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+                PutSavedFormats(tries[t]);
+                int via = FailingStreams();
+                CoUninitialize();
+                rc = ApplySettings(s);
+                CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+                PutSavedFormats(s);
+                bad = FailingStreams();
+                CoUninitialize();
+                AppLog(L"repair: with %lu Hz stereo %d not opening; with the settings again %d (restart %d)", tries[t].rate,
+                       via, bad, rc);
+            }
         }
         return bad == 0 ? 1 : 2;
     }
