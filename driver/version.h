@@ -2,9 +2,9 @@
 #pragma once
 #define S2M_VER_MAJOR 1
 #define S2M_VER_MINOR 0
-#define S2M_VER_BUILD 295
-#define S2M_VER_REV   894
-#define S2M_VER_STR   "1.0.295.894"
+#define S2M_VER_BUILD 296
+#define S2M_VER_REV   684
+#define S2M_VER_STR   "1.0.296.684"
 #define S2M_AUTHOR    "Symo"
 #define S2M_EMAIL     "symops@gmail.com"
 #define S2M_COPYRIGHT "Copyright (C) 2026 Symo <symops@gmail.com>"

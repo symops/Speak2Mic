@@ -5,6 +5,7 @@
 #include <devpropdef.h>
 #include <setupapi.h>
 #include <cfgmgr32.h>
+#include <mmreg.h>
 #include <mmdeviceapi.h>
 #include <propsys.h>
 #include <wchar.h>
@@ -522,7 +523,127 @@ int S2mRemoveEndpoints(wchar_t (*ids)[80], int n)
 }
 
 
+// ---------------------------------------------------------------------------
+// An endpoint without a usable format: Windows reads its default format as "0 Hz 0 bit 0 ch" (no
+// PKEY_AudioEngine_DeviceFormat), the audio engine falls back to the OEM format the endpoint builder stored when it
+// built the endpoint - for an earlier configuration of the cable - and the driver refuses it: no stream opens, every
+// new format is refused (0x88890008) until the cable happens to be set to a matching configuration again (minutes,
+// several times on a Windows 11 PC). The stored format pair is deleted with the builder stopped: it works the format
+// out again from the driver as it is now.
+static const PROPERTYKEY kDeviceFormat = { { 0xf19f064d, 0x082c, 0x4e27, { 0xbc, 0x73, 0x68, 0x82, 0xa1, 0xbb, 0x8e, 0x4c } }, 0 };
+
+static int FindBrokenFormats(wchar_t (*broken)[80])
+{
+    static const PROPERTYKEY kInterfaceName = {
+        { 0x026e516e, 0xb814, 0x414b, { 0x83, 0xcd, 0x85, 0x6d, 0x6f, 0xef, 0x48, 0x22 } }, 2 };
+    int n = 0;
+    HRESULT co = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    IMMDeviceEnumerator* en = nullptr;
+    if (SUCCEEDED(CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, __uuidof(IMMDeviceEnumerator), (void**)&en)))
+    {
+        IMMDeviceCollection* coll = nullptr;
+        if (SUCCEEDED(en->EnumAudioEndpoints(eAll, DEVICE_STATE_ACTIVE, &coll)))
+        {
+            UINT count = 0;
+            coll->GetCount(&count);
+            for (UINT i = 0; i < count && n < 4; i++)
+            {
+                IMMDevice* dev = nullptr;
+                if (FAILED(coll->Item(i, &dev))) continue;
+                IPropertyStore* ps = nullptr;
+                bool ours = false, bad = false;
+                if (SUCCEEDED(dev->OpenPropertyStore(STGM_READ, &ps)))
+                {
+                    PROPVARIANT v;
+                    PropVariantInit(&v);
+                    ours = SUCCEEDED(ps->GetValue(kInterfaceName, &v)) && v.vt == VT_LPWSTR && _wcsicmp(v.pwszVal, L"Speak2Mic") == 0;
+                    PropVariantClear(&v);
+                    if (ours && SUCCEEDED(ps->GetValue(kDeviceFormat, &v)))
+                    {
+                        const WAVEFORMATEX* f = v.vt == VT_BLOB && v.blob.cbSize >= sizeof(WAVEFORMATEX) ? (const WAVEFORMATEX*)v.blob.pBlobData : nullptr;
+                        bad = !f || !f->nSamplesPerSec || !f->nChannels;
+                    }
+                    PropVariantClear(&v);
+                    ps->Release();
+                }
+                LPWSTR id = nullptr;
+                if (bad && SUCCEEDED(dev->GetId(&id)))
+                {
+                    wcsncpy(broken[n], id, 79);
+                    broken[n][79] = 0;
+                    n++;
+                    CoTaskMemFree(id);
+                }
+                dev->Release();
+            }
+            coll->Release();
+        }
+        en->Release();
+    }
+    if (SUCCEEDED(co)) CoUninitialize();
+    return n;
+}
+
+static int RepairEndpointFormats()
+{
+    // only what a second look 1.5 s later still finds (not an endpoint the builder is just setting up)
+    wchar_t first[4][80], broken[4][80];
+    int m = FindBrokenFormats(first), n = 0;
+    if (!m) return 0;
+    Sleep(1500);
+    int k = FindBrokenFormats(broken);
+    for (int i = 0; i < k; i++)
+    {
+        bool both = false;
+        for (int j = 0; j < m; j++) both = both || _wcsicmp(broken[i], first[j]) == 0;
+        if (both && n != i) wcscpy(broken[n], broken[i]);
+        if (both) n++;
+    }
+    if (!n) return 0;
+
+    AudioServices svc;
+    AudioStopServices(true, &svc);
+    EnablePrivilege(L"SeBackupPrivilege");
+    EnablePrivilege(L"SeRestorePrivilege");
+    int done = 0;
+    for (int i = 0; i < n; i++)
+    {
+        const wchar_t* guid = wcschr(broken[i] + 1, L'{');
+        bool capture = wcsncmp(broken[i], L"{0.0.1.", 7) == 0;
+        if (!guid) continue;
+        wchar_t path[200];
+        _snwprintf(path, 200, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\MMDevices\\Audio\\%ls\\%ls\\Properties",
+                   capture ? L"Capture" : L"Render", guid);
+        path[199] = 0;
+        HKEY key;
+        LONG open = RegCreateKeyExW(HKEY_LOCAL_MACHINE, path, 0, nullptr, REG_OPTION_BACKUP_RESTORE, KEY_SET_VALUE | KEY_QUERY_VALUE,
+                                    nullptr, &key, nullptr);
+        LONG a = -1, b = -1;
+        if (open == ERROR_SUCCESS)
+        {
+            a = RegDeleteValueW(key, L"{f19f064d-082c-4e27-bc73-6882a1bb8e4c},0");   // PKEY_AudioEngine_DeviceFormat
+            b = RegDeleteValueW(key, L"{e4870e26-3cc5-4cd2-ba46-ca0a9a70ed04},3");   // PKEY_AudioEngine_OEMFormat
+            RegCloseKey(key);
+            if (a == ERROR_SUCCESS || b == ERROR_SUCCESS) done++;
+        }
+        AppLog(L"endpoint %ls had no usable format: stored formats deleted (open %ld, device format %ld, OEM format %ld)",
+               broken[i], open, a, b);
+    }
+    AudioStartServices(&svc);
+    return done;
+}
+
+static int RemoveOrphanEndpoints(DWORD waitMs);
+
 int S2mCleanupOrphanEndpoints(DWORD waitMs)
+{
+    int removed = RemoveOrphanEndpoints(waitMs);
+    // after a device restart (every caller): also an endpoint left without a usable format
+    if (RepairEndpointFormats() > 0) AppLog(L"endpoint formats repaired");
+    return removed;
+}
+
+static int RemoveOrphanEndpoints(DWORD waitMs)
 {
     static wchar_t ids[128][80], again[128][80];
     int n = -1;
