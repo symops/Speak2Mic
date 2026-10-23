@@ -2898,6 +2898,29 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
         bad = FailingStreams();
         CoUninitialize();
         AppLog(L"repair: restart %d, endpoints not opening now: %d", rc, bad);
+        if (bad > 0)
+        {
+            // An endpoint without a stored format is set up by the audio engine from its own candidates (48000 / 44100
+            // Hz, 2 / 6 channels): a cable it cannot match (32000 Hz, 4 ch on the Windows 11 test PC) stays refused, also
+            // every format set on it. Once through the format Windows tries first, then the user's settings again.
+            Settings standard = s;
+            standard.rate = 48000;
+            standard.bits = 16;
+            standard.channels = 2;
+            standard.micChannels = 1;
+            AppLog(L"repair: still refused - once through 48000 Hz 16 bit stereo, then the settings again");
+            ApplySettings(standard);
+            CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+            PutSavedFormats(standard);
+            int std = FailingStreams();
+            CoUninitialize();
+            rc = ApplySettings(s);
+            CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+            PutSavedFormats(s);
+            bad = FailingStreams();
+            CoUninitialize();
+            AppLog(L"repair: with 48000 Hz stereo %d not opening; with the settings again %d (restart %d)", std, bad, rc);
+        }
         return bad == 0 ? 1 : 2;
     }
 
