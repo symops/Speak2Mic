@@ -265,3 +265,4 @@ Map selecteren
 Installatiemap:
 Bladeren…
 Kies de installatielocatie (daarin wordt de map %ls gemaakt)
+De Extern bureaublad-sessie (RDP) stuurt het geluid naar uw computer: Windows toont daarin alleen ‘Externe audio’, de Speak2Mic-apparaten zijn niet zichtbaar. In het RDP-verbindingsvenster: ‘Lokale bronnen’ → ‘Externe audio’ → ‘Instellingen’ → ‘Afspelen op externe computer’, maak daarna opnieuw verbinding.

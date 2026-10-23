@@ -15,6 +15,10 @@ enum DiagResult
 
 DiagResult RunDiagnostics(SetupLog log, void* ctx);
 
+// A Remote Desktop session that plays the sound on the user's computer: Windows shows only "Remote Audio" endpoints
+// in it - the Speak2Mic ones (and every local device's) are not visible there.
+bool DiagRemoteAudioSession();
+
 // Version of the driver that last started (from its log), e.g. "1.0.269.795"; false if unknown.
 bool DiagRunningDriverVersion(wchar_t* out, size_t len);
 // The driver version Windows installed on the device (may be newer than the running one until a restart).

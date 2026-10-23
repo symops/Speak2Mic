@@ -265,3 +265,4 @@ Pilih folder
 Folder instalasi:
 Telusuri…
 Pilih lokasi instalasi (folder %ls dibuat di dalamnya)
+Sesi Desktop Jarak Jauh (RDP) mengalihkan suara ke komputer Anda: di dalamnya Windows hanya menampilkan “Audio Jarak Jauh”, perangkat Speak2Mic tidak terlihat. Di jendela koneksi RDP: “Sumber Daya Lokal” → “Audio jarak jauh” → “Pengaturan” → “Putar di komputer jarak jauh”, lalu sambungkan ulang.

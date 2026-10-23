@@ -61,6 +61,39 @@ static const wchar_t* StateText(DWORD s)
 }
 
 // Counts Speak2Mic sound endpoints; optionally reports each one.
+bool DiagRemoteAudioSession()
+{
+    if (!GetSystemMetrics(SM_REMOTESESSION)) return false;
+    bool remote = false;
+    HRESULT co = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    IMMDeviceEnumerator* en = nullptr;
+    if (SUCCEEDED(CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, __uuidof(IMMDeviceEnumerator), (void**)&en)))
+    {
+        IMMDeviceCollection* coll = nullptr;
+        if (SUCCEEDED(en->EnumAudioEndpoints(eAll, DEVICE_STATE_ACTIVE, &coll)))
+        {
+            UINT count = 0;
+            coll->GetCount(&count);
+            for (UINT i = 0; i < count && !remote; i++)
+            {
+                IMMDevice* dev = nullptr;
+                LPWSTR id = nullptr;
+                if (SUCCEEDED(coll->Item(i, &dev)) && SUCCEEDED(dev->GetId(&id)))
+                {
+                    remote = wcsncmp(id, L"{3.", 3) == 0;      // "{3.0.0.0000000N}.{...}": the session's Remote Audio
+                    CoTaskMemFree(id);
+                }
+                if (dev) dev->Release();
+            }
+            coll->Release();
+        }
+        en->Release();
+    }
+    if (SUCCEEDED(co)) CoUninitialize();
+    AppLog(L"remote desktop session: yes, sound played on the user's computer: %ls", remote ? L"yes" : L"no");
+    return remote;
+}
+
 static void ScanEndpoints(int* active, int* inactive, SetupLog log, void* ctx, bool report)
 {
     *active = *inactive = 0;
@@ -368,6 +401,7 @@ DiagResult RunDiagnostics(SetupLog log, void* ctx)
             else
             {
                 Say(log, ctx, TR(L"Драйвер работает, но Windows не создала звуковые устройства Speak2Mic."));
+                if (DiagRemoteAudioSession()) Say(log, ctx, TR(L"Сеанс удалённого рабочего стола (RDP) перенаправляет звук на ваш компьютер: в нём Windows показывает только «Удаленное аудио», устройства Speak2Mic не видны. В окне подключения RDP: «Локальные ресурсы» → «Удалённый звук» → «Параметры» → «Воспроизводить на удалённом компьютере», затем переподключитесь."));
                 result = DiagNoEndpoints;
             }
             DiagDeepProbe(log, ctx, id);

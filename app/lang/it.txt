@@ -265,3 +265,4 @@ Seleziona cartella
 Cartella di installazione:
 Sfoglia…
 Scegliere il percorso di installazione (vi viene creata la cartella %ls)
+La sessione Desktop remoto (RDP) reindirizza l’audio sul tuo computer: in essa Windows mostra solo «Audio remoto», i dispositivi Speak2Mic non sono visibili. Nella finestra di connessione RDP: «Risorse locali» → «Audio remoto» → «Impostazioni» → «Riproduci sul computer remoto», quindi riconnettiti.

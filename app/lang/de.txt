@@ -265,3 +265,4 @@ Ordner auswählen
 Installationsordner:
 Durchsuchen…
 Installationsort wählen (darin wird der Ordner %ls angelegt)
+Die Remotedesktop-Sitzung (RDP) leitet den Ton auf Ihren Computer um: Windows zeigt darin nur „Remoteaudio“, die Speak2Mic-Geräte sind nicht sichtbar. Im RDP-Verbindungsfenster: „Lokale Ressourcen“ → „Remoteaudio“ → „Einstellungen“ → „Auf Remotecomputer wiedergeben“, dann neu verbinden.

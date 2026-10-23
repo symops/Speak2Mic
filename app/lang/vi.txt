@@ -265,3 +265,4 @@ Chọn thư mục
 Thư mục cài đặt:
 Duyệt…
 Chọn vị trí cài đặt (thư mục %ls sẽ được tạo trong đó)
+Phiên Máy tính Từ xa (RDP) chuyển âm thanh về máy của bạn: trong phiên này Windows chỉ hiển thị “Âm thanh Từ xa”, các thiết bị Speak2Mic không hiện ra. Trong cửa sổ kết nối RDP: “Tài nguyên Cục bộ” → “Âm thanh từ xa” → “Cài đặt” → “Phát trên máy tính từ xa”, sau đó kết nối lại.

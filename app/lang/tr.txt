@@ -265,3 +265,4 @@ Klasörü seç
 Kurulum klasörü:
 Gözat…
 Kurulum konumunu seçin (içinde %ls klasörü oluşturulur)
+Uzak Masaüstü (RDP) oturumu sesi bilgisayarınıza yönlendiriyor: Windows bu oturumda yalnızca “Uzak Ses” gösterir, Speak2Mic aygıtları görünmez. RDP bağlantı penceresinde: “Yerel Kaynaklar” → “Uzak ses” → “Ayarlar” → “Uzak bilgisayarda çal”, ardından yeniden bağlanın.

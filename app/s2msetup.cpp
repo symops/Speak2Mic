@@ -134,7 +134,13 @@ static DWORD WINAPI Worker(LPVOID)
         {
             // Do not report success blindly: wait for the device and its sound endpoints.
             WorkerLog(nullptr, TR(L"Проверка: ожидание запуска устройства и звуковых устройств…"));
-            if (WaitForEndpoints(15000) != DiagOk)
+            if (WaitForEndpoints(15000) != DiagOk && DiagRemoteAudioSession())
+            {
+                // Not a fault to repair: a Remote Desktop session that plays the sound on the user's computer shows
+                // only its Remote Audio (restarts and ProposeFormat = 0 only left the cable worse off, WORKSTATION1).
+                WorkerLog(nullptr, TR(L"Сеанс удалённого рабочего стола (RDP) перенаправляет звук на ваш компьютер: в нём Windows показывает только «Удаленное аудио», устройства Speak2Mic не видны. В окне подключения RDP: «Локальные ресурсы» → «Удалённый звук» → «Параметры» → «Воспроизводить на удалённом компьютере», затем переподключитесь."));
+            }
+            else if (WaitForEndpoints(0) != DiagOk)
             {
                 // Endpoint builder did not pick the device up: restart the audio services completely.
                 WorkerLog(nullptr, TR(L"Звуковые устройства не появились — перезапуск служб звука Windows…"));
