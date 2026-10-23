@@ -266,3 +266,5 @@ Folder instalacji:
 Przeglądaj…
 Wybierz miejsce instalacji (zostanie w nim utworzony folder %ls)
 Sesja pulpitu zdalnego (RDP) przekierowuje dźwięk na Twój komputer: Windows pokazuje w niej tylko „Dźwięk zdalny”, urządzenia Speak2Mic nie są widoczne. W oknie połączenia RDP: „Zasoby lokalne” → „Dźwięk zdalny” → „Ustawienia” → „Odtwarzaj na komputerze zdalnym”, a następnie połącz się ponownie.
+Urządzenia dźwiękowe Speak2Mic nie otwierały się — urządzenie zostało uruchomione ponownie, teraz działają.
+Urządzenia dźwiękowe Speak2Mic nie otwierają się nawet po ponownym uruchomieniu urządzenia — szczegóły w dzienniku.

@@ -42,6 +42,9 @@ HRESULT SetEndpointName(const wchar_t* deviceId, const wchar_t* name);
 // every channel of the playback device in turn.
 // Blocking; returns when done, when *stop becomes non-zero, or on an error (HRESULT, S_OK = done/stopped).
 HRESULT PlayChannelTest(const wchar_t* deviceId, volatile LONG* stop);
+// Opens a shared-mode stream on the endpoint in its mix format and closes it again: S_OK when Windows lets it open
+// (0x88890008 = the endpoint exists but is unusable, as after an install in a Remote Desktop session).
+HRESULT TestOpenEndpoint(const wchar_t* deviceId);
 
 // Endpoint volume 0..1 (the slider in Sound settings / the "Levels" tab). Careful: for a microphone
 // without a hardware volume Windows' range is -96..+30 dB, so 1.0 (100 %) there means +30 dB of gain.

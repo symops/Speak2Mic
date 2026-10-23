@@ -78,6 +78,7 @@ static void WorkerLog(void*, const wchar_t* line)
 
 static void CloseRunningPanel();
 static void ApplySavedFormats();
+static void RepairIfUnusable();
 
 static DWORD WINAPI Worker(LPVOID)
 {
@@ -168,6 +169,7 @@ static DWORD WINAPI Worker(LPVOID)
             if (SetupRemoveStaleEndpoints(WorkerLog, nullptr) > 0) WaitForEndpoints(15000);
             DiagSetMicUnityGain();      // a new microphone endpoint may start at +30 dB
             ApplySavedFormats();        // Windows recreated the endpoints with the INF default format
+            RepairIfUnusable();         // and they must also open (administrator rights are here, not in the panel)
             S2mSyncEndpointNames(true);                      // names Device Manager shows for the present ones
             g_diag = RunDiagnostics(WorkerLog, nullptr);
         }
@@ -240,6 +242,33 @@ static void ApplySavedFormats()
     AppLog(L"set-formats: exit code %lu", code);
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
+}
+
+// The endpoints present must open a stream: "Speak2Mic.exe --repair" restarts the device if they do not.
+static void RepairIfUnusable()
+{
+    wchar_t exe[MAX_PATH];
+    if (!SetupProgramDir(exe)) return;
+    wcsncat(exe, L"\\Speak2Mic.exe", MAX_PATH - wcslen(exe) - 1);
+    if (GetFileAttributesW(exe) == INVALID_FILE_ATTRIBUTES) SiblingPath(L"Speak2Mic.exe", exe);
+    wchar_t cmd[MAX_PATH + 32];
+    _snwprintf(cmd, MAX_PATH + 32, L"\"%ls\" --repair", exe);
+    cmd[MAX_PATH + 31] = 0;
+    STARTUPINFOW si = { sizeof(si) };
+    PROCESS_INFORMATION pi = {};
+    if (!CreateProcessW(exe, cmd, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi))
+    {
+        AppLog(L"repair: cannot start %ls (%lu)", exe, GetLastError());
+        return;
+    }
+    WaitForSingleObject(pi.hProcess, 120000);
+    DWORD code = 3;
+    GetExitCodeProcess(pi.hProcess, &code);
+    AppLog(L"repair: exit code %lu", code);
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    if (code == 1) WorkerLog(nullptr, TR(L"Звуковые устройства Speak2Mic не открывались — устройство перезапущено, теперь они работают."));
+    else if (code == 2) WorkerLog(nullptr, TR(L"Звуковые устройства Speak2Mic не открываются и после перезапуска устройства — подробности в журнале."));
 }
 
 // ---------------------------------------------------------------------------

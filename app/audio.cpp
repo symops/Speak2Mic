@@ -868,6 +868,22 @@ static void MakeChime(float** out, UINT32* frames, UINT32 rate)
     }
 }
 
+HRESULT TestOpenEndpoint(const wchar_t* deviceId)
+{
+    bool com = SUCCEEDED(CoInitializeEx(nullptr, COINIT_MULTITHREADED));
+    IMMDevice* dev = OpenDevice(deviceId);
+    IAudioClient* client = nullptr;
+    WAVEFORMATEX* fmt = nullptr;
+    HRESULT hr = dev ? dev->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, (void**)&client) : E_NOTFOUND;
+    if (SUCCEEDED(hr)) hr = client->GetMixFormat(&fmt);
+    if (SUCCEEDED(hr)) hr = client->Initialize(AUDCLNT_SHAREMODE_SHARED, 0, 200 * kHnsPerMs, 0, fmt, nullptr);
+    if (fmt) CoTaskMemFree(fmt);
+    if (client) client->Release();
+    if (dev) dev->Release();
+    if (com) CoUninitialize();
+    return hr;
+}
+
 HRESULT PlayChannelTest(const wchar_t* deviceId, volatile LONG* stop)
 {
     bool com = SUCCEEDED(CoInitializeEx(nullptr, COINIT_MULTITHREADED));

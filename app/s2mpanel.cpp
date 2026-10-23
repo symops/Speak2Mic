@@ -156,6 +156,60 @@ static bool IsElevated()
     return elevated;
 }
 
+static int FindInList(const AudioDevice* list, int count, bool input);
+
+// The saved settings as both endpoints' default formats (and the speaker layout); waits up to 15 s for the endpoints.
+// Returns how many of the two got them.
+static int PutSavedFormats(const Settings& s)
+{
+    WORD bits = (WORD)(s.bits ? s.bits : 24);
+    static AudioDevice list[128];
+    int done = 0;
+    for (int tries = 0; tries < 30 && done < 2; tries++)
+    {
+        if (tries) Sleep(500);
+        int n = ListAudioDevices(list, 128);
+        done = 0;
+        for (int side = 0; side < 2; side++)
+        {
+            int i = FindInList(list, n, side == 0);
+            if (i < 0) break;
+            DWORD ch = side == 0 || !s.micChannels ? s.channels : s.micChannels;
+            wchar_t err[160];
+            bool ok = SetEndpointFormat(list[i].id, s.rate, bits, (WORD)ch, err, 160);
+            if (!ok && bits > 16) ok = SetEndpointFormat(list[i].id, s.rate, 16, (WORD)ch, err, 160);
+            AppLog(L"set-formats \"%ls\": %lu Hz %u bit %lu ch -> %ls (%ls)", list[i].name, s.rate, bits, ch,
+                   ok ? L"ok" : L"FAILED", err);
+            done++;
+        }
+    }
+    return done;
+}
+
+// How many of the two Speak2Mic endpoints do not open a stream; -1 when they are not there (waits up to 15 s).
+static int FailingStreams()
+{
+    static AudioDevice list[128];
+    for (int tries = 0; tries < 30; tries++)
+    {
+        if (tries) Sleep(500);
+        int n = ListAudioDevices(list, 128);
+        int spk = FindInList(list, n, true), mic = FindInList(list, n, false);
+        if (spk < 0 || mic < 0) continue;
+        int bad = 0;
+        const int both[2] = { spk, mic };
+        for (int i : both)
+        {
+            HRESULT hr = TestOpenEndpoint(list[i].id);
+            AppLog(L"stream test \"%ls\": 0x%08lX", list[i].name, (unsigned long)hr);
+            if (FAILED(hr)) bad++;
+        }
+        return bad;
+    }
+    AppLog(L"stream test: Speak2Mic endpoints not found");
+    return -1;
+}
+
 // Runs "s2mpanel --apply ..." elevated and returns its exit code (-1 if UAC was declined).
 static int ApplyElevated(HWND hwnd, const Settings& s)
 {
@@ -2817,29 +2871,34 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
         CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
         Settings s;
         ReadSettings(&s);
-        WORD bits = (WORD)(s.bits ? s.bits : 24);
-        static AudioDevice list[128];
-        int done = 0;
-        for (int tries = 0; tries < 30 && done < 2; tries++)
-        {
-            if (tries) Sleep(500);
-            int n = ListAudioDevices(list, 128);
-            done = 0;
-            for (int side = 0; side < 2; side++)
-            {
-                int i = FindInList(list, n, side == 0);
-                if (i < 0) break;
-                DWORD ch = side == 0 || !s.micChannels ? s.channels : s.micChannels;
-                wchar_t err[160];
-                bool ok = SetEndpointFormat(list[i].id, s.rate, bits, (WORD)ch, err, 160);
-                if (!ok && bits > 16) ok = SetEndpointFormat(list[i].id, s.rate, 16, (WORD)ch, err, 160);
-                AppLog(L"set-formats \"%ls\": %lu Hz %u bit %lu ch -> %ls (%ls)", list[i].name, s.rate, bits, ch,
-                       ok ? L"ok" : L"FAILED", err);
-                done++;
-            }
-        }
+        int done = PutSavedFormats(s);
         CoUninitialize();
         return done == 2 ? 0 : 1;
+    }
+
+    // Helper mode for the installer (administrator): s2mpanel --repair. Both Speak2Mic endpoints must open a stream;
+    // if one does not (0x88890008: the endpoints were there but unusable after an install over Remote Desktop, until
+    // "s2mctl set" restarted the device), the device is restarted with the current settings, the formats and the
+    // speaker layout put on again and the endpoints tried once more.
+    // Exit code: 0 they open, 1 they open after the restart, 2 they still do not, 3 not found, 4 no driver settings.
+    if (argv && argc == 2 && _wcsicmp(argv[1], L"--repair") == 0)
+    {
+        LocalFree(argv);
+        Settings s;
+        if (!ReadSettings(&s)) return 4;
+        CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+        int bad = FailingStreams();
+        CoUninitialize();
+        if (bad < 0) return 3;
+        if (bad == 0) return 0;
+        AppLog(L"repair: %d Speak2Mic endpoint(s) do not open - device restarted with the current settings", bad);
+        int rc = ApplySettings(s);
+        CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+        PutSavedFormats(s);
+        bad = FailingStreams();
+        CoUninitialize();
+        AppLog(L"repair: restart %d, endpoints not opening now: %d", rc, bad);
+        return bad == 0 ? 1 : 2;
     }
 
     // Elevated helper mode: s2mpanel --cleanup  (removes stale Speak2Mic endpoints; exit code = count)

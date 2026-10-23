@@ -266,6 +266,8 @@ Install folder:
 Browse…
 Choose the install location (a %ls folder is created in it)
 The Remote Desktop (RDP) session plays the sound on your computer: Windows shows only "Remote Audio" in it, the Speak2Mic devices are not visible. In the RDP connection window: "Local Resources" → "Remote audio" → "Settings" → "Play on remote computer", then reconnect.
+The Speak2Mic sound devices did not open — the device was restarted, they work now.
+The Speak2Mic sound devices do not open even after the device was restarted — see the log for details.
 [driver] the driver log is empty: the driver has never started
 [driver] ---- driver log (DriverLog) ----
 [setupapi] cannot open %ls (%lu)
