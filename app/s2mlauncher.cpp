@@ -154,12 +154,15 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR cmdLine, int show)
     sei.lpParameters = cmdLine && *cmdLine ? cmdLine : nullptr;
     sei.nShow = show;
     bool started = ShellExecuteExW(&sei) != FALSE;
-    if (extracted)
+    // Waits for the installer: the temporary folder goes when it closes (it copies what it needs to Program Files), and
+    // its exit code is ours ("/install" without a window reports the result in it).
+    DWORD code = started ? 0 : 1;
+    if (started && sei.hProcess)
     {
-        // The installer copies what it needs to Program Files; the temporary folder goes when it closes.
-        if (started && sei.hProcess) WaitForSingleObject(sei.hProcess, INFINITE);
-        RemoveTree(root);
+        WaitForSingleObject(sei.hProcess, INFINITE);
+        GetExitCodeProcess(sei.hProcess, &code);
     }
+    if (extracted) RemoveTree(root);
     if (sei.hProcess) CloseHandle(sei.hProcess);
-    return started ? 0 : 1;
+    return (int)code;
 }

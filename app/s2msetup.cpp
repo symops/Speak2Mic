@@ -38,6 +38,8 @@ static HBRUSH    g_whiteBrush;
 static HANDLE    g_worker;
 static int       g_action;
 static bool      g_ok, g_reboot;
+static bool      g_quiet;           // "/install": no window, the installation at once, the result in the exit code
+static int       g_quietExit = 1;   // 0 works, 1 failed, 2 restart needed, 3 cannot install here, 4 installed but not working
 static DiagResult g_diag;
 static bool      g_wantDesktop, g_wantStartMenu, g_selfDelete;
 static bool      g_testOk, g_secureOk, g_driverOk, g_filesOk;
@@ -495,6 +497,21 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         else
             AppendLog(g_driverOk ? TR(L"Speak2Mic уже установлен. Можно переустановить или удалить.")
                                  : TR(L"Всё готово к установке. Нажмите «Установить»."));
+        if (g_quiet)
+        {
+            if (!g_filesOk || !g_testOk || !g_secureOk)
+            {
+                AppLog(L"quiet install not possible: package files %d, test signing %d, Secure Boot off %d", (int)g_filesOk,
+                       (int)g_testOk, (int)g_secureOk);
+                g_quietExit = 3;
+                PostMessageW(hwnd, WM_CLOSE, 0, 0);
+            }
+            else
+            {
+                if (!SetupProgramsInstalled()) SetupSetProgramDir(g_dir);
+                Start(ACT_INSTALL);
+            }
+        }
         return 0;
     }
 
@@ -614,6 +631,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         {
             AppendLog(TR(L"Операция не выполнена — подробности выше."));
         }
+        if (g_quiet && action == ACT_INSTALL)
+        {
+            g_quietExit = !g_ok ? 1 : g_reboot ? 2 : g_diag != DiagOk ? 4 : 0;
+            AppLog(L"quiet install finished: exit code %d", g_quietExit);
+            PostMessageW(hwnd, WM_CLOSE, 0, 0);
+        }
         return 0;
     }
 
@@ -690,6 +713,15 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
 {
     g_inst = inst;
     AppLogOpen(L"setup");
+    {
+        // "/install" (also "--install"): installs without a window (test machines, administrators)
+        int argc = 0;
+        wchar_t** argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+        for (int i = 1; argv && i < argc; i++)
+            if (!_wcsicmp(argv[i], L"/install") || !_wcsicmp(argv[i], L"--install")) g_quiet = true;
+        if (argv) LocalFree(argv);
+        if (g_quiet) AppLog(L"quiet install requested");
+    }
     AppLog(L"Speak2Mic-Setup " S2M_VER_STR);
     INITCOMMONCONTROLSEX icc = { sizeof(icc), ICC_STANDARD_CLASSES };
     InitCommonControlsEx(&icc);
@@ -717,7 +749,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
                                 CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top,
                                 nullptr, nullptr, inst, nullptr);
     if (!hwnd) return 1;
-    ShowWindow(hwnd, show);
+    if (!g_quiet) ShowWindow(hwnd, show);
 
     MSG m;
     while (GetMessageW(&m, nullptr, 0, 0) > 0)
@@ -728,5 +760,5 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
             DispatchMessageW(&m);
         }
     }
-    return 0;
+    return g_quiet ? g_quietExit : 0;
 }
