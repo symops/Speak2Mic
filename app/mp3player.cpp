@@ -182,17 +182,6 @@ static bool PickFile(wchar_t* path, LONGLONG* pos)
     return true;
 }
 
-static void Store(BYTE* p, float v, int bytes, bool isFloat)
-{
-    if (v > 1.0f) v = 1.0f;
-    if (v < -1.0f) v = -1.0f;
-    if (isFloat && bytes == 4) { *(float*)p = v; return; }
-    LONG s = (LONG)(v * 2147483647.0);
-    if (bytes == 2) *(SHORT*)p = (SHORT)(s >> 16);
-    else if (bytes == 3) { p[0] = (BYTE)(s >> 8); p[1] = (BYTE)(s >> 16); p[2] = (BYTE)(s >> 24); }
-    else *(LONG*)p = s;
-}
-
 // ---------------------------------------------------------------------------
 // The generator ("folder" MP3_GENERATOR): endless pleasant music made up on the fly, as "tracks" of 45..90 s, each
 // with its own key, mode and tempo - a soft pad chord per bar, a bass, a bell-like pentatonic melody (no wrong notes)
@@ -501,33 +490,89 @@ static void DecClose(Decoder* d)
     ZeroMemory(d, sizeof(*d));
 }
 
+// The output stream is opened in each track's own format (32-bit float, its rate and channels; mono doubled to front
+// left + right as before) with AUTOCONVERTPCM + SRC_DEFAULT_QUALITY: Windows' audio engine converts it to the device
+// format with its resampler and channel mixer. The linear interpolation done here before let a 44.1 kHz track alias
+// on a 48 kHz cable (and the channels a file did not have stayed silent instead of being mixed).
+struct Output
+{
+    IAudioClient*       client;
+    IAudioRenderClient* render;
+    UINT32              frames, rate, ch;
+};
+
+static DWORD ChannelMaskFor(UINT32 ch)
+{
+    switch (ch)
+    {
+    case 1:  return SPEAKER_FRONT_CENTER;
+    case 2:  return SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT;
+    case 4:  return 0x33;       // front L/R, back L/R
+    case 6:  return 0x3F;       // 5.1
+    case 8:  return 0x63F;      // 7.1
+    default: return ch < 18 ? (1u << ch) - 1 : 0;      // the first speaker positions in order
+    }
+}
+
+static void CloseOutput(Output* o, bool drain)
+{
+    if (o->client)
+    {
+        // the end of the previous track still plays from the buffer: up to its 200 ms
+        for (int i = 0; drain && i < 40; i++)
+        {
+            UINT32 padding = 0;
+            if (FAILED(o->client->GetCurrentPadding(&padding)) || padding == 0) break;
+            Sleep(10);
+        }
+        o->client->Stop();
+    }
+    if (o->render) o->render->Release();
+    if (o->client) o->client->Release();
+    ZeroMemory(o, sizeof(*o));
+}
+
+static HRESULT OpenOutput(IMMDevice* dev, UINT32 rate, UINT32 ch, Output* o)
+{
+    WAVEFORMATEXTENSIBLE f = {};
+    f.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+    f.Format.nChannels = (WORD)ch;
+    f.Format.nSamplesPerSec = rate;
+    f.Format.wBitsPerSample = 32;
+    f.Format.nBlockAlign = (WORD)(ch * 4);
+    f.Format.nAvgBytesPerSec = rate * f.Format.nBlockAlign;
+    f.Format.cbSize = sizeof(f) - sizeof(WAVEFORMATEX);
+    f.Samples.wValidBitsPerSample = 32;
+    f.dwChannelMask = ChannelMaskFor(ch);
+    f.SubFormat = kSubtypeFloat;
+    HRESULT hr = dev->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, (void**)&o->client);
+    if (SUCCEEDED(hr))
+        hr = o->client->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM | AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY,
+                                   2000000 /* 200 ms */, 0, &f.Format, nullptr);
+    if (SUCCEEDED(hr)) hr = o->client->GetBufferSize(&o->frames);
+    if (SUCCEEDED(hr)) hr = o->client->GetService(__uuidof(IAudioRenderClient), (void**)&o->render);
+    if (SUCCEEDED(hr)) hr = o->client->Start();
+    if (FAILED(hr))
+    {
+        CloseOutput(o, false);
+        return hr;
+    }
+    o->rate = rate;
+    o->ch = ch;
+    return S_OK;
+}
+
 static DWORD WINAPI PlayThread(LPVOID)
 {
     bool com = SUCCEEDED(CoInitializeEx(nullptr, COINIT_MULTITHREADED));
     bool mf = SUCCEEDED(MFStartup(MF_VERSION, MFSTARTUP_LITE));
     IMMDeviceEnumerator* en = nullptr;
     IMMDevice* dev = nullptr;
-    IAudioClient* client = nullptr;
-    IAudioRenderClient* render = nullptr;
-    WAVEFORMATEX* fmt = nullptr;
-    UINT32 bufferFrames = 0;
+    Output out = {};
     HRESULT hr = mf ? CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, __uuidof(IMMDeviceEnumerator), (void**)&en)
                     : E_FAIL;
     if (SUCCEEDED(hr)) hr = en->GetDevice(g_device, &dev);
-    if (SUCCEEDED(hr)) hr = dev->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, (void**)&client);
-    if (SUCCEEDED(hr)) hr = client->GetMixFormat(&fmt);
-    if (SUCCEEDED(hr)) hr = client->Initialize(AUDCLNT_SHAREMODE_SHARED, 0, 2000000 /* 200 ms */, 0, fmt, nullptr);
-    if (SUCCEEDED(hr)) hr = client->GetBufferSize(&bufferFrames);
-    if (SUCCEEDED(hr)) hr = client->GetService(__uuidof(IAudioRenderClient), (void**)&render);
-    if (SUCCEEDED(hr)) hr = client->Start();
 
-    const int outCh = fmt ? fmt->nChannels : 2, outBytes = fmt ? fmt->wBitsPerSample / 8 : 4;
-    const bool outFloat = fmt && (fmt->wFormatTag == WAVE_FORMAT_IEEE_FLOAT ||
-        (fmt->wFormatTag == WAVE_FORMAT_EXTENSIBLE && IsEqualGUID(((WAVEFORMATEXTENSIBLE*)fmt)->SubFormat, kSubtypeFloat)));
-    const double outRate = fmt ? fmt->nSamplesPerSec : 48000;
-
-    float* src = nullptr;                   // decoded frames waiting to be resampled (srcCh interleaved)
-    size_t srcFrames = 0, srcCap = 0;
     HRESULT result = hr;
     while (SUCCEEDED(hr) && !g_stop)
     {
@@ -568,69 +613,46 @@ static DWORD WINAPI PlayThread(LPVOID)
         AppLog(L"mp3: playing %ls%ls (%u Hz, %u ch)", path, pos > 0 ? L" (continued)" : L"", srcRate, srcCh);
         wcscpy(g_lastFile, path);
 
-        const double step = srcRate / outRate;      // source frames per output frame
-        double t = 0;                               // position in src (frames)
-        srcFrames = 0;
+        UINT32 outCh = srcCh == 1 ? 2 : srcCh;          // mono: front left + right
+        if (!out.client || out.rate != srcRate || out.ch != outCh)
+        {
+            CloseOutput(&out, true);
+            if (FAILED(hr = OpenOutput(dev, srcRate, outCh, &out)))
+            {
+                AppLog(L"mp3: output stream %u Hz %u ch not opened (0x%08lX)", srcRate, outCh, (unsigned long)hr);
+                DecClose(&dec);
+                break;
+            }
+        }
+
         LONGLONG trackPos = pos;
-        bool eof = false;
+        const float* data = nullptr;
+        size_t frames = 0, used = 0;            // decoded frames not written yet: data[used..frames)
         while (!g_stop && SUCCEEDED(hr))
         {
-            // Enough source for the next output frames?
-            while (!eof && (size_t)t + 2 >= srcFrames)
+            if (used >= frames)
             {
-                const float* data = nullptr;
-                size_t frames = 0;
                 if (FAILED(hr = DecRead(&dec, &data, &frames))) break;
-                if (!frames)
-                {
-                    eof = true;
-                    break;
-                }
+                used = 0;
+                if (!frames) break;                             // track finished
                 trackPos = dec.pos;
-                {
-                    // Drop what was consumed, append the new frames.
-                    size_t keep = (size_t)t < srcFrames ? srcFrames - (size_t)t : 0;
-                    if (keep && (size_t)t) memmove(src, src + (size_t)t * srcCh, keep * srcCh * sizeof(float));
-                    t -= (double)(size_t)t;
-                    srcFrames = keep;
-                    if (srcFrames + frames > srcCap)
-                    {
-                        srcCap = (srcFrames + frames) * 2;
-                        float* bigger = (float*)realloc(src, srcCap * srcCh * sizeof(float));
-                        if (!bigger) { hr = E_OUTOFMEMORY; break; }
-                        src = bigger;
-                    }
-                    memcpy(src + srcFrames * srcCh, data, frames * srcCh * sizeof(float));
-                    srcFrames += frames;
-                }
             }
-            if (eof && (size_t)t + 1 >= srcFrames) break;       // track finished
-
             UINT32 padding = 0;
-            client->GetCurrentPadding(&padding);
-            UINT32 room = bufferFrames - padding;
+            out.client->GetCurrentPadding(&padding);
+            UINT32 room = out.frames - padding;
             if (room == 0) { Sleep(10); continue; }
-            BYTE* out = nullptr;
-            if (FAILED(hr = render->GetBuffer(room, &out))) break;
-            UINT32 written = 0;
-            for (; written < room && (size_t)t + 1 < srcFrames; written++, t += step)
-            {
-                size_t i = (size_t)t;
-                float frac = (float)(t - i);
-                const float* a = src + i * srcCh;
-                const float* b = a + srcCh;
-                BYTE* o = out + (size_t)written * fmt->nBlockAlign;
-                for (int c = 0; c < outCh; c++)
-                {
-                    // mono: front left + right; more channels than the file: silent
-                    int sc = srcCh == 1 ? (c < 2 ? 0 : -1) : (c < (int)srcCh ? c : -1);
-                    float v = sc < 0 ? 0.0f : a[sc] + (b[sc] - a[sc]) * frac;
-                    Store(o + c * outBytes, v, outBytes, outFloat);
-                }
-            }
-            render->ReleaseBuffer(written, 0);
-            if (written < room && eof) continue;
-            if (written == room) Sleep(10);
+            UINT32 n = (UINT32)(frames - used < room ? frames - used : room);
+            BYTE* buf = nullptr;
+            if (FAILED(hr = out.render->GetBuffer(n, &buf))) break;
+            float* o = (float*)buf;
+            const float* in = data + used * srcCh;
+            if (srcCh == 1)
+                for (UINT32 i = 0; i < n; i++) o[2 * i] = o[2 * i + 1] = in[i];
+            else
+                memcpy(o, in, (size_t)n * srcCh * sizeof(float));
+            out.render->ReleaseBuffer(n, 0);
+            used += n;
+            if (n == room) Sleep(10);
         }
         if (g_stop)
         {
@@ -640,11 +662,7 @@ static DWORD WINAPI PlayThread(LPVOID)
         DecClose(&dec);
     }
     if (FAILED(hr)) result = hr;
-    if (client) client->Stop();
-    free(src);
-    if (render) render->Release();
-    if (client) client->Release();
-    if (fmt) CoTaskMemFree(fmt);
+    CloseOutput(&out, !g_stop);
     if (dev) dev->Release();
     if (en) en->Release();
     if (mf) MFShutdown();
