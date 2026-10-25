@@ -430,7 +430,68 @@ struct SignalResult
     int     windows, dropouts;  // 10-ms windows while the tone plays / windows far below the loudest one
     int     latencyMs;          // tone start -> first loud microphone window (-1: not detected)
     wchar_t map[160];           // the tone's windows: '#' >= 1/2 of the loudest, '+' >= 1/4, '.' dropout
+    int     stalls, stallMaxMs; // the PC stalled during the measurement (StallProbe): times, the longest one
 };
+
+// Stall probe: a time-critical thread wakes every 2 ms (high-resolution waitable timer); a wake-up more than 25 ms late
+// means the whole PC stood still - a virtual machine whose host took its CPUs away. The audio engine cannot feed any
+// device in time then, so dropouts during such a stall are the PC's, not the cable's.
+struct Stall { LONGLONG end; LONG ms; };
+static Stall         g_stalls[512];
+static volatile LONG g_stallNext;
+static LONGLONG      g_qpcFreq;
+
+static DWORD WINAPI StallProbe(LPVOID)
+{
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+    HANDLE timer = CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
+    LARGE_INTEGER prev, now;
+    QueryPerformanceCounter(&prev);
+    for (;;)
+    {
+        if (timer)
+        {
+            LARGE_INTEGER due;
+            due.QuadPart = -20000;     // 2 ms
+            SetWaitableTimer(timer, &due, 0, nullptr, nullptr, FALSE);
+            WaitForSingleObject(timer, INFINITE);
+        }
+        else Sleep(1);
+        QueryPerformanceCounter(&now);
+        LONG ms = (LONG)((now.QuadPart - prev.QuadPart) * 1000 / g_qpcFreq);
+        if (ms > (timer ? 25 : 40))
+        {
+            LONG i = (InterlockedIncrement(&g_stallNext) - 1) & 511;
+            g_stalls[i].ms = ms;
+            g_stalls[i].end = now.QuadPart;
+        }
+        prev = now;
+    }
+}
+
+static void StallProbeStart()
+{
+    LARGE_INTEGER f;
+    QueryPerformanceFrequency(&f);
+    g_qpcFreq = f.QuadPart;
+    HANDLE t = CreateThread(nullptr, 0, StallProbe, nullptr, 0, nullptr);
+    if (t) CloseHandle(t);
+}
+
+// Stalls that overlap QPC `from`..`to`.
+static void StallsBetween(LONGLONG from, LONGLONG to, int* count, int* maxMs)
+{
+    *count = 0;
+    *maxMs = 0;
+    LONG next = g_stallNext;
+    for (LONG k = next - 1; k >= 0 && k >= next - 512; k--)
+    {
+        const Stall& s = g_stalls[k & 511];
+        if (s.end < from || s.end - (LONGLONG)s.ms * g_qpcFreq / 1000 > to) continue;
+        (*count)++;
+        if (s.ms > *maxMs) *maxMs = s.ms;
+    }
+}
 
 // Plays a 1-kHz tone of amplitude `amp` on speaker channel `onlyChannel` (-1: all) for `ms`, starting after 300 ms of
 // silence, and captures the microphone at the same time.
@@ -492,6 +553,8 @@ static SignalResult RunSignalOnce(const wchar_t* spkId, const wchar_t* micId, in
         UINT32 winN = 0;
         float winRms[4096];
         int nWin = 0;
+        LARGE_INTEGER q0;
+        QueryPerformanceCounter(&q0);
         DWORD t0 = GetTickCount();
         DWORD total = (DWORD)(silenceMs + ms + latencyMs + 400);
         while (GetTickCount() - t0 < total)
@@ -553,6 +616,9 @@ static SignalResult RunSignalOnce(const wchar_t* spkId, const wchar_t* micId, in
             }
             Sleep(5);
         }
+        LARGE_INTEGER q1;
+        QueryPerformanceCounter(&q1);
+        StallsBetween(q0.QuadPart, q1.QuadPart, &r.stalls, &r.stallMaxMs);
         // Analysis: loudest window, the tone's windows (above 1/4 of it), dropouts inside the tone, latency.
         const int skipWin = skipMs / 10;
         float maxRms = 0;
@@ -685,6 +751,19 @@ static float MicToUnity()
     return db;
 }
 
+// The PC stood still for 20 ms or more during the measurement (StallProbe): dropouts are then a warning.
+static bool StalledPc(const SignalResult& r) { return r.stallMaxMs >= 20; }
+
+// "; the PC stalled N time(s), up to M ms" for the log (a static buffer: one line at a time).
+static const wchar_t* StallText(const SignalResult& r)
+{
+    static wchar_t buf[120];
+    if (!r.stalls) return L"; the PC did not stall";
+    _snwprintf(buf, 120, L"; the PC stalled %d time(s) meanwhile, up to %d ms (a VM without its CPUs: not the cable)", r.stalls, r.stallMaxMs);
+    buf[119] = 0;
+    return buf;
+}
+
 // Checks one channel's measurement; `report` = log failures (false: only count them, for the first attempt).
 static int EvaluateChannel(const SignalResult& r, int ch, int spkChannels, const Quality& q, bool report)
 {
@@ -695,9 +774,10 @@ static int EvaluateChannel(const SignalResult& r, int ch, int spkChannels, const
     bool reach = Db(r.peakAll) > -40.0f, clip = Db(r.peakAll) < -1.0f;
     bool level = !(r.micChannels >= spkChannels && ch < r.micChannels && fabsf(Db(r.peak[ch]) + 20.0f) > 3.0f);
     bool drop = !(r.windows > 0 && r.dropouts * 20 > r.windows);
-    bad += !reach + !clip + !level + !drop;
+    bad += !reach + !clip + !level + (!drop && !StalledPc(r));
     if (!report) return bad;
-    Check(reach, L"channel %d/%d reaches the microphone (%d ch): peak %.1f dBFS > -40", ch + 1, spkChannels, r.micChannels, Db(r.peakAll));
+    Check(reach, L"channel %d/%d reaches the microphone (%d ch): peak %.1f dBFS > -40%ls", ch + 1, spkChannels, r.micChannels,
+          Db(r.peakAll), reach ? L"" : StallText(r));
     Check(clip, L"channel %d/%d not clipped: peak %.1f dBFS < -1", ch + 1, spkChannels, Db(r.peakAll));
     // Level of every microphone channel (for the log), and the expected -20 dBFS when the cable passes the
     // speaker channel 1:1 (the microphone has at least as many channels).
@@ -711,8 +791,9 @@ static int EvaluateChannel(const SignalResult& r, int ch, int spkChannels, const
              Db(r.peak[ch]), ch + 1);
     if (r.windows > 0 && r.dropouts > 0)
     {
-        if (!drop) Check(false, L"channel %d/%d: %d of %d 10-ms windows dropped out", ch + 1, spkChannels, r.dropouts, r.windows);
-        else Warn(L"channel %d/%d: %d of %d 10-ms windows dropped out", ch + 1, spkChannels, r.dropouts, r.windows);
+        if (!drop && !StalledPc(r))
+            Check(false, L"channel %d/%d: %d of %d 10-ms windows dropped out%ls", ch + 1, spkChannels, r.dropouts, r.windows, StallText(r));
+        else Warn(L"channel %d/%d: %d of %d 10-ms windows dropped out%ls", ch + 1, spkChannels, r.dropouts, r.windows, StallText(r));
     }
     if (bad || r.dropouts) Out(L"  info channel %d/%d windows: %ls", ch + 1, spkChannels, r.map);
     if (r.latencyMs >= 0)
@@ -811,9 +892,9 @@ static void ActionSignal()
             PolicyGetMixFormat(g_spk.id, &sf);
             PolicyGetMixFormat(g_mic.id, &mf);
             Out(L"  info channel %d/%d first attempt: peaks%ls, %d/%d windows dropped [%ls]; microphone volume now %.2f dB%ls; "
-                L"mix formats %lu Hz %u ch / %lu Hz %u ch", ch + 1, spkChannels, peaks, r.dropouts, r.windows, r.map, vdb,
+                L"mix formats %lu Hz %u ch / %lu Hz %u ch%ls", ch + 1, spkChannels, peaks, r.dropouts, r.windows, r.map, vdb,
                 vmute ? L" (muted)" : L"", sf ? sf->nSamplesPerSec : 0, sf ? sf->nChannels : 0, mf ? mf->nSamplesPerSec : 0,
-                mf ? mf->nChannels : 0);
+                mf ? mf->nChannels : 0, StallText(r));
             if (sf) CoTaskMemFree(sf);
             if (mf) CoTaskMemFree(mf);
             if (r.peakAll < 1e-6f)
@@ -1536,6 +1617,7 @@ int wmain(int argc, wchar_t** argv)
     g_rng = 0x9E3779B97F4A7C15ULL ^ ((unsigned long long)seed << 1 | 1);
     SetConsoleCtrlHandler(CtrlHandler, TRUE);
     CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    StallProbeStart();
     S2mNotReady notReady = S2mCheckReady();
     if (notReady != S2mReadyOk)
     {
