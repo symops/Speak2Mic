@@ -804,6 +804,9 @@ static const wchar_t* StallText(const SignalResult& r)
     return buf;
 }
 
+// [signal] totals over the run (the reported measurements), for the summary at the end.
+static long g_sigWindows, g_sigDropouts, g_sigOffStall;
+
 // Checks one channel's measurement; `report` = log failures (false: only count them, for the first attempt).
 static int EvaluateChannel(const SignalResult& r, int ch, int spkChannels, const Quality& q, bool report)
 {
@@ -830,6 +833,9 @@ static int EvaluateChannel(const SignalResult& r, int ch, int spkChannels, const
     if (!level)
         Warn(L"channel %d/%d arrives at %.1f dBFS on microphone channel %d (expected -20 +-3, 1:1)", ch + 1, spkChannels,
              Db(r.peak[ch]), ch + 1);
+    g_sigWindows += r.windows;
+    g_sigDropouts += r.dropouts;
+    g_sigOffStall += r.unexplained;
     if (r.windows > 0 && r.dropouts > 0)
     {
         if (!drop)
@@ -1771,6 +1777,13 @@ int wmain(int argc, wchar_t** argv)
     Out(L"Test music removed.");
     Restore(snap);
     Out(L"");
+    {
+        // the PC under the test: a VM whose host takes its CPUs away stalls (and drops sound) far more than real hardware
+        LONG stalls = g_stallNext, longest = 0;
+        for (LONG k = 0; k < stalls && k < 512; k++) if (g_stalls[k].ms > longest) longest = g_stalls[k].ms;
+        Out(L"[signal] windows %ld, dropped out %ld (%ld not on a stall of the PC); the PC stalled %ld time(s) during the "
+            L"test, the longest of the last 512 %ld ms", g_sigWindows, g_sigDropouts, g_sigOffStall, (long)stalls, (long)longest);
+    }
     Out(L"==== %d action(s): %d passed, %d FAILED, %d warning(s); seed %u ====", iteration, g_pass, g_fail, g_warn, seed);
     Out(L"Log: %ls", AppLogPath());
     CoUninitialize();
