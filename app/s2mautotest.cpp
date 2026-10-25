@@ -371,7 +371,9 @@ static bool DriverConfigLine(wchar_t* out, size_t len)
 }
 
 // The driver log lines about the microphone volume node (value at start, every SET), newest last.
-static void DumpMicNodeLog(int maxLines)
+// The driver's last log lines (registry DriverLog) about the microphone node; `streams`: also its streams (opened,
+// states, formats, buffers - the total silence of a measurement on Windows 11 needed them).
+static void DumpMicNodeLog(int maxLines, bool streams = false)
 {
     DWORD size = 0;
     if (RegGetValueW(HKEY_LOCAL_MACHINE, S2M_PARAMS_KEY, L"DriverLog", RRF_RT_REG_SZ, nullptr, nullptr, &size) != ERROR_SUCCESS || !size)
@@ -389,7 +391,9 @@ static void DumpMicNodeLog(int maxLines)
             wchar_t c = *e;
             *e = 0;
             if (wcsstr(p, L"microphone volume") || wcsstr(p, L"microphone mute") || wcsstr(p, L"Microphone node") ||
-                wcsstr(p, L"StartDevice"))
+                wcsstr(p, L"StartDevice") ||
+                (streams && (wcsstr(p, L": stream ") || wcsstr(p, L": state ") || wcsstr(p, L"SetFormat") ||
+                             wcsstr(p, L"audio buffer") || wcsstr(p, L"rejected"))))
             {
                 if (n == 256) { memmove(lines, lines + 1, sizeof(lines[0]) * 255); n--; }
                 lines[n++] = p;
@@ -948,7 +952,7 @@ static void ActionSignal()
                 DescribeAudioSessions(g_mic.id, ms, 1500);
                 Out(L"  info silence: speaker volume %.2f dB%ls; speaker sessions: %ls; microphone sessions: %ls", sdb,
                     smute ? L" MUTED" : L"", ss, ms);
-                DumpMicNodeLog(8);
+                DumpMicNodeLog(24, true);
                 // Control: does Windows deliver the tone to the speaker at all? Loopback = the mixed output the audio
                 // engine hands to the driver. Tone there + silence on the microphone: lost in or after the driver
                 // (cable, a filter driver of another program); silence there too: stopped before the driver.
@@ -984,6 +988,11 @@ static void ActionSignal()
             SignalResult again = RunSignal(g_spk.id, g_mic.id, ch, 0.1f, 700, (int)q.latency);
             if (SUCCEEDED(again.hr) && EvaluateChannel(again, ch, spkChannels, q, false) == 0)
                 Warn(L"channel %d/%d: the first measurement was off, the repeat is clean (passing glitch, see above)", ch + 1, spkChannels);
+            else if (SUCCEEDED(again.hr) && again.peakAll < 1e-6f)
+            {
+                Out(L"  info channel %d/%d: the repeat got nothing either; the driver's streams now:", ch + 1, spkChannels);
+                DumpMicNodeLog(24, true);
+            }
             r = again;
         }
         EvaluateChannel(r, ch, spkChannels, q, true);
