@@ -431,6 +431,9 @@ struct SignalResult
     int     latencyMs;          // tone start -> first loud microphone window (-1: not detected)
     wchar_t map[160];           // the tone's windows: '#' >= 1/2 of the loudest, '+' >= 1/4, '.' dropout
     int     stalls, stallMaxMs; // the PC stalled during the measurement (StallProbe): times, the longest one
+    int     stallFrom[16], stallTo[16], nStall;   // those stalls, ms from the start of the streams
+    int     unexplained;        // dropouts that do not lie on a stall
+    int     dropAt[16], nDrop;  // when the dropouts played (ms from the start of the streams)
 };
 
 // Stall probe: a time-critical thread wakes every 2 ms (high-resolution waitable timer); a wake-up more than 25 ms late
@@ -478,11 +481,14 @@ static void StallProbeStart()
     if (t) CloseHandle(t);
 }
 
-// Stalls that overlap QPC `from`..`to`.
-static void StallsBetween(LONGLONG from, LONGLONG to, int* count, int* maxMs)
+// Stalls that overlap QPC `from`..`to`; also each one's span in ms from `from` (up to 16) into r.
+static void StallsBetween(LONGLONG from, LONGLONG to, SignalResult* r)
 {
+    int* count = &r->stalls;
+    int* maxMs = &r->stallMaxMs;
     *count = 0;
     *maxMs = 0;
+    r->nStall = 0;
     LONG next = g_stallNext;
     for (LONG k = next - 1; k >= 0 && k >= next - 512; k--)
     {
@@ -490,7 +496,22 @@ static void StallsBetween(LONGLONG from, LONGLONG to, int* count, int* maxMs)
         if (s.end < from || s.end - (LONGLONG)s.ms * g_qpcFreq / 1000 > to) continue;
         (*count)++;
         if (s.ms > *maxMs) *maxMs = s.ms;
+        if (r->nStall < 16)
+        {
+            int end = (int)((s.end - from) * 1000 / g_qpcFreq);
+            r->stallFrom[r->nStall] = end - s.ms;
+            r->stallTo[r->nStall++] = end;
+        }
     }
+}
+
+// A dropout at `ms` of the played timeline lies on a stall: from 50 ms before it to 100 ms after (the audio engine
+// catches up a period or two later).
+static bool OnStall(const SignalResult& r, int ms)
+{
+    for (int k = 0; k < r.nStall; k++)
+        if (ms >= r.stallFrom[k] - 50 && ms <= r.stallTo[k] + 100) return true;
+    return false;
 }
 
 // Plays a 1-kHz tone of amplitude `amp` on speaker channel `onlyChannel` (-1: all) for `ms`, starting after 300 ms of
@@ -618,7 +639,7 @@ static SignalResult RunSignalOnce(const wchar_t* spkId, const wchar_t* micId, in
         }
         LARGE_INTEGER q1;
         QueryPerformanceCounter(&q1);
-        StallsBetween(q0.QuadPart, q1.QuadPart, &r.stalls, &r.stallMaxMs);
+        StallsBetween(q0.QuadPart, q1.QuadPart, &r);
         // Analysis: loudest window, the tone's windows (above 1/4 of it), dropouts inside the tone, latency.
         const int skipWin = skipMs / 10;
         float maxRms = 0;
@@ -633,7 +654,13 @@ static SignalResult RunSignalOnce(const wchar_t* spkId, const wchar_t* micId, in
             for (int i = first + 2; i <= last - 2; i++)
             {
                 r.windows++;
-                if (winRms[i] < maxRms * 0.25f) r.dropouts++;
+                // the microphone's window i played at i * 10 - latency ms (the tone's first window = the silence)
+                if (winRms[i] < maxRms * 0.25f)
+                {
+                    r.dropouts++;
+                    if (!OnStall(r, i * 10 - r.latencyMs)) r.unexplained++;
+                    if (r.nDrop < 16) r.dropAt[r.nDrop++] = i * 10 - r.latencyMs;
+                }
             }
             int n = 0;
             for (int i = first; i <= last && n < 159; i++)
@@ -751,16 +778,24 @@ static float MicToUnity()
     return db;
 }
 
-// The PC stood still for 20 ms or more during the measurement (StallProbe): dropouts are then a warning.
-static bool StalledPc(const SignalResult& r) { return r.stallMaxMs >= 20; }
-
 // "; the PC stalled N time(s), up to M ms" for the log (a static buffer: one line at a time).
 static const wchar_t* StallText(const SignalResult& r)
 {
-    static wchar_t buf[120];
-    if (!r.stalls) return L"; the PC did not stall";
-    _snwprintf(buf, 120, L"; the PC stalled %d time(s) meanwhile, up to %d ms (a VM without its CPUs: not the cable)", r.stalls, r.stallMaxMs);
-    buf[119] = 0;
+    static wchar_t buf[600];
+    int n;
+    if (!r.stalls) n = _snwprintf(buf, 600, L"; the PC did not stall");
+    else
+    {
+        n = _snwprintf(buf, 600, L"; the PC stalled %d time(s) meanwhile, up to %d ms, at", r.stalls, r.stallMaxMs);
+        for (int k = 0; k < r.nStall && n > 0 && n < 560; k++) n += _snwprintf(buf + n, 600 - n, L" %d-%d", r.stallFrom[k], r.stallTo[k]);
+    }
+    if (r.nDrop && n > 0 && n < 540)
+    {
+        n += _snwprintf(buf + n, 600 - n, L"; dropouts at");
+        for (int k = 0; k < r.nDrop && n > 0 && n < 580; k++) n += _snwprintf(buf + n, 600 - n, L" %d", r.dropAt[k]);
+        if (n > 0 && n < 590) _snwprintf(buf + n, 600 - n, L" ms");
+    }
+    buf[599] = 0;
     return buf;
 }
 
@@ -773,8 +808,9 @@ static int EvaluateChannel(const SignalResult& r, int ch, int spkChannels, const
     int bad = 0;
     bool reach = Db(r.peakAll) > -40.0f, clip = Db(r.peakAll) < -1.0f;
     bool level = !(r.micChannels >= spkChannels && ch < r.micChannels && fabsf(Db(r.peak[ch]) + 20.0f) > 3.0f);
-    bool drop = !(r.windows > 0 && r.dropouts * 20 > r.windows);
-    bad += !reach + !clip + !level + (!drop && !StalledPc(r));
+    // more than 1 in 20 windows dropped out, not counting those that lie on a stall of the PC (StallProbe)
+    bool drop = !(r.windows > 0 && r.unexplained * 20 > r.windows);
+    bad += !reach + !clip + !level + !drop;
     if (!report) return bad;
     Check(reach, L"channel %d/%d reaches the microphone (%d ch): peak %.1f dBFS > -40%ls", ch + 1, spkChannels, r.micChannels,
           Db(r.peakAll), reach ? L"" : StallText(r));
@@ -791,9 +827,11 @@ static int EvaluateChannel(const SignalResult& r, int ch, int spkChannels, const
              Db(r.peak[ch]), ch + 1);
     if (r.windows > 0 && r.dropouts > 0)
     {
-        if (!drop && !StalledPc(r))
-            Check(false, L"channel %d/%d: %d of %d 10-ms windows dropped out%ls", ch + 1, spkChannels, r.dropouts, r.windows, StallText(r));
-        else Warn(L"channel %d/%d: %d of %d 10-ms windows dropped out%ls", ch + 1, spkChannels, r.dropouts, r.windows, StallText(r));
+        if (!drop)
+            Check(false, L"channel %d/%d: %d of %d 10-ms windows dropped out, %d of them not on a stall%ls", ch + 1, spkChannels,
+                  r.dropouts, r.windows, r.unexplained, StallText(r));
+        else Warn(L"channel %d/%d: %d of %d 10-ms windows dropped out, %d of them not on a stall%ls", ch + 1, spkChannels,
+                  r.dropouts, r.windows, r.unexplained, StallText(r));
     }
     if (bad || r.dropouts) Out(L"  info channel %d/%d windows: %ls", ch + 1, spkChannels, r.map);
     if (r.latencyMs >= 0)
