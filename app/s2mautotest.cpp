@@ -509,12 +509,13 @@ static void StallsBetween(LONGLONG from, LONGLONG to, SignalResult* r)
     }
 }
 
-// A dropout at `ms` of the played timeline lies on a stall: from 50 ms before it to 100 ms after (the audio engine
-// catches up a period or two later).
+// A dropout at `ms` of the played timeline lies on a stall: from 150 ms before it to 100 ms after. The measured latency
+// also holds the capture side's engine buffer, so the dropouts land earlier than the stall on this timeline: in two VM
+// runs 70 % of them 0-100 ms before its start, the rest mostly up to 300 ms before.
 static bool OnStall(const SignalResult& r, int ms)
 {
     for (int k = 0; k < r.nStall; k++)
-        if (ms >= r.stallFrom[k] - 50 && ms <= r.stallTo[k] + 100) return true;
+        if (ms >= r.stallFrom[k] - 150 && ms <= r.stallTo[k] + 100) return true;
     return false;
 }
 
