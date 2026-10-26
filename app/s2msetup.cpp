@@ -24,6 +24,7 @@ enum
     IDC_TITLE = 100, IDC_SUBTITLE, IDC_GROUP, IDC_ST_TEST, IDC_ST_SECURE, IDC_ST_DRIVER,
     IDC_ENABLE_TEST, IDC_INSTALL, IDC_REMOVE, IDC_LOG, IDC_LAUNCH, IDC_CLOSE, IDC_DIAG, IDC_OPENLOG,
     IDC_LINK_DESKTOP, IDC_LINK_START, IDC_VERSION, IDC_LANG, IDC_DIR_LABEL, IDC_DIR, IDC_DIR_BROWSE,
+    IDC_PROJECT,
 };
 enum { ACT_INSTALL = 1, ACT_REMOVE, ACT_TESTSIGN, ACT_DIAG };
 #define WM_APP_LOG  (WM_APP + 1)
@@ -32,7 +33,11 @@ enum { ACT_INSTALL = 1, ACT_REMOVE, ACT_TESTSIGN, ACT_DIAG };
 static HINSTANCE g_inst;
 static HWND      g_wnd;
 static UINT      g_dpi = 96;
-static HFONT     g_font, g_fontTitle;
+static HFONT     g_font, g_fontTitle, g_fontLink;
+static int       g_dy;              // the header's extra row (96-DPI units): what is below it moves down by that
+static wchar_t   g_verText[200];    // "Version ... · author, e-mail" (the header's last line, the link follows it)
+static const wchar_t kProjectUrl[] = L"https://github.com/symops/Speak2Mic";
+static const wchar_t kProjectText[] = L"github.com/symops/Speak2Mic";
 static HICON     g_bigIcon;
 static HBRUSH    g_whiteBrush;
 static HANDLE    g_worker;
@@ -375,26 +380,61 @@ static HWND Create(const wchar_t* cls, const wchar_t* text, DWORD style, int id,
     return h;
 }
 
+// Below the header (94 units high) a control moves down by the header's extra row.
 static void Place(int id, int x, int y, int w, int h)
 {
+    if (y >= 94) y += g_dy;
     SetWindowPos(Ctl(id), nullptr, S(x), S(y), S(w), S(h), SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
+// The version line is as wide as its text and the project link stands right behind it, both rows as high as the font
+// needs (at 125 / 150 % of the screen scale the text is taller than the 19 units of the layout). When the link does not
+// fit beside the version (a long translation, a large scale), it takes a row of its own and the header grows (g_dy).
+static void LayoutHeader()
+{
+    wchar_t line[220];
+    _snwprintf(line, 220, L"%ls   ·", g_verText);
+    line[219] = 0;
+    SIZE sv = {}, sb = {}, sl = {};
+    HDC dc = GetDC(g_wnd);
+    HGDIOBJ old = SelectObject(dc, g_font);
+    GetTextExtentPoint32W(dc, line, (int)wcslen(line), &sv);
+    GetTextExtentPoint32W(dc, g_verText, (int)wcslen(g_verText), &sb);
+    SelectObject(dc, g_fontLink);
+    GetTextExtentPoint32W(dc, kProjectText, (int)wcslen(kProjectText), &sl);
+    SelectObject(dc, old);
+    ReleaseDC(g_wnd, dc);
+    const int x0 = S(100), y0 = S(71), gap = S(6), pad = S(4);
+    int rowH = (sv.cy > sl.cy ? sv.cy : sl.cy) + S(2);
+    if (rowH < S(19)) rowH = S(19);
+    bool sameLine = x0 + sv.cx + pad + gap + sl.cx + pad <= S(588);
+    SetWindowTextW(Ctl(IDC_VERSION), sameLine ? line : g_verText);
+    SetWindowPos(Ctl(IDC_VERSION), nullptr, x0, y0, (sameLine ? sv.cx : sb.cx) + pad, rowH, SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(Ctl(IDC_PROJECT), nullptr, sameLine ? x0 + sv.cx + pad + gap : x0, sameLine ? y0 : y0 + rowH, sl.cx + pad, rowH,
+                 SWP_NOZORDER | SWP_NOACTIVATE);
+    int extra = (sameLine ? y0 + rowH : y0 + 2 * rowH) + S(4) - S(94);
+    g_dy = extra > 0 ? MulDiv(extra, 96, (int)g_dpi) + 1 : 0;
 }
 
 static void ApplyDpi()
 {
     if (g_font) DeleteObject(g_font);
     if (g_fontTitle) DeleteObject(g_fontTitle);
+    if (g_fontLink) DeleteObject(g_fontLink);
     if (g_bigIcon) DestroyIcon(g_bigIcon);
     g_font = CreateFontW(-MulDiv(9, (int)g_dpi, 72), 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0,
                          CLEARTYPE_QUALITY, 0, L"Segoe UI");
     g_fontTitle = CreateFontW(-MulDiv(18, (int)g_dpi, 72), 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0,
                               CLEARTYPE_QUALITY, 0, L"Segoe UI");
+    g_fontLink = CreateFontW(-MulDiv(9, (int)g_dpi, 72), 0, 0, 0, FW_NORMAL, 0, TRUE, 0, DEFAULT_CHARSET, 0, 0,
+                             CLEARTYPE_QUALITY, 0, L"Segoe UI");
     g_bigIcon = (HICON)LoadImageW(g_inst, MAKEINTRESOURCEW(1), IMAGE_ICON, S(64), S(64), 0);
     for (HWND c = GetWindow(g_wnd, GW_CHILD); c; c = GetWindow(c, GW_HWNDNEXT))
     {
         SendMessageW(c, WM_SETFONT, (WPARAM)g_font, TRUE);
     }
     SendMessageW(Ctl(IDC_TITLE), WM_SETFONT, (WPARAM)g_fontTitle, TRUE);
+    SendMessageW(Ctl(IDC_PROJECT), WM_SETFONT, (WPARAM)g_fontLink, TRUE);
 
     // 600 px wide (96 DPI). The test mode button is as wide as its longer label (Enable / Disable, so it does not
     // jump), the test mode line gets the rest of the row: "... (until restart)" has to fit.
@@ -418,7 +458,7 @@ static void ApplyDpi()
     Place(IDC_TITLE, 100, 12, 350, 36);
     Place(IDC_LANG, 450, 14, 138, 400);
     Place(IDC_SUBTITLE, 100, 50, 480, 20);
-    Place(IDC_VERSION, 100, 71, 480, 19);
+    LayoutHeader();                                 // the version line and the link; sets g_dy for what follows
     Place(IDC_GROUP, 12, 106, 576, 104);
     Place(IDC_ST_SECURE, 26, 130, 550, 20);         // Secure Boot first: test mode can be turned on only without it
     Place(IDC_ST_TEST, 26, 154, 578 - button - 8 - 26, 20);
@@ -436,6 +476,16 @@ static void ApplyDpi()
     Place(IDC_DIAG, 12, 448, 116, 30);
     Place(IDC_OPENLOG, 134, 448, 130, 30);
     Place(IDC_CLOSE, 472, 448, 116, 30);
+    // the window as high as its controls (the header's extra row)
+    RECT want = { 0, 0, S(600), S(490 + g_dy) }, now;
+    GetClientRect(g_wnd, &now);
+    if (now.bottom != want.bottom)
+    {
+        AdjustWindowRectExForDpi(&want, (DWORD)GetWindowLongW(g_wnd, GWL_STYLE), FALSE, (DWORD)GetWindowLongW(g_wnd, GWL_EXSTYLE),
+                                 g_dpi);
+        SetWindowPos(g_wnd, nullptr, 0, 0, want.right - want.left, want.bottom - want.top,
+                     SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
 }
 
 static void CreateControls()
@@ -448,7 +498,9 @@ static void CreateControls()
     int n = _snwprintf(ver, 200, TR(L"Версия %ls"), L"" S2M_VER_STR);
     if (n > 0 && n < 200) _snwprintf(ver + n, 200 - n, L"   ·   %ls, %ls", L"" S2M_AUTHOR, L"" S2M_EMAIL);
     ver[199] = 0;
+    wcscpy(g_verText, ver);
     Create(L"STATIC", ver, 0, IDC_VERSION);
+    Create(L"STATIC", kProjectText, SS_NOTIFY, IDC_PROJECT);   // the project page: opened in the browser only by a click
     Create(L"BUTTON", TR(L"Состояние системы"), BS_GROUPBOX, IDC_GROUP);
     Create(L"STATIC", L"", SS_ENDELLIPSIS, IDC_ST_SECURE);   // a translation too long: "..." instead of a cut
     Create(L"STATIC", L"", SS_ENDELLIPSIS, IDC_ST_TEST);   // a translation too long: "..." instead of a cut
@@ -531,19 +583,33 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         HDC dc = BeginPaint(hwnd, &ps);
         RECT rc;
         GetClientRect(hwnd, &rc);
-        RECT head = { 0, 0, rc.right, S(94) };
+        RECT head = { 0, 0, rc.right, S(94 + g_dy) };
         FillRect(dc, &head, g_whiteBrush);
-        RECT line = { 0, S(94), rc.right, S(95) };
+        RECT line = { 0, S(94 + g_dy), rc.right, S(95 + g_dy) };
         FillRect(dc, &line, GetSysColorBrush(COLOR_3DSHADOW));
         if (g_bigIcon) DrawIconEx(dc, S(20), S(15), g_bigIcon, S(64), S(64), 0, nullptr, DI_NORMAL);
         EndPaint(hwnd, &ps);
         return 0;
     }
 
+    case WM_SETCURSOR:
+        if ((HWND)wp == Ctl(IDC_PROJECT))
+        {
+            SetCursor(LoadCursorW(nullptr, IDC_HAND));
+            return TRUE;
+        }
+        break;
+
     case WM_CTLCOLORSTATIC:
     {
         HDC dc = (HDC)wp;
         int id = GetDlgCtrlID((HWND)lp);
+        if (id == IDC_PROJECT)
+        {
+            SetBkColor(dc, RGB(255, 255, 255));
+            SetTextColor(dc, RGB(0, 102, 204));
+            return (LRESULT)g_whiteBrush;
+        }
         if (id == IDC_TITLE || id == IDC_SUBTITLE || id == IDC_VERSION)
         {
             SetBkColor(dc, RGB(255, 255, 255));
@@ -691,6 +757,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                 break;
             case IDC_DIAG: Start(ACT_DIAG); break;
             case IDC_OPENLOG: ShellExecuteW(hwnd, L"open", L"notepad.exe", AppLogPath(), nullptr, SW_SHOWNORMAL); break;
+            case IDC_PROJECT: ShellExecuteW(hwnd, L"open", kProjectUrl, nullptr, nullptr, SW_SHOWNORMAL); break;   // STN_CLICKED
             case IDC_CLOSE: PostMessageW(hwnd, WM_CLOSE, 0, 0); break;
             }
         }
