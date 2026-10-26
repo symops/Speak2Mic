@@ -585,7 +585,10 @@ static SignalResult RunSignalOnce(const wchar_t* spkId, const wchar_t* micId, in
         QueryPerformanceCounter(&q0);
         DWORD t0 = GetTickCount();
         DWORD total = (DWORD)(silenceMs + ms + latencyMs + 400);
-        while (GetTickCount() - t0 < total)
+        // Until the microphone has delivered the whole measurement (by its own timeline), at most 4 s longer: in a VM
+        // that stalls, the captured audio lagged behind - 0.76 s of it after 2 s, the tone not even reached (-140 dBFS).
+        const UINT64 needFrames = (UINT64)cf->nSamplesPerSec * total / 1000;
+        while (GetTickCount() - t0 < total || (captured < needFrames && GetTickCount() - t0 < total + 4000))
         {
             UINT32 pad = 0;
             rc->GetCurrentPadding(&pad);
