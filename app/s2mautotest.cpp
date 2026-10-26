@@ -438,6 +438,8 @@ struct SignalResult
     int     stallFrom[16], stallTo[16], nStall;   // those stalls, ms from the start of the streams
     int     unexplained;        // dropouts that do not lie on a stall
     int     dropAt[16], nDrop;  // when the dropouts played (ms from the start of the streams)
+    int     packets, silentPackets;   // capture packets received / of them flagged silent by the audio engine
+    UINT64  frames;             // capture frames received
 };
 
 // Stall probe: a time-critical thread wakes every 2 ms (high-resolution waitable timer); a wake-up more than 25 ms late
@@ -618,6 +620,9 @@ static SignalResult RunSignalOnce(const wchar_t* spkId, const wchar_t* micId, in
                 UINT32 frames = 0;
                 DWORD flags = 0;
                 if (FAILED(capture->GetBuffer(&cd, &frames, &flags, nullptr, nullptr))) break;
+                r.packets++;
+                if (flags & AUDCLNT_BUFFERFLAGS_SILENT) r.silentPackets++;
+                r.frames += frames;
                 for (UINT32 i = 0; i < frames; i++, captured++)
                 {
                     double sq = 0;
@@ -820,6 +825,9 @@ static int EvaluateChannel(const SignalResult& r, int ch, int spkChannels, const
     bool drop = !(r.windows > 0 && r.unexplained * 20 > r.windows);
     bad += !reach + !clip + !level + !drop;
     if (!report) return bad;
+    if (!reach)
+        Out(L"  info channel %d/%d capture: %d packet(s), %d of them flagged silent by Windows, %llu frame(s)", ch + 1, spkChannels,
+            r.packets, r.silentPackets, (unsigned long long)r.frames);
     Check(reach, L"channel %d/%d reaches the microphone (%d ch): peak %.1f dBFS > -40%ls", ch + 1, spkChannels, r.micChannels,
           Db(r.peakAll), reach ? L"" : StallText(r));
     Check(clip, L"channel %d/%d not clipped: peak %.1f dBFS < -1", ch + 1, spkChannels, Db(r.peakAll));
@@ -941,9 +949,10 @@ static void ActionSignal()
             PolicyGetMixFormat(g_spk.id, &sf);
             PolicyGetMixFormat(g_mic.id, &mf);
             Out(L"  info channel %d/%d first attempt: peaks%ls, %d/%d windows dropped [%ls]; microphone volume now %.2f dB%ls; "
-                L"mix formats %lu Hz %u ch / %lu Hz %u ch%ls", ch + 1, spkChannels, peaks, r.dropouts, r.windows, r.map, vdb,
+                L"mix formats %lu Hz %u ch / %lu Hz %u ch; capture %d packet(s), %d silent, %llu frame(s)%ls", ch + 1, spkChannels, peaks,
+                r.dropouts, r.windows, r.map, vdb,
                 vmute ? L" (muted)" : L"", sf ? sf->nSamplesPerSec : 0, sf ? sf->nChannels : 0, mf ? mf->nSamplesPerSec : 0,
-                mf ? mf->nChannels : 0, StallText(r));
+                mf ? mf->nChannels : 0, r.packets, r.silentPackets, (unsigned long long)r.frames, StallText(r));
             if (sf) CoTaskMemFree(sf);
             if (mf) CoTaskMemFree(mf);
             if (r.peakAll < 1e-6f)
