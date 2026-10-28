@@ -446,12 +446,16 @@ struct SignalResult
 // means the whole PC stood still - a virtual machine whose host took its CPUs away. The audio engine cannot feed any
 // device in time then, so dropouts during such a stall are the PC's, not the cable's.
 struct Stall { LONGLONG end; LONG ms; };
-static Stall         g_stalls[512];
+static const LONG    kStallRing = 2048;      // every CPU's probe records here
+static Stall         g_stalls[kStallRing];
 static volatile LONG g_stallNext;
 static LONGLONG      g_qpcFreq;
 
-static DWORD WINAPI StallProbe(LPVOID)
+static DWORD WINAPI StallProbe(LPVOID cpu)
 {
+    // one probe per CPU, kept on it: a VM's host takes single virtual CPUs away, and a probe on another CPU saw nothing
+    // while the audio engine on that one stood still (Windows 11 VM: dropouts of 70-320 ms, "the PC did not stall")
+    SetThreadAffinityMask(GetCurrentThread(), (DWORD_PTR)1 << (UINT_PTR)cpu);
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
     HANDLE timer = CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
     LARGE_INTEGER prev, now;
@@ -470,7 +474,7 @@ static DWORD WINAPI StallProbe(LPVOID)
         LONG ms = (LONG)((now.QuadPart - prev.QuadPart) * 1000 / g_qpcFreq);
         if (ms > (timer ? 25 : 40))
         {
-            LONG i = (InterlockedIncrement(&g_stallNext) - 1) & 511;
+            LONG i = (InterlockedIncrement(&g_stallNext) - 1) & (kStallRing - 1);
             g_stalls[i].ms = ms;
             g_stalls[i].end = now.QuadPart;
         }
@@ -483,8 +487,14 @@ static void StallProbeStart()
     LARGE_INTEGER f;
     QueryPerformanceFrequency(&f);
     g_qpcFreq = f.QuadPart;
-    HANDLE t = CreateThread(nullptr, 0, StallProbe, nullptr, 0, nullptr);
-    if (t) CloseHandle(t);
+    DWORD_PTR process = 0, system = 0;
+    GetProcessAffinityMask(GetCurrentProcess(), &process, &system);
+    for (UINT_PTR cpu = 0; cpu < sizeof(DWORD_PTR) * 8; cpu++)
+        if (process & ((DWORD_PTR)1 << cpu))
+        {
+            HANDLE t = CreateThread(nullptr, 0, StallProbe, (LPVOID)cpu, 0, nullptr);
+            if (t) CloseHandle(t);
+        }
 }
 
 // Stalls that overlap QPC `from`..`to`; also each one's span in ms from `from` (up to 16) into r.
@@ -496,9 +506,9 @@ static void StallsBetween(LONGLONG from, LONGLONG to, SignalResult* r)
     *maxMs = 0;
     r->nStall = 0;
     LONG next = g_stallNext;
-    for (LONG k = next - 1; k >= 0 && k >= next - 512; k--)
+    for (LONG k = next - 1; k >= 0 && k >= next - kStallRing; k--)
     {
-        const Stall& s = g_stalls[k & 511];
+        const Stall& s = g_stalls[k & (kStallRing - 1)];
         if (s.end < from || s.end - (LONGLONG)s.ms * g_qpcFreq / 1000 > to) continue;
         (*count)++;
         if (s.ms > *maxMs) *maxMs = s.ms;
@@ -1792,9 +1802,9 @@ int wmain(int argc, wchar_t** argv)
     {
         // the PC under the test: a VM whose host takes its CPUs away stalls (and drops sound) far more than real hardware
         LONG stalls = g_stallNext, longest = 0;
-        for (LONG k = 0; k < stalls && k < 512; k++) if (g_stalls[k].ms > longest) longest = g_stalls[k].ms;
+        for (LONG k = 0; k < stalls && k < kStallRing; k++) if (g_stalls[k].ms > longest) longest = g_stalls[k].ms;
         Out(L"[signal] windows %ld, dropped out %ld (%ld not on a stall of the PC); the PC stalled %ld time(s) during the "
-            L"test, the longest of the last 512 %ld ms", g_sigWindows, g_sigDropouts, g_sigOffStall, (long)stalls, (long)longest);
+            L"test, the longest of the last 2048 %ld ms", g_sigWindows, g_sigDropouts, g_sigOffStall, (long)stalls, (long)longest);
     }
     Out(L"==== %d action(s): %d passed, %d FAILED, %d warning(s); seed %u ====", iteration, g_pass, g_fail, g_warn, seed);
     Out(L"Log: %ls", AppLogPath());
