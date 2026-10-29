@@ -440,6 +440,7 @@ struct SignalResult
     int     dropAt[16], nDrop;  // when the dropouts played (ms from the start of the streams)
     int     packets, silentPackets;   // capture packets received / of them flagged silent by the audio engine
     UINT64  frames;             // capture frames received
+    int     cpuBusy;            // % of all CPUs' time busy during the measurement (-1: not known)
 };
 
 // Stall probe: a time-critical thread wakes every 2 ms (high-resolution waitable timer); a wake-up more than 25 ms late
@@ -603,6 +604,8 @@ static SignalResult RunSignalOnce(const wchar_t* spkId, const wchar_t* micId, in
         int nWin = 0;
         LARGE_INTEGER q0;
         QueryPerformanceCounter(&q0);
+        FILETIME idle0, kern0, user0;
+        bool cpu0 = GetSystemTimes(&idle0, &kern0, &user0) != 0;
         DWORD t0 = GetTickCount();
         DWORD total = (DWORD)(silenceMs + ms + latencyMs + 400);
         // Until the microphone has delivered the whole measurement (by its own timeline), at most 4 s longer: in a VM
@@ -673,6 +676,18 @@ static SignalResult RunSignalOnce(const wchar_t* spkId, const wchar_t* micId, in
         LARGE_INTEGER q1;
         QueryPerformanceCounter(&q1);
         StallsBetween(q0.QuadPart, q1.QuadPart, &r);
+        {
+            // how busy the PC was meanwhile: the audio engine can be late without any stall when everything else keeps
+            // the CPUs busy (the first minutes after Windows started: regular 70-ms gaps, no CPU stalled)
+            FILETIME idle1, kern1, user1;
+            r.cpuBusy = -1;
+            if (cpu0 && GetSystemTimes(&idle1, &kern1, &user1))
+            {
+                auto u = [](const FILETIME& f) { return ((ULONGLONG)f.dwHighDateTime << 32) | f.dwLowDateTime; };
+                ULONGLONG idle = u(idle1) - u(idle0), total = (u(kern1) - u(kern0)) + (u(user1) - u(user0));   // kernel holds idle
+                if (total) r.cpuBusy = (int)((total - idle) * 100 / total);
+            }
+        }
         // Analysis: loudest window, the tone's windows (above 1/4 of it), dropouts inside the tone, latency.
         const int skipWin = skipMs / 10;
         float maxRms = 0;
@@ -826,8 +841,10 @@ static const wchar_t* StallText(const SignalResult& r)
     {
         n += _snwprintf(buf + n, 600 - n, L"; dropouts at");
         for (int k = 0; k < r.nDrop && n > 0 && n < 580; k++) n += _snwprintf(buf + n, 600 - n, L" %d", r.dropAt[k]);
-        if (n > 0 && n < 590) _snwprintf(buf + n, 600 - n, L" ms");
+        if (n > 0 && n < 590) n += _snwprintf(buf + n, 600 - n, L" ms");
     }
+    if (n > 0 && n < 560)
+        _snwprintf(buf + n, 600 - n, L"; CPUs %d %% busy, Windows up %llu min", r.cpuBusy, (unsigned long long)(GetTickCount64() / 60000));
     buf[599] = 0;
     return buf;
 }
