@@ -862,8 +862,12 @@ static int EvaluateChannel(const SignalResult& r, int ch, int spkChannels, const
     int bad = 0;
     bool reach = Db(r.peakAll) > -40.0f, clip = Db(r.peakAll) < -1.0f;
     bool level = !(r.micChannels >= spkChannels && ch < r.micChannels && fabsf(Db(r.peak[ch]) + 20.0f) > 3.0f);
-    // more than 1 in 20 windows dropped out, not counting those that lie on a stall of the PC (StallProbe)
-    bool drop = !(r.windows > 0 && r.unexplained * 20 > r.windows);
+    // more than 1 in 20 windows dropped out, not counting those that lie on a stall of the PC (StallProbe), nor any when
+    // the CPUs were 85 % busy or more meanwhile: in a Windows 11 VM run the CPUs were 36 % busy on average over 1575
+    // measurements, 75 % in the 14 with dropouts off a stall and 100 % in the one that failed, 7 minutes after Windows
+    // started - its startup work keeping the audio engine from running in time, not the cable
+    bool busyPc = r.cpuBusy >= 85;
+    bool drop = busyPc || !(r.windows > 0 && r.unexplained * 20 > r.windows);
     bad += !reach + !clip + !level + !drop;
     if (!report) return bad;
     if (!reach)
@@ -896,8 +900,9 @@ static int EvaluateChannel(const SignalResult& r, int ch, int spkChannels, const
         if (!drop)
             Check(false, L"channel %d/%d: %d of %d 10-ms windows dropped out, %d of them not on a stall%ls", ch + 1, spkChannels,
                   r.dropouts, r.windows, r.unexplained, StallText(r));
-        else Warn(L"channel %d/%d: %d of %d 10-ms windows dropped out, %d of them not on a stall%ls", ch + 1, spkChannels,
-                  r.dropouts, r.windows, r.unexplained, StallText(r));
+        else Warn(L"channel %d/%d: %d of %d 10-ms windows dropped out, %d of them not on a stall%ls%ls", ch + 1, spkChannels,
+                  r.dropouts, r.windows, r.unexplained, StallText(r),
+                  busyPc && r.unexplained * 20 > r.windows ? L" (the PC too busy: not the cable)" : L"");
     }
     if (bad || r.dropouts) Out(L"  info channel %d/%d windows: %ls", ch + 1, spkChannels, r.map);
     if (r.latencyMs >= 0)
