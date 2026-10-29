@@ -435,7 +435,7 @@ struct SignalResult
     int     latencyMs;          // tone start -> first loud microphone window (-1: not detected)
     wchar_t map[160];           // the tone's windows: '#' >= 1/2 of the loudest, '+' >= 1/4, '.' dropout
     int     stalls, stallMaxMs; // the PC stalled during the measurement (StallProbe): times, the longest one
-    int     stallFrom[16], stallTo[16], nStall;   // those stalls, ms from the start of the streams
+    int     stallFrom[64], stallTo[64], nStall;   // those stalls, ms from the start of the streams (overlapping ones merged)
     int     unexplained;        // dropouts that do not lie on a stall
     int     dropAt[16], nDrop;  // when the dropouts played (ms from the start of the streams)
     int     packets, silentPackets;   // capture packets received / of them flagged silent by the audio engine
@@ -512,10 +512,20 @@ static void StallsBetween(LONGLONG from, LONGLONG to, SignalResult* r)
         if (s.end < from || s.end - (LONGLONG)s.ms * g_qpcFreq / 1000 > to) continue;
         (*count)++;
         if (s.ms > *maxMs) *maxMs = s.ms;
-        if (r->nStall < 16)
+        // every CPU's probe records the same stall of the whole VM: merged into one span (16 kept spans were all
+        // copies of the last stalls, the earlier ones lost and their dropouts counted as not on a stall)
+        int end = (int)((s.end - from) * 1000 / g_qpcFreq), start = end - s.ms;
+        bool merged = false;
+        for (int i = 0; i < r->nStall && !merged; i++)
+            if (start <= r->stallTo[i] + 5 && end >= r->stallFrom[i] - 5)
+            {
+                if (start < r->stallFrom[i]) r->stallFrom[i] = start;
+                if (end > r->stallTo[i]) r->stallTo[i] = end;
+                merged = true;
+            }
+        if (!merged && r->nStall < 64)
         {
-            int end = (int)((s.end - from) * 1000 / g_qpcFreq);
-            r->stallFrom[r->nStall] = end - s.ms;
+            r->stallFrom[r->nStall] = start;
             r->stallTo[r->nStall++] = end;
         }
     }
@@ -809,7 +819,7 @@ static const wchar_t* StallText(const SignalResult& r)
     if (!r.stalls) n = _snwprintf(buf, 600, L"; the PC did not stall");
     else
     {
-        n = _snwprintf(buf, 600, L"; the PC stalled %d time(s) meanwhile, up to %d ms, at", r.stalls, r.stallMaxMs);
+        n = _snwprintf(buf, 600, L"; the PC stalled %d time(s) meanwhile, up to %d ms, at", r.nStall, r.stallMaxMs);
         for (int k = 0; k < r.nStall && n > 0 && n < 560; k++) n += _snwprintf(buf + n, 600 - n, L" %d-%d", r.stallFrom[k], r.stallTo[k]);
     }
     if (r.nDrop && n > 0 && n < 540)
