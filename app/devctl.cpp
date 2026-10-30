@@ -33,6 +33,22 @@ static bool ChangeState(HDEVINFO set, SP_DEVINFO_DATA* info, DWORD state, bool* 
     return ok;
 }
 
+// setupapi.dll (MinGW's cfgmgr32.h has only the CM_ macro for it)
+extern "C" DWORD WINAPI CMP_WaitNoPendingInstallEvents(DWORD timeout);
+
+// Waits (at most 30 s) until Windows installs no device: a restart while another device was being installed (the
+// Show2Cam autotest adding cameras, Windows Update) failed its disable (0xE000020B) and the next one left Speak2Mic
+// disabled until a reboot ("reboot required", problem 22, six enables in vain) - the 32-bit Windows 10 autotest.
+static void WaitPnpIdle(const wchar_t* when)
+{
+    DWORD t0 = GetTickCount();
+    DWORD r = CMP_WaitNoPendingInstallEvents(30000);
+    DWORD ms = GetTickCount() - t0;
+    if (ms >= 500 || r != WAIT_OBJECT_0)
+        AppLog(L"restart: %ls waited %lu ms for other device installations to end (%ls)", when, ms,
+               r == WAIT_OBJECT_0 ? L"done" : r == WAIT_TIMEOUT ? L"still installing" : L"failed");
+}
+
 static bool DeviceDisabled(DEVINST dev)
 {
     ULONG status = 0, problem = 0;
@@ -71,7 +87,14 @@ bool S2mRestartDevice(bool* found, bool* reboot)
         }
 
         *found = true;
-        if (!ChangeState(set, &info, DICS_DISABLE, reboot)) ok = false;
+        WaitPnpIdle(L"before the restart");
+        if (!ChangeState(set, &info, DICS_DISABLE, reboot))
+        {
+            // disturbed by an installation that began meanwhile: once more when it is over
+            WaitPnpIdle(L"after a failed disable");
+            *reboot = false;
+            if (!ChangeState(set, &info, DICS_DISABLE, reboot)) ok = false;
+        }
         if (!ChangeState(set, &info, DICS_ENABLE, reboot)) ok = false;
         AppLog(L"restart: disable + enable %ls%ls", ok ? L"done" : L"FAILED", *reboot ? L", reboot required" : L"");
         // Left disabled (problem 22, "reboot required": a program still had the device open when it was disabled, or
@@ -83,6 +106,7 @@ bool S2mRestartDevice(bool* found, bool* reboot)
         for (int t = 0; t < 6 && DeviceDisabled(info.DevInst); t++)
         {
             Sleep(t < 4 ? 1000 * (t + 1) : 2000);
+            WaitPnpIdle(L"before another enable");
             bool again = false;
             AudioServices builder = {};
             if (t >= 2) AudioStopServices(true, &builder);
