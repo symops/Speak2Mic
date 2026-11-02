@@ -754,7 +754,7 @@ static void Layout()
     Place(IDC_L_MUSIC, L1, 372, 130, 20);   Place(IDC_MUSICSRC, C1, 368, 200, 300);
     Place(IDC_L_MUSICDIR, L1, 406, 130, 20); Place(IDC_MUSICDIR, C1, 402, R - 80 - C1, 23);
     Place(IDC_MUSIC_BROWSE, R - 74, 400, 74, 27);
-    Place(IDC_SIGNAL, L1, 438, 150, 28);    Place(IDC_PLAY, L1 + 156, 438, 110, 28);
+    Place(IDC_PLAY, L1, 438, 110, 28);    Place(IDC_SIGNAL, L1 + 116, 438, 150, 28);
     Place(IDC_DEV_APPLY, C2, 438, W2, 28);
     Place(IDC_IO_STATUS, L1, 486, R - 38 - L1, 300); // events (newest at the bottom, shown when closed)
     Place(IDC_CLEARLOG, R - 32, 484, 32, 26);        // clear the event log
@@ -816,8 +816,8 @@ static void CreateControls()
     Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_MUSICDIR, WS_EX_CLIENTEDGE);
     SendMessageW(Ctl(IDC_MUSICDIR), EM_LIMITTEXT, MAX_PATH - 1, 0);
     Create(L"BUTTON", TR(L"Обзор…"), BS_PUSHBUTTON | WS_TABSTOP, IDC_MUSIC_BROWSE);
-    Create(L"BUTTON", TR(L"Проверка"), BS_PUSHBUTTON | WS_TABSTOP, IDC_SIGNAL);
     Create(L"BUTTON", TR(L"Играть"), BS_PUSHBUTTON | WS_TABSTOP, IDC_PLAY);
+    Create(L"BUTTON", TR(L"Проверка"), BS_PUSHBUTTON | WS_TABSTOP, IDC_SIGNAL);
     Create(L"BUTTON", TR(L"Применить"), BS_PUSHBUTTON | WS_TABSTOP, IDC_DEV_APPLY);
 
     // the meters' own window (hidden until "Check"); owned by the panel, so it stays above it and closes with it
