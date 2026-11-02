@@ -3,9 +3,9 @@
 #   dist/Speak2Mic-Setup.exe        the release: ONE file - the launcher with the whole package below appended
 #                                   (a cabinet, MSZIP; extracted to a temporary folder when it runs)
 #   dist/Speak2Mic/                 the same package unpacked (for development / testing)
-#   dist/Speak2Mic-Debug-Setup.exe, dist/Speak2Mic-Debug/   the same plus the test tools (s2mautotest.exe, s2minstall.exe, s2mctl.exe), for testing only
+#   dist/Speak2Mic-Debug-Setup.exe, dist/Speak2Mic-Debug/   the same plus uninstall.cmd and the test tools (s2mautotest.exe, s2minstall.exe, s2mctl.exe), for testing only
 #     Speak2Mic-Setup.exe           x86 launcher: starts x64\ or x86\Speak2Mic-Setup.exe (whichever Windows this is)
-#     uninstall.cmd                 the same for removal
+#     uninstall.cmd                 (debug package only) removal without a window
 #     mp3\                          music for the panel's "Play" button (installed to Program Files\Speak2Mic\mp3)
 #     x64\  x86\                    the programs, the driver (.sys, .inf, .cat) and the test certificates of each
 set -e
@@ -79,11 +79,13 @@ done
 DD=dist/Speak2Mic-Debug
 cp -a $D $DD
 for f in s2mautotest.exe s2minstall.exe s2mctl.exe; do rm -f $D/x64/$f $D/x86/$f; done
+# uninstall.cmd too: Windows' Apps, the installer's Remove button and "-Setup.exe /remove" do the same
+rm -f $D/uninstall.cmd $D/x64/uninstall.cmd $D/x86/uninstall.cmd
 
 # One file each: the launcher + the package as a cabinet (MSZIP; Windows extracts it with SetupIterateCabinet) + a
 # trailer "S2MPAYLD" + the cabinet's size (little endian, 8 bytes). See app/s2mlauncher.cpp.
 one_file() {        # package folder, setup file
-    (cd $1 && find uninstall.cmd mp3 x64 x86 -type f | sort | xargs gcab -c -z ../payload.cab)
+    (cd $1 && find . -type f ! -name Speak2Mic-Setup.exe -o -type f -path "./x*" | sed "s|^\./||" | sort | xargs gcab -c -z ../payload.cab)
     python3 - "$2" <<'PY'
 import struct, sys
 launcher = open('app/x86/s2mlauncher.exe', 'rb').read()

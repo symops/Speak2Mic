@@ -30,7 +30,7 @@ static const wchar_t* kFiles[] = {
     L"s2mdebug.exe", L"install.cmd", L"УСТАНОВКА.txt", L"INSTALL.txt",
     L"s2mrepeater.exe",     // no longer shipped; listed so that an older installation is cleaned up
     L"Speak2Mic.sys", L"Speak2Mic.inf", L"Speak2Mic.cat", L"Speak2Mic.cer", L"Speak2Mic-Publisher.cer",
-    L"uninstall.cmd",
+    L"uninstall.cmd",       // the debug package only (package.sh)
     L"config.ps1",          // no longer shipped (replaced by s2mctl.exe); listed so that an older installation is cleaned up
 };
 
