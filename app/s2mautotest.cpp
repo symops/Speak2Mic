@@ -1294,6 +1294,144 @@ static int RunCtl(const wchar_t* args)
     return (int)code;
 }
 
+// What a settings file holds, as it is now (the driver settings, both names, the microphone's volume and mute).
+struct Settings { Quality q; wchar_t spk[256], mic[256]; float pct; bool mute; };
+
+static bool ReadSettings(Settings* s)
+{
+    s->q = ReadQuality();
+    AudioDevice spk, mic;
+    if (!WaitOurs(&spk, &mic, 20000)) return false;
+    g_spk = spk;
+    g_mic = mic;
+    wcscpy(s->spk, spk.desc);
+    wcscpy(s->mic, mic.desc);
+    float db = 0, mn = 0, mx = 0;
+    s->pct = GetEndpointVolumeDb(mic.id, &db, &mn, &mx) ? DbToPercentF(db) : -1;
+    if (s->pct > 300.0f) s->pct = 300.0f;               // import clamps to the panel's 0..300 %
+    s->mute = false;
+    GetEndpointMute(mic.id, &s->mute);
+    return true;
+}
+
+// The settings that differ ("" = none), into `out`.
+static void SettingsDiff(const Settings& a, const Settings& b, wchar_t* out, size_t len)
+{
+    out[0] = 0;
+    auto add = [&](const wchar_t* fmt, ...) {
+        size_t n = wcslen(out);
+        va_list args;
+        va_start(args, fmt);
+        _vsnwprintf(out + n, len - n, fmt, args);
+        va_end(args);
+        out[len - 1] = 0;
+    };
+    if (a.q.rate != b.q.rate) add(L" rate %lu/%lu", a.q.rate, b.q.rate);
+    if (a.q.channels != b.q.channels) add(L" channels %lu/%lu", a.q.channels, b.q.channels);
+    if (a.q.micChannels != b.q.micChannels) add(L" mic channels %lu/%lu", a.q.micChannels, b.q.micChannels);
+    if (a.q.bits != b.q.bits) add(L" bits %lu/%lu", a.q.bits, b.q.bits);
+    if (a.q.latency != b.q.latency) add(L" latency %lu/%lu", a.q.latency, b.q.latency);
+    if (wcscmp(a.spk, b.spk)) add(L" speaker \"%ls\"/\"%ls\"", a.spk, b.spk);
+    if (wcscmp(a.mic, b.mic)) add(L" microphone \"%ls\"/\"%ls\"", a.mic, b.mic);
+    if (fabsf(a.pct - b.pct) > 1.0f) add(L" volume %.1f/%.1f %%", a.pct, b.pct);
+    if (a.mute != b.mute) add(L" mute %d/%d", (int)a.mute, (int)b.mute);
+}
+
+// export -> every exported setting changed -> import: all of them back. Then a damaged file: refused, nothing changed;
+// and a file with invalid values: those settings kept, its valid ones taken. (The panel's Export / Import buttons write
+// and read the same keys.)
+static void CliSettings()
+{
+    wchar_t file[MAX_PATH], bad[MAX_PATH], a[MAX_PATH + 160], diff[600];
+    GetTempPathW(MAX_PATH - 40, file);
+    wcscpy(bad, file);
+    wcscat(file, L"s2m_autotest.ini");
+    wcscat(bad, L"s2m_autotest_bad.ini");
+    Out(L"[cli] settings: export, everything changed, import; a damaged file; a file with invalid values");
+    Settings s0, s1, s2, s3;
+    if (!Check(ReadSettings(&s0), L"endpoints found")) return;
+    LONG outsideBefore = g_outsideChanges;
+    _snwprintf(a, MAX_PATH + 160, L"export \"%ls\"", file);
+    if (!Check(RunCtl(a) == 0, L"export exit code 0")) return;
+    // everything else: another rate, channel counts, bits, latency (one device restart), names, volume, mute
+    static const DWORD rates[] = { 22050, 32000, 44100, 48000, 96000 }, chans[] = { 1, 2, 4, 6, 8 }, mics[] = { 0, 1, 2, 4 };
+    static const DWORD bitsList[] = { 16, 24, 32 };
+    Quality q = s0.q;
+    while (q.rate == s0.q.rate) q.rate = rates[Rand(0, 4)];
+    while (q.channels == s0.q.channels) q.channels = chans[Rand(0, 4)];
+    while (q.micChannels == s0.q.micChannels) q.micChannels = mics[Rand(0, 3)];
+    while (q.bits == s0.q.bits) q.bits = bitsList[Rand(0, 2)];
+    while (q.latency == s0.q.latency) q.latency = (DWORD)Rand(20, 200);
+    _snwprintf(a, MAX_PATH + 160, L"set --rate %lu --channels %lu --mic-channels %lu --bits %lu --latency %lu", q.rate, q.channels,
+               q.micChannels, q.bits, q.latency);
+    Out(L"  info changed: %ls", a);
+    if (!Check(RunCtl(a) == 0, L"set exit code 0")) return;
+    if (!Check(ReadSettings(&s1), L"endpoints back after the change")) return;
+    wchar_t sn[64], mn[64];
+    _snwprintf(sn, 64, L"Settings spk %d", Rand(0, 9999));
+    _snwprintf(mn, 64, L"Settings mic %d", Rand(0, 9999));
+    SetEndpointName(g_spk.id, sn);
+    SetEndpointName(g_mic.id, mn);
+    SetEndpointVolumeDb(g_mic.id, s0.pct > 50.0f ? -20.0f : 3.0f);
+    SetEndpointMute(g_mic.id, !s0.mute);
+    _snwprintf(a, MAX_PATH + 160, L"import \"%ls\"", file);
+    if (!Check(RunCtl(a) == 0, L"import exit code 0")) return;
+    Sleep(400);
+    if (!Check(ReadSettings(&s1), L"endpoints back after the import")) return;
+    SettingsDiff(s0, s1, diff, 600);
+    if (diff[0] && g_outsideChanges != outsideBefore && !wcsstr(diff, L"rate") && !wcsstr(diff, L"channels") &&
+        !wcsstr(diff, L"bits") && !wcsstr(diff, L"latency") && !wcsstr(diff, L"\""))
+        Warn(L"settings back but for%ls: another program changed the microphone volume meanwhile", diff);
+    else Check(!diff[0], L"every exported setting back%ls%ls", diff[0] ? L"; differs (was/now):" : L"", diff);
+
+    // a damaged file (random bytes): refused, nothing changed
+    HANDLE f = CreateFileW(bad, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, 0, nullptr);
+    if (f != INVALID_HANDLE_VALUE)
+    {
+        BYTE junk[700];
+        for (int i = 0; i < 700; i++) junk[i] = (BYTE)Rand(0, 255);
+        DWORD n = 0;
+        WriteFile(f, junk, sizeof(junk), &n, nullptr);
+        CloseHandle(f);
+    }
+    _snwprintf(a, MAX_PATH + 160, L"import \"%ls\"", bad);
+    int rc = RunCtl(a);
+    Check(rc != 0, L"a damaged settings file refused (exit code %d)", rc);
+    if (ReadSettings(&s2))
+    {
+        SettingsDiff(s1, s2, diff, 600);
+        Check(!diff[0], L"nothing changed by it%ls", diff);
+    }
+
+    // invalid values: those settings kept; the valid microphone name taken
+    CopyFileW(file, bad, FALSE);
+    WritePrivateProfileStringW(L"Speak2Mic", L"SampleRate", L"12345", bad);
+    WritePrivateProfileStringW(L"Speak2Mic", L"Channels", L"3", bad);
+    WritePrivateProfileStringW(L"Speak2Mic", L"MicChannels", L"5", bad);
+    WritePrivateProfileStringW(L"Speak2Mic", L"BitsPerSample", L"20", bad);
+    WritePrivateProfileStringW(L"Speak2Mic", L"LatencyMs", L"5000", bad);
+    WritePrivateProfileStringW(L"Speak2Mic", L"MicMute", L"7", bad);
+    _snwprintf(mn, 64, L"Imported mic %d", Rand(0, 9999));
+    WritePrivateProfileStringW(L"Speak2Mic", L"MicName", mn, bad);
+    WritePrivateProfileStringW(nullptr, nullptr, nullptr, bad);
+    rc = RunCtl(a);
+    Check(rc == 0, L"a file with invalid values imported (exit code %d)", rc);
+    Sleep(400);
+    if (ReadSettings(&s3))
+    {
+        Settings want = s1;
+        wcscpy(want.mic, mn);
+        SettingsDiff(want, s3, diff, 600);
+        Check(!diff[0], L"its invalid values ignored, the valid name taken%ls", diff);
+    }
+    // back to how it was
+    _snwprintf(a, MAX_PATH + 160, L"import \"%ls\"", file);
+    RunCtl(a);
+    ReadSettings(&s3);
+    DeleteFileW(file);
+    DeleteFileW(bad);
+}
+
 static void ActionCli()
 {
     int which = Rand(0, 8);
@@ -1348,42 +1486,8 @@ static void ActionCli()
         break;
     }
     case 4:
-    {
-        // export -> change -> import -> the exported state is back
-        wchar_t file[MAX_PATH], a[MAX_PATH + 32];
-        GetTempPathW(MAX_PATH, file);
-        wcsncat(file, L"s2m_autotest.ini", MAX_PATH - wcslen(file) - 1);
-        float db0 = 0, mn = 0, mx = 0;
-        GetEndpointVolumeDb(g_mic.id, &db0, &mn, &mx);
-        LONG outsideBefore = g_outsideChanges;
-        wchar_t name0[256];
-        wcscpy(name0, g_spk.desc);
-        Out(L"[cli] export / change / import (%ls)", file);
-        _snwprintf(a, MAX_PATH + 32, L"export \"%ls\"", file);
-        if (!Check(RunCtl(a) == 0, L"export exit code 0")) break;
-        Check(GetPrivateProfileIntW(L"Speak2Mic", L"SampleRate", 0, file) == (UINT)ReadQuality().rate, L"export has the sample rate");
-        SetEndpointVolumeDb(g_mic.id, db0 > -20.0f ? -20.0f : 0.0f);
-        SetEndpointName(g_spk.id, L"Autotest temporary");
-        _snwprintf(a, MAX_PATH + 32, L"import \"%ls\"", file);
-        if (!Check(RunCtl(a) == 0, L"import exit code 0")) break;
-        Sleep(400);
-        float db = 0;
-        GetEndpointVolumeDb(g_mic.id, &db, &mn, &mx);
-        float was = DbToPercentF(db0) > 300.0f ? 300.0f : DbToPercentF(db0);     // import clamps to the panel's 0..300 %
-        if (fabsf(DbToPercentF(db) - was) > 1.0f && g_outsideChanges != outsideBefore)
-            Warn(L"volume back: %.1f %% (was %.1f %%), but another program changed the microphone volume meanwhile (%ld "
-                 L"time(s), see the audio sessions above)", DbToPercentF(db), DbToPercentF(db0), g_outsideChanges - outsideBefore);
-        else
-            Check(fabsf(DbToPercentF(db) - was) <= 1.0f, L"volume back: %.1f %% (was %.1f %%)", DbToPercentF(db), DbToPercentF(db0));
-        if (FindOurs(&s, &m))
-        {
-            Check(wcscmp(s.desc, name0) == 0, L"speaker name back: \"%ls\"", s.desc);
-            g_spk = s;
-            g_mic = m;
-        }
-        DeleteFileW(file);
+        CliSettings();
         break;
-    }
     case 5:
     {
         static const wchar_t* bad[] = { L"set --rate 12345", L"volume 999", L"mute maybe", L"bogus", L"set --channels 3",
