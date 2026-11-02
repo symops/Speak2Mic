@@ -159,8 +159,143 @@ static bool WriteResource(int id, const wchar_t* path)
     return ok;
 }
 
-// The samples built in as resources (RCDATA 500 = manifest "music|file|-" / "broken-music|file|-", 501.. = the files in
-// its order).
+// Broken samples are not carried in the program (nor so in its installer): made here on every run, a new random choice and
+// new random bytes each time.
+static unsigned BrokenRand(unsigned lo, unsigned hi)
+{
+    static unsigned s;
+    if (!s)
+    {
+        LARGE_INTEGER q;
+        QueryPerformanceCounter(&q);
+        s = (q.LowPart ^ GetCurrentProcessId() * 2654435761u) | 1;
+    }
+    s ^= s << 13;
+    s ^= s >> 17;
+    s ^= s << 5;
+    return lo + s % (hi - lo + 1);
+}
+
+static bool ReadWholeFile(const wchar_t* path, BYTE** data, DWORD* size)
+{
+    *data = nullptr;
+    *size = 0;
+    HANDLE f = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
+    if (f == INVALID_HANDLE_VALUE) return false;
+    DWORD n = GetFileSize(f, nullptr), got = 0;
+    BYTE* p = n != INVALID_FILE_SIZE ? (BYTE*)malloc(n ? n : 1) : nullptr;
+    bool ok = p && ReadFile(f, p, n, &got, nullptr) && got == n;
+    CloseHandle(f);
+    if (!ok) { free(p); return false; }
+    *data = p;
+    *size = n;
+    return true;
+}
+
+// `head` `repeat` times, then `junk` random bytes.
+static bool WriteBroken(const wchar_t* path, const void* head, DWORD headLen, unsigned repeat, DWORD junk)
+{
+    HANDLE f = CreateFileW(path, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, 0, nullptr);
+    if (f == INVALID_HANDLE_VALUE) return false;
+    bool ok = true;
+    DWORD n = 0;
+    for (unsigned i = 0; i < repeat && headLen && ok; i++) ok = WriteFile(f, head, headLen, &n, nullptr) && n == headLen;
+    BYTE* b = junk ? (BYTE*)malloc(junk) : nullptr;
+    if (b)
+    {
+        for (DWORD i = 0; i < junk; i++) b[i] = (BYTE)BrokenRand(0, 255);
+        ok = ok && WriteFile(f, b, junk, &n, nullptr) && n == junk;
+        free(b);
+    }
+    CloseHandle(f);
+    return ok;
+}
+
+// Which of n entries are used: at least `least`, in a random selection.
+static void BrokenPick(bool* use, int n, int least)
+{
+    int want = (int)BrokenRand((unsigned)least, (unsigned)n);
+    for (int i = 0; i < n; i++) use[i] = false;
+    for (int have = 0; have < want;)
+    {
+        int k = (int)BrokenRand(0, (unsigned)n - 1);
+        if (!use[k]) { use[k] = true; have++; }
+    }
+}
+
+// Next to one good file: empty, text named as music, random bytes, a header followed by junk, a WAV whose header claims far
+// more data than there is, files cut short (MP3 / FLAC: the start plays, then the next file). `mp3` / `flac`: good samples.
+static int MakeBrokenSamples(const wchar_t* folder, const wchar_t* mp3Path, const wchar_t* flacPath, MusicLog log)
+{
+    BYTE* mp3 = nullptr;
+    BYTE* flac = nullptr;
+    DWORD mp3Len = 0, flacLen = 0;
+    ReadWholeFile(mp3Path, &mp3, &mp3Len);
+    ReadWholeFile(flacPath, &flac, &flacLen);
+    bool use[9];
+    BrokenPick(use, 9, 5);
+    int made = 0;
+    for (int i = 0; i < 9; i++)
+    {
+        if (!use[i]) continue;
+        wchar_t name[64], path[MAX_PATH];
+        const void* head = nullptr;
+        DWORD len = 0, junk = 0;
+        unsigned repeat = 1;
+        static const char text[] = "not music, just text\r\n";
+        static const BYTE id3[20] = { 'I', 'D', '3', 3, 0, 0, 0, 0, 0, 10 };
+        BYTE* wav = nullptr;
+        switch (i)
+        {
+        case 0: wcscpy(name, L"broken-empty.mp3"); break;
+        case 1: wcscpy(name, L"broken-text.wav"); head = text; len = sizeof(text) - 1; repeat = 40; break;
+        case 2: wcscpy(name, L"broken-random.ogg"); junk = BrokenRand(2000, 20000); break;
+        case 3: wcscpy(name, L"broken-ogg-header-junk.ogg"); head = "OggS"; len = 4; junk = BrokenRand(2000, 20000); break;
+        case 4: wcscpy(name, L"broken-flac-header-junk.flac"); head = "fLaC"; len = 4; junk = BrokenRand(2000, 20000); break;
+        case 5: wcscpy(name, L"broken-id3-only.mp3"); head = id3; len = sizeof(id3); break;
+        case 6:
+        {
+            // 0.5 s of a tone, the header claiming 5-50 times as much
+            const DWORD frames = 22050, bytes = frames * 4, claimed = bytes * BrokenRand(5, 50);
+            wcscpy(name, L"broken-wav-lying-size.wav");
+            wav = (BYTE*)malloc(44 + bytes);
+            if (!wav) continue;
+            struct { char riff[4]; DWORD size; char wave[8]; DWORD fmtLen; WORD tag, ch; DWORD rate, bps; WORD align, bits; char data[4]; DWORD dataLen; } h =
+                { { 'R', 'I', 'F', 'F' }, 36 + claimed, { 'W', 'A', 'V', 'E', 'f', 'm', 't', ' ' }, 16, 1, 2, 44100, 176400, 4, 16, { 'd', 'a', 't', 'a' }, claimed };
+            memcpy(wav, &h, 44);
+            short* s = (short*)(wav + 44);
+            for (DWORD f = 0; f < frames; f++)
+            {
+                s[f * 2] = (short)(8000 * sin(f / 7.0));
+                s[f * 2 + 1] = 0;
+            }
+            head = wav;
+            len = 44 + bytes;
+            break;
+        }
+        case 7:
+        case 8:
+        {
+            int cut = (int)BrokenRand(10, 60);
+            _snwprintf(name, 64, i == 7 ? L"broken-cut-%d.mp3" : L"broken-cut-%d.flac", cut);
+            name[63] = 0;
+            head = i == 7 ? mp3 : flac;
+            len = (DWORD)((ULONGLONG)(i == 7 ? mp3Len : flacLen) * cut / 100);
+            if (!len) continue;                                // its good source is not there
+            break;
+        }
+        }
+        Join(path, folder, name);
+        if (WriteBroken(path, head, len, repeat, junk)) made++;
+        else LogF(log, L"  broken sample %ls not written", name);
+        free(wav);
+    }
+    free(mp3);
+    free(flac);
+    return made;
+}
+
+// The samples built in as resources (RCDATA 500 = manifest "music|file|-", 501.. = the files in its order).
 static int AddSamples(TestMusic* m, MusicLog log)
 {
     wchar_t brokenFolder[MAX_PATH] = L"";
@@ -191,21 +326,8 @@ static int AddSamples(TestMusic* m, MusicLog log)
         }
         *f2 = 0;
         *f1 = 0;
-        bool broken = !strcmp(line, "broken-music");
         wchar_t file[128], sub[160], path[MAX_PATH];
         MultiByteToWideChar(CP_UTF8, 0, f1 + 1, -1, file, 128);
-        if (broken)
-        {
-            // into the folder of broken files (with one good file, see below)
-            if (!brokenCount)
-            {
-                Join(brokenFolder, m->root, L"music-broken");
-                CreateDirectoryW(brokenFolder, nullptr);
-            }
-            Join(path, brokenFolder, file);
-            if (WriteResource(id, path)) brokenCount++;
-            continue;
-        }
         _snwprintf(sub, 160, L"sample-%ls", file);
         for (wchar_t* q = sub; *q; q++)
             if (*q == L'.') *q = L'-';
@@ -225,6 +347,14 @@ static int AddSamples(TestMusic* m, MusicLog log)
         _snwprintf(name, 140, L"s-%ls", file);
         Join(copy, m->all, name);
         CopyFileW(path, copy, FALSE);
+    }
+    {
+        wchar_t sampleMp3[MAX_PATH], sampleFlac[MAX_PATH];
+        Join(sampleMp3, m->root, L"sample-melody-vbr-id3-mp3\\melody-vbr-id3.mp3");
+        Join(sampleFlac, m->root, L"sample-melody-24bit-96k-flac\\melody-24bit-96k.flac");
+        Join(brokenFolder, m->root, L"music-broken");
+        CreateDirectoryW(brokenFolder, nullptr);
+        brokenCount = MakeBrokenSamples(brokenFolder, sampleMp3, sampleFlac, log);
     }
     // the broken files' folder gets one good file (the generated WAV): the player must skip the others and play it
     if (brokenCount && m->formatCount < 24)
