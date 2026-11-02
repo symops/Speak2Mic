@@ -46,7 +46,7 @@ If a call program uses Speak2Mic Microphone, set Control Panel → Sound → Com
 
 "Apply" (with the UAC shield) asks for administrator rights, writes the settings and restarts the device; streams open on the cable are interrupted for 2–3 seconds. Afterwards the panel sets the chosen format as the Windows "Default Format" of both devices (through `IPolicyConfig`, like the Sound control panel; Windows would keep the old one otherwise). The driver always accepts 16, 24 and 32 bit; if Windows refuses a 24/32-bit integer default format, the panel uses 16 bit at the same rate and says so. "Auto" means 24 bit. Updates and reinstallations keep the settings; "Remove" resets them to "Standard".
 
-Without the interface: `s2mctl.exe` (administrator command prompt):
+Without the interface: `s2mctl.exe` (administrator command prompt; in the debug package only, see below):
 ```
 s2mctl status
 s2mctl set --rate 48000 --bits 24 --latency 40
@@ -82,7 +82,10 @@ The panel, `s2mctl` and the autotest check at start that Secure Boot is off, tes
 needs clang, MinGW-w64 for x86_64 and i686 (gcc, windres, dlltool), a host C compiler and make (for `tools/generate-cat-file`), osslsigncode, openssl, gcab and Python 3 (on Debian/Ubuntu: `clang mingw-w64 gcc make osslsigncode openssl gcab python3`). It builds the driver and the programs for x64 and x86 and assembles:
 
 - **`dist/Speak2Mic-Setup.exe`** — the whole package in one file (~29 MB with music): it unpacks itself to a temporary folder, starts the installer for the right bitness and cleans up afterwards;
-- **`dist/Speak2Mic/`** — the same unpacked: a launcher `Speak2Mic-Setup.exe`, full `x64\` and `x86\` sets (installer, panel, `s2minstall.exe`, `s2mctl.exe`, `s2mautotest.exe`, test-signed `Speak2Mic.sys`, `Speak2Mic.inf`, `Speak2Mic.cat`, certificates), `mp3\` and `uninstall.cmd`. Windows on ARM is not supported.
+- **`dist/Speak2Mic/`** — the same unpacked: a launcher `Speak2Mic-Setup.exe`, full `x64\` and `x86\` sets (installer, panel, test-signed `Speak2Mic.sys`, `Speak2Mic.inf`, `Speak2Mic.cat`, certificates), `mp3\` and `uninstall.cmd`. Windows on ARM is not supported;
+- **`dist/Speak2Mic-Debug-Setup.exe`, `dist/Speak2Mic-Debug/`** — the same plus the test and administration tools `s2minstall.exe`, `s2mctl.exe` and `s2mautotest.exe`, for testing and support only (the release has none of them; installed over the debug package it removes them).
+
+`Speak2Mic-Setup.exe /install` installs and `/remove` removes without a window (`uninstall.cmd` does the latter); the exit code tells the result.
 
 Not in this repository (see `.gitignore`):
 
@@ -124,7 +127,7 @@ Device names are generated: edit `gen.py` and run `python gen.py` (writes `drive
 
 - **Programs** write UTF-8 logs with timestamps to `C:\ProgramData\Speak2Mic\logs\` (`setup.log`, `panel.log`, `install.log`, `ctl.log`, `autotest.log`; over 1 MB → `*.old.log`); the panel's event list is kept in `events.log` (last 500 events). Each starts with the program, its build and the Windows version.
 - **The driver** logs every step of its start and of its streams with NTSTATUS codes: in memory, to the kernel debugger (DebugView → Capture Kernel) and to `HKLM\SYSTEM\CurrentControlSet\Services\Speak2Mic\Parameters\DriverLog`.
-- **Diagnostics:** `Speak2Mic-Setup.exe` → "Diagnostics" or `s2minstall.exe diag` check the device (Device Manager problem code), the driver service and the Speak2Mic sound devices, and add the driver log and the Speak2Mic part of `setupapi.dev.log`.
+- **Diagnostics:** `Speak2Mic-Setup.exe` → "Diagnostics" or (debug package) `s2minstall.exe diag` check the device (Device Manager problem code), the driver service and the Speak2Mic sound devices, and add the driver log and the Speak2Mic part of `setupapi.dev.log`.
 - **`s2mctl.exe`** — everything the panel does: `status`; `set [--preset voice|standard|high|studio|max] [--rate HZ] [--bits 0|16|24|32] [--channels N] [--mic-channels N] [--latency MS]` (administrator); `name [--speaker "NAME"] [--mic "NAME"]` (`default` = default name); `volume 0..300`; `mute on|off`; `reset` (administrator); `export FILE.ini` / `import FILE.ini` (import: administrator); `test [SECONDS]`. Exit codes: 0 ok, 1 failed, 2 bad arguments, 3 administrator rights needed, 4 cannot work (Secure Boot on, test mode off or driver missing).
 - **`s2mautotest.exe [minutes] [--seed N]`** (administrator, 10 minutes by default) closes the panel, saves the current state and exercises everything at random: random settings with device restarts, a tone through the cable on every speaker channel (arrival, clipping, dropouts, silence, latency), renaming, microphone volume and mute, default formats, stream open/close stress, the Test sound and the music player (on music it generates at the start — the same melody as MP3, FLAC and WAV, one folder per format and one with all of them plus a broken file and a text file — and on the Generator; plus samples of what Windows does not write — OGG Vorbis, mono / VBR / ID3 / cover-art MP3, 8 / 24 / 32-bit float WAV, 24-bit 96 kHz FLAC — made anew on every build by `tools/make_autotest_media.py` and built into the autotest; removed at the end), leftover endpoint records and random `s2mctl` commands (including invalid ones and an export/import round trip). It restores everything at the end (also after Ctrl+C) and logs every check as PASS/FAIL/WARN; `--seed` repeats a run. It also logs outside volume changes, the audio sessions open on the microphone and the audio effects (APOs) on the devices.
 

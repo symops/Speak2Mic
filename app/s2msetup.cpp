@@ -43,7 +43,8 @@ static HBRUSH    g_whiteBrush;
 static HANDLE    g_worker;
 static int       g_action;
 static bool      g_ok, g_reboot;
-static bool      g_quiet;           // "/install": no window, the installation at once, the result in the exit code
+static bool      g_quiet;           // "/install" or "/remove": no window, at once, the result in the exit code
+static int       g_quietAction = ACT_INSTALL;
 static int       g_quietExit = 1;   // 0 works, 1 failed, 2 restart needed, 3 cannot install here, 4 installed but not working
 static DiagResult g_diag;
 static bool      g_wantDesktop, g_wantStartMenu, g_selfDelete;
@@ -549,7 +550,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         else
             AppendLog(g_driverOk ? TR(L"Speak2Mic уже установлен. Можно переустановить или удалить.")
                                  : TR(L"Всё готово к установке. Нажмите «Установить»."));
-        if (g_quiet)
+        if (g_quiet && g_quietAction == ACT_REMOVE) Start(ACT_REMOVE);
+        else if (g_quiet)
         {
             if (!g_filesOk || !g_testOk || !g_secureOk)
             {
@@ -703,6 +705,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             AppLog(L"quiet install finished: exit code %d", g_quietExit);
             PostMessageW(hwnd, WM_CLOSE, 0, 0);
         }
+        if (g_quiet && action == ACT_REMOVE)
+        {
+            g_quietExit = !g_ok ? 1 : g_reboot ? 2 : 0;
+            AppLog(L"quiet removal finished: exit code %d", g_quietExit);
+            PostMessageW(hwnd, WM_CLOSE, 0, 0);
+        }
         return 0;
     }
 
@@ -786,8 +794,15 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
         wchar_t** argv = CommandLineToArgvW(GetCommandLineW(), &argc);
         for (int i = 1; argv && i < argc; i++)
             if (!_wcsicmp(argv[i], L"/install") || !_wcsicmp(argv[i], L"--install")) g_quiet = true;
+            else if (!_wcsicmp(argv[i], L"/remove") || !_wcsicmp(argv[i], L"--remove"))
+            {
+                // removal without a window and without asking (uninstall.cmd, administrators): 0 removed, 1 failed,
+                // 2 a restart is needed
+                g_quiet = true;
+                g_quietAction = ACT_REMOVE;
+            }
         if (argv) LocalFree(argv);
-        if (g_quiet) AppLog(L"quiet install requested");
+        if (g_quiet) AppLog(g_quietAction == ACT_REMOVE ? L"quiet removal requested" : L"quiet install requested");
     }
     AppLog(L"Speak2Mic-Setup " S2M_VER_STR);
     INITCOMMONCONTROLSEX icc = { sizeof(icc), ICC_STANDARD_CLASSES };

@@ -3,7 +3,7 @@
 #   dist/Speak2Mic-Setup.exe        the release: ONE file - the launcher with the whole package below appended
 #                                   (a cabinet, MSZIP; extracted to a temporary folder when it runs)
 #   dist/Speak2Mic/                 the same package unpacked (for development / testing)
-#   dist/Speak2Mic-Debug-Setup.exe, dist/Speak2Mic-Debug/   the same plus the autotest (s2mautotest.exe), for testing only
+#   dist/Speak2Mic-Debug-Setup.exe, dist/Speak2Mic-Debug/   the same plus the test tools (s2mautotest.exe, s2minstall.exe, s2mctl.exe), for testing only
 #     Speak2Mic-Setup.exe           x86 launcher: starts x64\ or x86\Speak2Mic-Setup.exe (whichever Windows this is)
 #     uninstall.cmd                 the same for removal
 #     mp3\                          music for the panel's "Play" button (installed to Program Files\Speak2Mic\mp3)
@@ -73,12 +73,12 @@ for f in $D/uninstall.cmd $D/x64/uninstall.cmd $D/x86/uninstall.cmd; do
     iconv -f UTF-8 -t CP866 "$f" | sed 's/$/\r/' > "$f.tmp" && mv "$f.tmp" "$f"
 done
 
-# Two packages from this one build: the release, without the autotest, and a debug package - the release plus the
-# autotest (s2mautotest.exe) for the test PCs and VMs. The installer removes a file its package does not have, so the release
+# Two packages from this one build: the release, without the test and administration tools, and a debug package - the
+# release plus them (s2mautotest.exe s2minstall.exe s2mctl.exe) for the test PCs and VMs. The installer removes a file its package does not have, so the release
 # installed over the debug one takes the autotest away again.
 DD=dist/Speak2Mic-Debug
 cp -a $D $DD
-rm -f $D/x64/s2mautotest.exe $D/x86/s2mautotest.exe
+for f in s2mautotest.exe s2minstall.exe s2mctl.exe; do rm -f $D/x64/$f $D/x86/$f; done
 
 # One file each: the launcher + the package as a cabinet (MSZIP; Windows extracts it with SetupIterateCabinet) + a
 # trailer "S2MPAYLD" + the cabinet's size (little endian, 8 bytes). See app/s2mlauncher.cpp.
