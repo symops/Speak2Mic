@@ -336,8 +336,9 @@ static void SynthFrame(Synth* s, float* lr)
     if (++s->delayPos >= s->delayLen) s->delayPos = 0;
     l = (l + dl * 0.45) * fade;
     r = (r + dr * 0.45) * fade;
-    lr[0] = (float)tanh(l * 1.4) * 0.8f;
-    lr[1] = (float)tanh(r * 1.4) * 0.8f;
+    // the output level: half of the 0.8 it was (the user found the generator too loud), the soft limit unchanged
+    lr[0] = (float)tanh(l * 1.4) * 0.4f;
+    lr[1] = (float)tanh(r * 1.4) * 0.4f;
     s->n++;
 }
 
