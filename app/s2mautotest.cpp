@@ -40,8 +40,15 @@
 #include <fcntl.h>
 #include <wtsapi32.h>
 #include <mmdeviceapi.h>
-#include <functiondiscoverykeys_devpkey.h>
+#include <propsys.h>
 #include "setupcore.h"
+
+// PKEY_Device_FriendlyName / PKEY_DeviceInterface_FriendlyName, declared here: MinGW-w64 12's libuuid (Debian 13) does
+// not define them.
+static const PROPERTYKEY kDeviceFriendlyName = {
+    { 0xa45c254e, 0xdf1c, 0x4efd, { 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0 } }, 14 };
+static const PROPERTYKEY kInterfaceFriendlyName = {
+    { 0x026e516e, 0xb814, 0x414b, { 0x83, 0xcd, 0x85, 0x6d, 0x6f, 0xef, 0x48, 0x22 } }, 2 };
 
 // ---------------------------------------------------------------------------
 // Output and checks
@@ -235,8 +242,8 @@ static void LogEndpointStates()
             PROPVARIANT name, adapter;
             PropVariantInit(&name);
             PropVariantInit(&adapter);
-            ps->GetValue(PKEY_Device_FriendlyName, &name);
-            ps->GetValue(PKEY_DeviceInterface_FriendlyName, &adapter);
+            ps->GetValue(kDeviceFriendlyName, &name);
+            ps->GetValue(kInterfaceFriendlyName, &adapter);
             bool ours = (adapter.vt == VT_LPWSTR && wcsstr(adapter.pwszVal, L"Speak2Mic")) ||
                         (name.vt == VT_LPWSTR && wcsstr(name.pwszVal, L"Speak2Mic"));
             DWORD state = 0;

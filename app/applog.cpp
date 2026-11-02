@@ -124,7 +124,7 @@ void AppLogOpen(const wchar_t* name)
     GetModuleFileNameW(nullptr, exe, MAX_PATH);
     OSVERSIONINFOEXW os = { sizeof(os) };
     typedef LONG(WINAPI * RtlGetVersionFn)(OSVERSIONINFOEXW*);
-    RtlGetVersionFn getVersion = (RtlGetVersionFn)GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "RtlGetVersion");
+    RtlGetVersionFn getVersion = (RtlGetVersionFn)(void*)GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "RtlGetVersion");
     if (getVersion) getVersion(&os);
     AppLog(L"==== %ls started (pid %lu), Speak2Mic build %ls, Windows %lu.%lu.%lu ====", exe, GetCurrentProcessId(),
            L"" S2M_VER_STR, os.dwMajorVersion, os.dwMinorVersion, os.dwBuildNumber);

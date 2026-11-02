@@ -20,9 +20,12 @@ fi
 MINGW=/usr/$TRIPLE/include
 mkdir -p "$OBJ" "$OUT"
 
+# _MM3DNOW_H_INCLUDED: MinGW-w64 12 (Debian 13) has ntddk.h -> wdm.h -> intrin.h include <mm3dnow.h>, which clang 19
+# warns about as deprecated (3DNow!, empty, nothing here uses it); newer MinGW no longer includes it. Its guard
+# defined keeps it out on both.
 CXXFLAGS="$ARCHFLAGS -std=c++17 -O2 -fms-extensions -fno-exceptions -fno-rtti
   -fno-stack-protector -fno-threadsafe-statics -fno-use-cxa-atexit
-  -DNTDDI_VERSION=0x0A00000C -D_WIN32_WINNT=0x0A00
+  -DNTDDI_VERSION=0x0A00000C -D_WIN32_WINNT=0x0A00 -D_MM3DNOW_H_INCLUDED
   -include $DRV/check_prelude.h -isystem $MINGW/ddk -isystem $MINGW -I$DRV
   -Wall -Wno-unknown-pragmas -Wno-ignored-attributes -Wno-microsoft-anon-tag -Wno-nonportable-include-path"
 
@@ -40,7 +43,7 @@ if [ "$ARCH" = x86 ]; then
     $TRIPLE-nm -u "$OBJ"/*.o | sed -n 's/^ *U //p' | sort -u | python3 -c "
 import sys
 # the C runtime functions the compiler calls directly (no __imp_ prefix) also come from ntoskrnl.exe
-crt = {'_memset', '_memcpy', '_memmove', '__snprintf', '__vsnprintf', '_strlen', '_wcslen'}
+crt = {'_memset', '_memcpy', '_memmove', '_memcmp', '__snprintf', '__vsnprintf', '_strlen', '_wcslen'}
 syms = set()
 for s in sys.stdin.read().split():
     if s.startswith('__imp_'): syms.add(s[6:])

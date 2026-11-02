@@ -13,6 +13,7 @@ KeBugCheckEx
 KeQueryPerformanceCounter
 KeReleaseSpinLock
 RtlQueryRegistryValues
+memcmp
 memcpy
 memmove
 memset

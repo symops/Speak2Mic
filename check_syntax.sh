@@ -6,7 +6,7 @@ MINGW=/usr/x86_64-w64-mingw32/include
 rc=0
 for f in *.cpp; do
   clang++ --target=x86_64-w64-windows-gnu -std=c++17 -fsyntax-only -fms-extensions -fno-exceptions -fno-rtti \
-    -D_AMD64_ -D_WIN64 -DNTDDI_VERSION=0x0A00000C -D_WIN32_WINNT=0x0A00 \
+    -D_AMD64_ -D_WIN64 -DNTDDI_VERSION=0x0A00000C -D_WIN32_WINNT=0x0A00 -D_MM3DNOW_H_INCLUDED \
     -include check_prelude.h -isystem $MINGW/ddk -isystem $MINGW -Wall -Wno-unknown-pragmas -Wno-ignored-attributes \
     -Wno-microsoft-anon-tag -Wno-nonportable-include-path "$f" || rc=1
 done
