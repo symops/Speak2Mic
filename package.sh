@@ -3,6 +3,7 @@
 #   dist/Speak2Mic-Setup.exe        the release: ONE file - the launcher with the whole package below appended
 #                                   (a cabinet, MSZIP; extracted to a temporary folder when it runs)
 #   dist/Speak2Mic/                 the same package unpacked (for development / testing)
+#   dist/Speak2Mic-Debug-Setup.exe, dist/Speak2Mic-Debug/   the same plus the autotest (s2mautotest.exe), for testing only
 #     Speak2Mic-Setup.exe           x86 launcher: starts x64\ or x86\Speak2Mic-Setup.exe (whichever Windows this is)
 #     uninstall.cmd                 the same for removal
 #     mp3\                          music for the panel's "Play" button (installed to Program Files\Speak2Mic\mp3)
@@ -72,14 +73,25 @@ for f in $D/uninstall.cmd $D/x64/uninstall.cmd $D/x86/uninstall.cmd; do
     iconv -f UTF-8 -t CP866 "$f" | sed 's/$/\r/' > "$f.tmp" && mv "$f.tmp" "$f"
 done
 
-# One file: the launcher + the package as a cabinet (MSZIP; Windows extracts it with SetupIterateCabinet) + a trailer
-# "S2MPAYLD" + the cabinet's size (little endian, 8 bytes). See app/s2mlauncher.cpp.
-(cd $D && find uninstall.cmd mp3 x64 x86 -type f | sort | xargs gcab -c -z ../payload.cab)
-python3 - <<'PY'
-import struct
+# Two packages from this one build: the release, without the autotest, and a debug package - the release plus the
+# autotest (s2mautotest.exe) for the test PCs and VMs. The installer removes a file its package does not have, so the release
+# installed over the debug one takes the autotest away again.
+DD=dist/Speak2Mic-Debug
+cp -a $D $DD
+rm -f $D/x64/s2mautotest.exe $D/x86/s2mautotest.exe
+
+# One file each: the launcher + the package as a cabinet (MSZIP; Windows extracts it with SetupIterateCabinet) + a
+# trailer "S2MPAYLD" + the cabinet's size (little endian, 8 bytes). See app/s2mlauncher.cpp.
+one_file() {        # package folder, setup file
+    (cd $1 && find uninstall.cmd mp3 x64 x86 -type f | sort | xargs gcab -c -z ../payload.cab)
+    python3 - "$2" <<'PY'
+import struct, sys
 launcher = open('app/x86/s2mlauncher.exe', 'rb').read()
 cab = open('dist/payload.cab', 'rb').read()
-open('dist/Speak2Mic-Setup.exe', 'wb').write(launcher + cab + b'S2MPAYLD' + struct.pack('<Q', len(cab)))
+open(sys.argv[1], 'wb').write(launcher + cab + b'S2MPAYLD' + struct.pack('<Q', len(cab)))
 PY
-rm -f dist/payload.cab
-ls -la dist/Speak2Mic-Setup.exe
+    rm -f dist/payload.cab
+}
+one_file $D dist/Speak2Mic-Setup.exe
+one_file $DD dist/Speak2Mic-Debug-Setup.exe
+ls -la dist/Speak2Mic-Setup.exe dist/Speak2Mic-Debug-Setup.exe

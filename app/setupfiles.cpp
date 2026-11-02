@@ -22,7 +22,8 @@ static const IID kIidPersistFile        = { 0x0000010b, 0x0000, 0x0000, { 0xc0, 
 
 // Files of the package that are installed to Program Files.
 static const wchar_t* kFiles[] = {
-    L"Speak2Mic.exe", L"Speak2Mic-Setup.exe", L"s2minstall.exe", L"s2mautotest.exe", L"s2mctl.exe",
+    L"Speak2Mic.exe", L"Speak2Mic-Setup.exe", L"s2minstall.exe", L"s2mctl.exe",
+    L"s2mautotest.exe",    // the debug package only (package.sh); removed when the release is installed over it
     // no longer shipped (removed from the package); listed so that an older installation is cleaned up:
     L"s2mdebug.exe", L"install.cmd", L"УСТАНОВКА.txt", L"INSTALL.txt",
     L"s2mrepeater.exe",     // no longer shipped; listed so that an older installation is cleaned up
