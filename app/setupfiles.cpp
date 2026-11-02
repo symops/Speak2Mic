@@ -4,6 +4,7 @@
 #include "lang.h"
 #include "applog.h"
 #include "autostart.h"
+#include "../driver/version.h"
 #include <shlobj.h>
 #include <shobjidl.h>
 #include <objbase.h>
@@ -23,7 +24,8 @@ static const IID kIidPersistFile        = { 0x0000010b, 0x0000, 0x0000, { 0xc0, 
 // Files of the package that are installed to Program Files.
 static const wchar_t* kFiles[] = {
     L"Speak2Mic.exe", L"Speak2Mic-Setup.exe", L"s2minstall.exe", L"s2mctl.exe",
-    L"s2mautotest.exe",    // the debug package only (package.sh); removed when the release is installed over it
+    L"s2mautotest.exe",    // the debug package only (package.sh), like *install / *ctl;
+                           // a release installed over it removes them
     // no longer shipped (removed from the package); listed so that an older installation is cleaned up:
     L"s2mdebug.exe", L"install.cmd", L"УСТАНОВКА.txt", L"INSTALL.txt",
     L"s2mrepeater.exe",     // no longer shipped; listed so that an older installation is cleaned up
@@ -108,6 +110,68 @@ bool SetupProgramsInstalled()
     _snwprintf(exe, MAX_PATH, L"%ls\\Speak2Mic.exe", dir);
     exe[MAX_PATH - 1] = 0;
     return GetFileAttributesW(exe) != INVALID_FILE_ATTRIBUTES;
+}
+
+// The entry in Windows' "Apps" / "Programs and Features": its Uninstall button opens this installer (with its Remove
+// button; Programs and Features does not ask first), QuietUninstallString removes without a window.
+static const wchar_t kUninstallKey[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Speak2Mic";
+
+// The files' size in `dir`, and in its folders `depth` levels down.
+static ULONGLONG FolderBytes(const wchar_t* dir, int depth)
+{
+    ULONGLONG bytes = 0;
+    wchar_t pattern[MAX_PATH];
+    _snwprintf(pattern, MAX_PATH, L"%ls\\*", dir);
+    pattern[MAX_PATH - 1] = 0;
+    WIN32_FIND_DATAW fd;
+    HANDLE h = FindFirstFileW(pattern, &fd);
+    if (h == INVALID_HANDLE_VALUE) return 0;
+    do
+    {
+        if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) bytes += ((ULONGLONG)fd.nFileSizeHigh << 32) | fd.nFileSizeLow;
+        else if (depth > 0 && wcscmp(fd.cFileName, L".") && wcscmp(fd.cFileName, L".."))
+        {
+            wchar_t sub[MAX_PATH];
+            _snwprintf(sub, MAX_PATH, L"%ls\\%ls", dir, fd.cFileName);
+            sub[MAX_PATH - 1] = 0;
+            bytes += FolderBytes(sub, depth - 1);
+        }
+    } while (FindNextFileW(h, &fd));
+    FindClose(h);
+    return bytes;
+}
+
+static void RegisterUninstall(const wchar_t* dir)
+{
+    HKEY key;
+    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, kUninstallKey, 0, nullptr, 0, KEY_SET_VALUE | KEY_WOW64_64KEY, nullptr, &key, nullptr) !=
+        ERROR_SUCCESS)
+        return;
+    auto str = [&](const wchar_t* name, const wchar_t* fmt, const wchar_t* arg) {
+        wchar_t v[MAX_PATH + 64];
+        _snwprintf(v, MAX_PATH + 64, fmt, arg);
+        v[MAX_PATH + 63] = 0;
+        RegSetValueExW(key, name, 0, REG_SZ, (const BYTE*)v, (DWORD)((wcslen(v) + 1) * sizeof(wchar_t)));
+    };
+    auto num = [&](const wchar_t* name, DWORD v) { RegSetValueExW(key, name, 0, REG_DWORD, (const BYTE*)&v, sizeof(v)); };
+    str(L"DisplayName", L"%ls", L"Speak2Mic");
+    str(L"DisplayVersion", L"%ls", L"" S2M_VER_STR);
+    str(L"Publisher", L"%ls", L"" S2M_AUTHOR);
+    str(L"URLInfoAbout", L"%ls", L"https://github.com/symops/Speak2Mic");
+    str(L"InstallLocation", L"%ls", dir);
+    str(L"DisplayIcon", L"%ls\\Speak2Mic.exe,0", dir);
+    str(L"UninstallString", L"\"%ls\\Speak2Mic-Setup.exe\"", dir);
+    str(L"QuietUninstallString", L"\"%ls\\Speak2Mic-Setup.exe\" /remove", dir);
+    num(L"NoModify", 1);
+    num(L"NoRepair", 1);
+    // size in KB: the files of the program folder and of its media folders
+    num(L"EstimatedSize", (DWORD)(FolderBytes(dir, 1) / 1024));
+    RegCloseKey(key);
+}
+
+static void UnregisterUninstall()
+{
+    RegDeleteKeyExW(HKEY_LOCAL_MACHINE, kUninstallKey, KEY_WOW64_64KEY, 0);
 }
 
 static void RememberProgramDir(const wchar_t* dir)
@@ -219,6 +283,7 @@ bool SetupInstallFiles(const wchar_t* sourceDir, SetupLog log, void* ctx)
     if (ok)
     {
         RememberProgramDir(dest);
+        RegisterUninstall(dest);
         Log(log, ctx, TR(L"Программы установлены в %ls."), dest);
     }
     return ok;
@@ -361,6 +426,7 @@ bool SetupRemoveFiles(bool* deleteLater, SetupLog log, void* ctx)
     if (!*deleteLater) RemoveDirectoryW(dir);
     SetupSetProgramDir(dir);        // SetupScheduleSelfDelete still needs it after the registry value is gone
     ForgetProgramDir();
+    UnregisterUninstall();
     Log(log, ctx, *deleteLater ? TR(L"Ярлыки и программы удалены; папка %ls удалится после закрытия установщика.")
                                : TR(L"Ярлыки и программы удалены из %ls."), dir);
     return ok;
