@@ -157,7 +157,7 @@ It closes the control panel, saves the current settings, runs random actions for
 device restarts, a tone through the cable on every speaker channel, the music player, volume, names, the command
 line, settings export / import) and restores everything at the end (also after Ctrl+C). Every check is logged as
 PASS / FAIL / WARN to `autotest.log`; the exit code is 1 if anything failed. Dropouts during a stall of the PC (a VM
-whose host takes its CPUs away) or with the CPUs 85 % busy or more are warnings, not failures; the summary at the
+whose host takes its CPUs away) or with the CPUs 80 % busy or more are warnings, not failures; the summary at the
 end gives the totals.
 
 ## Author

@@ -870,10 +870,12 @@ static int EvaluateChannel(const SignalResult& r, int ch, int spkChannels, const
     bool reach = Db(r.peakAll) > -40.0f, clip = Db(r.peakAll) < -1.0f;
     bool level = !(r.micChannels >= spkChannels && ch < r.micChannels && fabsf(Db(r.peak[ch]) + 20.0f) > 3.0f);
     // more than 1 in 20 windows dropped out, not counting those that lie on a stall of the PC (StallProbe), nor any when
-    // the CPUs were 85 % busy or more meanwhile: in a Windows 11 VM run the CPUs were 36 % busy on average over 1575
+    // the CPUs were 80 % busy or more meanwhile: in a Windows 11 VM run the CPUs were 36 % busy on average over 1575
     // measurements, 75 % in the 14 with dropouts off a stall and 100 % in the one that failed, 7 minutes after Windows
     // started - its startup work keeping the audio engine from running in time, not the cable
-    bool busyPc = r.cpuBusy >= 85;
+    // 80 rather than the first 85: a later run's 23 such measurements were 84-100 % busy (16) or spread over 22-77 % (7),
+    // none at 78-83 - the bound sits in that gap, not on one case
+    bool busyPc = r.cpuBusy >= 80;
     bool drop = busyPc || !(r.windows > 0 && r.unexplained * 20 > r.windows);
     bad += !reach + !clip + !level + !drop;
     if (!report) return bad;
