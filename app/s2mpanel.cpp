@@ -1266,7 +1266,14 @@ static void OnMicVolumeSlider(int code)
 static void*   g_micWatch;
 static wchar_t g_micWatchId[256];
 static DWORD   g_protectLogged;         // GetTickCount of the last event log line about it
-static int     g_protectCount;          // set back since that line
+// Set back per program (the programs with an active session on the microphone; "" = not known), since the panel started:
+// the event line gives that program's total. A line is due for the program set back last (pending) - at most one line
+// per 5 s; one held back comes with the next 2-s check.
+struct ProtectWho { wchar_t who[300]; int count; };
+static ProtectWho g_protectWho[8];
+static int     g_protectWhoCount;
+static int     g_protectPending = -1;   // the entry whose last set-back is not in the event list yet
+static int     g_protectDb, g_protectWant;  // its values (percent)
 static bool    g_protectRetry;          // a change could not be set back yet
 
 static void OnForeignMicVolumeThread(float db, float, bool, const GUID&, void*)
@@ -1285,6 +1292,27 @@ static void EnsureMicWatch()
     g_micWatch = *id ? WatchEndpointVolume(id, OnForeignMicVolumeThread, nullptr) : nullptr;
     wcsncpy(g_micWatchId, id, 255);
     g_micWatchId[255] = 0;
+}
+
+// The event line of the last set-back (the program's total), unless one was written less than 5 s ago (some programs
+// change the volume all the time): then the 2-s check writes it later.
+static void LogProtect()
+{
+    if (g_protectPending < 0) return;
+    DWORD t = GetTickCount();
+    if (g_protectLogged && t - g_protectLogged < 5000) return;
+    const ProtectWho& p = g_protectWho[g_protectPending];
+    wchar_t line[480];
+    if (p.who[0])
+        _snwprintf(line, 480, TR(L"Громкость микрофона изменила программа %ls (%d %%) — возвращено %d %% (раз: %d)."), p.who,
+                   g_protectDb, g_protectWant, p.count);
+    else
+        _snwprintf(line, 480, TR(L"Громкость микрофона изменила другая программа (%d %%) — возвращено %d %% (раз: %d)."),
+                   g_protectDb, g_protectWant, p.count);
+    line[479] = 0;
+    AddEvent(line);
+    g_protectLogged = t ? t : 1;
+    g_protectPending = -1;
 }
 
 static void OnForeignMicVolume(float db)
@@ -1307,26 +1335,32 @@ static void OnForeignMicVolume(float db)
         AppLog(L"microphone volume changed by another program to %.2f dB: set back to %.2f dB (active sessions: %ls)", db, want,
                who[0] ? who : L"none");
     }
-    g_protectCount++;
-    DWORD t = GetTickCount();
-    if (t - g_protectLogged >= 5000 || !g_protectLogged)
     {
-        // the event list gets at most one line per 5 s (some programs change it all the time)
         // Who: the programs holding an active session on the microphone (a volume change itself carries no
         // program; call / monitoring programs that adjust the level keep the microphone open).
-        wchar_t who[300], line[480];
+        wchar_t who[300];
         ActiveSessionPrograms(g_devs[i].id, who, 300);
-        if (who[0])
-            _snwprintf(line, 480, TR(L"Громкость микрофона изменила программа %ls (%d %%) — возвращено %d %% (раз: %d)."), who,
-                       DbToPercent(db), DbToPercent(want), g_protectCount);
-        else
-            _snwprintf(line, 480, TR(L"Громкость микрофона изменила другая программа (%d %%) — возвращено %d %% (раз: %d)."),
-                       DbToPercent(db), DbToPercent(want), g_protectCount);
-        line[479] = 0;
-        AddEvent(line);
-        g_protectLogged = t ? t : 1;
-        g_protectCount = 0;
+        int k = 0;
+        while (k < g_protectWhoCount && wcscmp(g_protectWho[k].who, who) != 0) k++;
+        if (k == g_protectWhoCount)
+        {
+            if (k == 8) k = 7;                  // a table of the last ones: the eighth slot is reused
+            else g_protectWhoCount++;
+            wcscpy(g_protectWho[k].who, who);
+            g_protectWho[k].count = 0;
+        }
+        g_protectWho[k].count++;
+        // another program's line held back meanwhile comes first
+        if (g_protectPending >= 0 && g_protectPending != k)
+        {
+            g_protectLogged = 0;
+            LogProtect();
+        }
+        g_protectPending = k;
+        g_protectDb = DbToPercent(db);
+        g_protectWant = DbToPercent(want);
     }
+    LogProtect();
     g_micVolShown = -1;
     SyncMicVolume();
 }
@@ -1342,6 +1376,7 @@ static void CheckMicWatch()
     float seen = 0, now = 0, mn = 0, mx = 0;
     if (g_protectRetry && i >= 0 && GetEndpointVolumeDb(g_devs[i].id, &now, &mn, &mx))
         OnForeignMicVolume(now);
+    LogProtect();                           // a line held back by the 5-s limit
     if (i < 0 || !g_micWatch || !WatchedVolumeDb(g_micWatch, &seen) || !GetEndpointVolumeDb(g_devs[i].id, &now, &mn, &mx) ||
         fabsf(now - seen) < 0.05f || GetCapture() == Ctl(IDC_MICVOL))
     {

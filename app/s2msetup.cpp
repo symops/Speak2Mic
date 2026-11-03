@@ -54,6 +54,7 @@ static bool      g_testTarget;      // what the "test mode" button is switching 
 static bool      g_updateAvail;     // the installed driver is another version than this installer's ("Update")
 static bool      g_rebootPending;   // a driver was installed on the device but the old one runs until a restart
 
+static wchar_t   g_cmdDir[MAX_PATH]; // "/dir <folder>": the program folder for a new installation
 static wchar_t   g_dir[MAX_PATH];   // the program folder: chosen (before the installation) or the installed one
 
 static HWND Ctl(int id) { return GetDlgItem(g_wnd, id); }
@@ -515,6 +516,14 @@ static void CreateControls()
     Create(L"EDIT", L"", ES_READONLY | ES_AUTOHSCROLL | WS_TABSTOP, IDC_DIR, WS_EX_CLIENTEDGE);
     Create(L"BUTTON", TR(L"Обзор…"), BS_PUSHBUTTON | WS_TABSTOP, IDC_DIR_BROWSE);
     SetupProgramDir(g_dir);
+    if (g_cmdDir[0] && !SetupProgramsInstalled())
+    {
+        // as a folder picked with "Browse...": <folder>\Speak2Mic unless it already ends so (an installation stays where it is)
+        wchar_t full[MAX_PATH];
+        if (!GetFullPathNameW(g_cmdDir, MAX_PATH, full, nullptr)) wcscpy(full, g_cmdDir);
+        SetupProgramDirFromPick(full, g_dir);
+        AppLog(L"program folder from the command line: %ls", g_dir);
+    }
     SetWindowTextW(Ctl(IDC_DIR), g_dir);
     Create(L"BUTTON", TR(L"Ярлык на рабочем столе"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_LINK_DESKTOP);
     Create(L"BUTTON", TR(L"Ярлыки в меню «Пуск»"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_LINK_START);
@@ -794,6 +803,10 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
         wchar_t** argv = CommandLineToArgvW(GetCommandLineW(), &argc);
         for (int i = 1; argv && i < argc; i++)
             if (!_wcsicmp(argv[i], L"/install") || !_wcsicmp(argv[i], L"--install")) g_quiet = true;
+            else if ((!_wcsicmp(argv[i], L"/dir") || !_wcsicmp(argv[i], L"--dir")) && i + 1 < argc)
+                wcsncpy(g_cmdDir, argv[++i], MAX_PATH - 1);       // "/dir <folder>": where a new installation goes
+            else if (!_wcsnicmp(argv[i], L"/dir=", 5) || !_wcsnicmp(argv[i], L"--dir=", 6))
+                wcsncpy(g_cmdDir, wcschr(argv[i], L'=') + 1, MAX_PATH - 1);
             else if (!_wcsicmp(argv[i], L"/remove") || !_wcsicmp(argv[i], L"--remove"))
             {
                 // removal without a window and without asking (uninstall.cmd, administrators): 0 removed, 1 failed,
