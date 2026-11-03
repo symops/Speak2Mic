@@ -268,3 +268,11 @@ Kies de installatielocatie (daarin wordt de map %ls gemaakt)
 De Extern bureaublad-sessie (RDP) stuurt het geluid naar uw computer: Windows toont daarin alleen ‘Externe audio’, de Speak2Mic-apparaten zijn niet zichtbaar. In het RDP-verbindingsvenster: ‘Lokale bronnen’ → ‘Externe audio’ → ‘Instellingen’ → ‘Afspelen op externe computer’, maak daarna opnieuw verbinding.
 De Speak2Mic-geluidsapparaten openden niet — het apparaat is opnieuw gestart, ze werken nu.
 De Speak2Mic-geluidsapparaten openen ook na het herstarten van het apparaat niet — zie het logboek.
+Ingeschakeld
+Uitgeschakeld
+Luidspreker ‘%ls’ ingeschakeld.
+Luidspreker ‘%ls’ uitgeschakeld.
+Microfoon ‘%ls’ ingeschakeld.
+Microfoon ‘%ls’ uitgeschakeld.
+Kan ‘%ls’ niet in- of uitschakelen (0x%08lX).
+Het apparaat is uitgeschakeld (vakje ‘Ingeschakeld’ in het paneel, of de geluidsinstellingen van Windows).

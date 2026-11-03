@@ -6,6 +6,7 @@
 //   s2mctl name [--speaker "NAME"] [--mic "NAME"]          ("" or "default" = the default name)
 //   s2mctl volume PERCENT                                  (microphone, 0..300; 100 = unchanged signal)
 //   s2mctl mute on|off
+//   s2mctl enable speaker|mic on|off                        (switched off: gone for programs, as Windows' "Disable")
 //   s2mctl reset                                            (admin; preset "Standard", default names, 100 %, sound on)
 //   s2mctl export FILE.ini   /   s2mctl import FILE.ini    (import: admin; same file format as the panel)
 //   s2mctl test [SECONDS]                                   (the panel's "Test": Windows' melody on every channel)
@@ -93,6 +94,29 @@ static bool FindOurs(AudioDevice* spk, AudioDevice* mic)
         if (list[i].flow == eCapture && !m) { *mic = list[i]; m = true; }
     }
     return s && m;
+}
+
+// Our endpoint of that side switched off (DEVICE_STATE_DISABLED), when it has no active one.
+static bool FindOff(bool speaker, AudioDevice* out)
+{
+    static AudioDevice list[128];
+    int n = ListAudioDevices(list, 128);
+    for (int i = 0; i < n; i++)
+    {
+        bool ours = list[i].adapter[0] ? _wcsicmp(list[i].adapter, L"Speak2Mic") == 0 : wcsstr(list[i].name, L"(Speak2Mic)") != nullptr;
+        if (ours && list[i].flow == (speaker ? eRender : eCapture)) return false;
+    }
+    n = ListDisabledAudioDevices(list, 128);
+    for (int i = 0; i < n; i++)
+    {
+        bool ours = list[i].adapter[0] ? _wcsicmp(list[i].adapter, L"Speak2Mic") == 0 : wcsstr(list[i].name, L"(Speak2Mic)") != nullptr;
+        if (ours && list[i].flow == (speaker ? eRender : eCapture))
+        {
+            *out = list[i];
+            return true;
+        }
+    }
+    return false;
 }
 
 static bool NeedDevices(AudioDevice* spk, AudioDevice* mic)
@@ -214,7 +238,15 @@ static int CmdStatus()
     Out(L"settings: %lu Hz, %lu bit, speaker %lu ch, microphone %lu ch%ls, latency %lu ms%ls", q.rate, q.bits, q.channels,
         q.micChannels ? q.micChannels : q.channels, q.micChannels ? L"" : L" (as the speaker)", q.latency,
         installed ? L"" : L" (defaults: driver not installed?)");
-    AudioDevice spk, mic;
+    AudioDevice spk, mic, off;
+    bool offFound = false;
+    for (int side = 0; side < 2; side++)
+        if (FindOff(side == 0, &off))
+        {
+            Out(L"%ls: \"%ls\" - switched off", side ? L"microphone" : L"speaker", off.desc);
+            offFound = true;
+        }
+    if (offFound) return 0;
     if (!NeedDevices(&spk, &mic)) return 1;
     const AudioDevice* d[2] = { &spk, &mic };
     for (int side = 0; side < 2; side++)
@@ -351,7 +383,10 @@ static int CmdMute(int argc, wchar_t** argv)
 static int CmdReset()
 {
     if (!IsElevated()) { Out(L"error: administrator rights are needed"); return 3; }
-    AudioDevice spk, mic;
+    AudioDevice spk, mic, off;
+    for (int side = 0; side < 2; side++)
+        if (FindOff(side == 0, &off)) SetEndpointEnabled(off.id, true);     // both on (the default)
+    for (int t = 0; t < 20 && !FindOurs(&spk, &mic); t++) Sleep(100);
     if (FindOurs(&spk, &mic))
     {
         SetEndpointName(spk.id, kDefaultName[0]);
@@ -394,7 +429,13 @@ static int CmdExport(int argc, wchar_t** argv)
     num(L"MicChannels", (long)q.micChannels);
     num(L"BitsPerSample", (long)q.bits);
     num(L"LatencyMs", (long)q.latency);
-    AudioDevice spk, mic;
+    AudioDevice spk, mic, off;
+    for (int side = 0; side < 2; side++)
+    {
+        bool isOff = FindOff(side == 0, &off);
+        num(side ? L"MicEnabled" : L"SpeakerEnabled", isOff ? 0 : 1);
+        if (isOff) WritePrivateProfileStringW(kIniSection, side ? L"MicName" : L"SpeakerName", off.desc[0] ? off.desc : kDefaultName[side], path);
+    }
     if (FindOurs(&spk, &mic))
     {
         WritePrivateProfileStringW(kIniSection, L"SpeakerName", spk.desc[0] ? spk.desc : kDefaultName[0], path);
@@ -408,6 +449,8 @@ static int CmdExport(int argc, wchar_t** argv)
     Out(L"settings saved to %ls", path);
     return 0;
 }
+
+static int SwitchSide(int side, bool on);
 
 static int CmdImport(int argc, wchar_t** argv)
 {
@@ -441,7 +484,11 @@ static int CmdImport(int argc, wchar_t** argv)
     int rc = 0;
     if (memcmp(&q, &now, sizeof(q)) != 0) rc = ApplyQuality(q);        // needs admin (3) like "Apply"
     if (rc == 3) return rc;
+    DWORD enabled[2] = { num(L"SpeakerEnabled"), num(L"MicEnabled") };
+    for (int side = 0; side < 2; side++)
+        if (enabled[side] <= 1 && SwitchSide(side, enabled[side] == 1) == 1) rc = 1;
     AudioDevice spk, mic;
+    for (int t = 0; t < 20 && !FindOurs(&spk, &mic) && enabled[0] != 0 && enabled[1] != 0; t++) Sleep(100);
     if (FindOurs(&spk, &mic))
     {
         const AudioDevice* d[2] = { &spk, &mic };
@@ -495,6 +542,51 @@ static int CmdTest(int argc, wchar_t** argv)
     return 0;
 }
 
+// The speaker (0) / microphone switched on or off: 0 done (or already so), 1 failed, 3 administrator rights needed.
+static int SwitchSide(int side, bool on)
+{
+    AudioDevice d;
+    bool found;
+    if (on) found = FindOff(side == 0, &d);
+    else
+    {
+        static AudioDevice list[128];
+        int n = ListAudioDevices(list, 128);
+        found = false;
+        for (int i = 0; i < n && !found; i++)
+        {
+            bool ours = list[i].adapter[0] ? _wcsicmp(list[i].adapter, L"Speak2Mic") == 0 : wcsstr(list[i].name, L"(Speak2Mic)") != nullptr;
+            if (ours && list[i].flow == (side == 0 ? eRender : eCapture))
+            {
+                d = list[i];
+                found = true;
+            }
+        }
+    }
+    if (!found) return 0;
+    HRESULT hr = SetEndpointEnabled(d.id, on);
+    Out(L"%ls \"%ls\" %ls: %ls (0x%08lX)", side ? L"microphone" : L"speaker", d.desc, on ? L"on" : L"off",
+        SUCCEEDED(hr) ? L"done" : L"FAILED", (unsigned long)hr);
+    if (hr == E_ACCESSDENIED) return 3;
+    return SUCCEEDED(hr) ? 0 : 1;
+}
+
+static int CmdEnable(int argc, wchar_t** argv)
+{
+    bool spk = argc == 4 && !_wcsicmp(argv[2], L"speaker"), mic = argc == 4 && !_wcsicmp(argv[2], L"mic");
+    bool on = argc == 4 && !_wcsicmp(argv[3], L"on"), off = argc == 4 && !_wcsicmp(argv[3], L"off");
+    if ((!spk && !mic) || (!on && !off))
+    {
+        Out(L"error: s2mctl enable speaker|mic on|off");
+        return 2;
+    }
+    int rc = SwitchSide(spk ? 0 : 1, on);
+    // Windows shows the change a moment later
+    AudioDevice d;
+    for (int t = 0; t < 30 && rc == 0 && FindOff(spk, &d) == on; t++) Sleep(100);
+    return rc;
+}
+
 static void Usage()
 {
     Out(L"Speak2Mic %ls - settings from the command line", L"" S2M_VER_STR);
@@ -504,6 +596,7 @@ static void Usage()
     Out(L"  s2mctl name [--speaker \"NAME\"] [--mic \"NAME\"]                    (\"default\" = default name)");
     Out(L"  s2mctl volume 0..300                                              (microphone, 100 = unchanged)");
     Out(L"  s2mctl mute on|off");
+    Out(L"  s2mctl enable speaker|mic on|off                                  (off: gone for programs)");
     Out(L"  s2mctl reset                                                      (administrator)");
     Out(L"  s2mctl export FILE.ini | import FILE.ini                          (import: administrator)");
     Out(L"  s2mctl test [SECONDS]");
@@ -536,6 +629,7 @@ int wmain(int argc, wchar_t** argv)
     else if (_wcsicmp(cmd, L"name") == 0) rc = CmdName(argc, argv);
     else if (_wcsicmp(cmd, L"volume") == 0) rc = CmdVolume(argc, argv);
     else if (_wcsicmp(cmd, L"mute") == 0) rc = CmdMute(argc, argv);
+    else if (_wcsicmp(cmd, L"enable") == 0) rc = CmdEnable(argc, argv);
     else if (_wcsicmp(cmd, L"reset") == 0 && argc == 2) rc = CmdReset();
     else if (_wcsicmp(cmd, L"export") == 0) rc = CmdExport(argc, argv);
     else if (_wcsicmp(cmd, L"import") == 0) rc = CmdImport(argc, argv);

@@ -268,3 +268,11 @@ Elija la ubicación de instalación (se crea en ella la carpeta %ls)
 La sesión de Escritorio remoto (RDP) redirige el sonido a su equipo: en ella Windows solo muestra «Audio remoto», los dispositivos Speak2Mic no son visibles. En la ventana de conexión RDP: «Recursos locales» → «Audio remoto» → «Configuración» → «Reproducir en el equipo remoto», luego vuelva a conectarse.
 Los dispositivos de sonido Speak2Mic no se abrían: el dispositivo se reinició y ahora funcionan.
 Los dispositivos de sonido Speak2Mic no se abren ni tras reiniciar el dispositivo; detalles en el registro.
+Activado
+Desactivado
+Altavoz «%ls» activado.
+Altavoz «%ls» desactivado.
+Micrófono «%ls» activado.
+Micrófono «%ls» desactivado.
+No se pudo activar o desactivar «%ls» (0x%08lX).
+El dispositivo está desactivado (casilla «Activado» del panel o configuración de sonido de Windows).

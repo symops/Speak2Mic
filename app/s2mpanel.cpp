@@ -33,7 +33,7 @@ enum
     IDC_GROUP1,
     IDC_L_PRESET, IDC_L_RATE, IDC_L_BITS, IDC_L_CHANNELS, IDC_L_LATENCY, IDC_L_LANG, IDC_LANG,
     IDC_L_MICCHANNELS, IDC_MICCHANNELS,
-    IDC_GROUP3, IDC_L_SPKNAME, IDC_SPKNAME, IDC_L_MICNAME, IDC_MICNAME, IDC_DEV_APPLY, IDC_RENAME_STATUS,
+    IDC_GROUP3, IDC_L_SPKNAME, IDC_SPKNAME, IDC_SPK_ON, IDC_L_MICNAME, IDC_MICNAME, IDC_MIC_ON, IDC_DEV_APPLY, IDC_RENAME_STATUS,
     IDC_RESET_ALL, IDC_MIXER, IDC_CLEARLOG, IDC_L_MICVOL, IDC_MICVOL, IDC_MICVOL_VALUE, IDC_MICMUTE,
     IDC_EXPORT, IDC_IMPORT, IDC_IO_STATUS, IDC_PLAY, IDC_AUTOSTART,
     IDC_L_MUSIC, IDC_MUSICDIR, IDC_MUSIC_BROWSE, IDC_MUSICSRC, IDC_SIGNAL, IDC_L_MUSICDIR,
@@ -447,6 +447,10 @@ static int         g_devCount;
 
 static LevelMeter  g_meterIn, g_meterOut;
 static bool        g_inFound, g_outFound;
+// Our speaker (0) / microphone (1) switched off ("Enabled" unchecked, or "Disable" in Windows' sound settings): the
+// endpoint, which Windows keeps with DEVICE_STATE_DISABLED (programs no longer see it).
+static bool        g_off[2];
+static AudioDevice g_offDev[2];
 
 // The meters, their labels and formats live in the "Signal" window, everything else in the panel.
 static bool IsSignalCtl(int id) { return id >= IDC_IN_LABEL && id <= IDC_OUT_FORMAT; }
@@ -750,7 +754,9 @@ static void Layout()
     // of its own, as Show2Cam's "Folder"); taken with "Apply" (bottom right), "Check" and "Play" bottom left.
     Place(IDC_GROUP3, 12, 276, 576, 200);
     Place(IDC_L_SPKNAME, L1, 304, 130, 20); Place(IDC_SPKNAME, C1, 300, 300, 23);
+    Place(IDC_SPK_ON, C1 + 316, 301, R - C1 - 316, 22);
     Place(IDC_L_MICNAME, L1, 338, 130, 20); Place(IDC_MICNAME, C1, 334, 300, 23);
+    Place(IDC_MIC_ON, C1 + 316, 335, R - C1 - 316, 22);
     Place(IDC_L_MUSIC, L1, 372, 130, 20);   Place(IDC_MUSICSRC, C1, 368, 200, 300);
     Place(IDC_L_MUSICDIR, L1, 406, 130, 20); Place(IDC_MUSICDIR, C1, 402, R - 80 - C1, 23);
     Place(IDC_MUSIC_BROWSE, R - 74, 400, 74, 27);
@@ -805,8 +811,10 @@ static void CreateControls()
     Create(L"BUTTON", TR(L"Устройства и источник"), BS_GROUPBOX, IDC_GROUP3);
     Create(L"STATIC", TR(L"Динамик:"), 0, IDC_L_SPKNAME);
     Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_SPKNAME, WS_EX_CLIENTEDGE);
+    Create(L"BUTTON", TR(L"Включено"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_SPK_ON);
     Create(L"STATIC", TR(L"Микрофон:"), 0, IDC_L_MICNAME);
     Create(L"EDIT", L"", ES_AUTOHSCROLL | WS_TABSTOP, IDC_MICNAME, WS_EX_CLIENTEDGE);
+    Create(L"BUTTON", TR(L"Включено"), BS_AUTOCHECKBOX | WS_TABSTOP, IDC_MIC_ON);
     Create(L"STATIC", TR(L"Источник:"), 0, IDC_L_MUSIC);
     Create(WC_COMBOBOXW, L"", CBS_DROPDOWNLIST | WS_TABSTOP, IDC_MUSICSRC);
     ComboAdd(IDC_MUSICSRC, TR(L"Проверка"), MusicTestSrc);
@@ -821,7 +829,7 @@ static void CreateControls()
     Create(L"BUTTON", TR(L"Применить"), BS_PUSHBUTTON | WS_TABSTOP, IDC_DEV_APPLY);
 
     // the meters' own window (hidden until "Check"); owned by the panel, so it stays above it and closes with it
-    g_sig = CreateWindowExW(WS_EX_CONTROLPARENT, L"S2mSignal", TR(L"Индикация сигнала"), WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+    g_sig = CreateWindowExW(WS_EX_CONTROLPARENT, L"S2mSignal", TR(L"Проверка"), WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
                             CW_USEDEFAULT, CW_USEDEFAULT, 10, 10, g_wnd, nullptr, g_inst, nullptr);
     Create(L"STATIC", L"", 0, IDC_IN_LABEL);
     Create(L"STATIC", L"", SS_RIGHT, IDC_IN_DB);
@@ -1135,6 +1143,7 @@ static bool SpeakDevicesAppeared()
 // node has exactly that range (-96..+9.56 dB), so Windows' own "100 %" is the panel's 300 %. Drivers before
 // 1.0.272 had no node: Windows used -96..+30 dB software volume, and stronger gain set elsewhere shows its real
 // percentage next to the slider (which then sits at 300 %).
+static void MeterNotes();
 static int g_micVolShown = -1;      // volume shown, in 0.1 dB steps (+ 100000 offset); -1 = no microphone
 static int g_micMuteShown = -1;     // mute state shown, -1 = unknown
 
@@ -1190,7 +1199,7 @@ static void SyncMicVolume()
     {
         g_micMuteShown = muteKey;
         SendMessageW(Ctl(IDC_MICMUTE), BM_SETCHECK, mute ? BST_CHECKED : BST_UNCHECKED, 0);
-        SetMeterNote(Ctl(IDC_OUT_METER), muteKey == 1 ? TR(L"Без звука") : L"");    // the microphone's meter
+        MeterNotes();                                   // the microphone's meter: "No sound"
     }
     if (ok && mx > 20.0f && db >= mx - 0.05f)
     {
@@ -1362,7 +1371,7 @@ static void OnMicMute()
     if (SetEndpointMute(g_devs[i].id, mute))
     {
         g_micMuteShown = mute ? 1 : 0;
-        SetMeterNote(Ctl(IDC_OUT_METER), mute ? TR(L"Без звука") : L"");
+        MeterNotes();
     }
     AppLog(L"microphone mute: %ls", mute ? L"on" : L"off");
 }
@@ -1648,14 +1657,14 @@ static void UpdatePlayButton()
     if (MusicSource() == MusicTestSrc)
     {
         SetText(IDC_PLAY, g_testThread ? TR(L"Стоп") : TR(L"Играть"));
-        EnableWindow(Ctl(IDC_PLAY), TRUE);
+        EnableWindow(Ctl(IDC_PLAY), g_testThread || !g_off[0]);     // the speaker switched off: nowhere to play
         return;
     }
     wchar_t folder[MAX_PATH];
     MusicPlayFolder(folder);
     bool playing = Mp3Playing();
     SetText(IDC_PLAY, playing ? TR(L"Пауза") : TR(L"Играть"));
-    EnableWindow(Ctl(IDC_PLAY), playing || Mp3FolderHasFiles(folder));
+    EnableWindow(Ctl(IDC_PLAY), playing || (!g_off[0] && Mp3FolderHasFiles(folder)));
 }
 
 static void StopMusic()
@@ -1715,7 +1724,16 @@ static void OnPlayDone(HRESULT hr)
 
 static void RefreshDevices(bool startMeters = true);
 
-static wchar_t g_shownName[2][256];     // names put into the edit boxes (current endpoint names)
+// The words over the meters of the "Check" window: "Off" for an endpoint switched off, "No sound" for the muted
+// microphone (as in Show2Cam's preview).
+static void MeterNotes()
+{
+    SetMeterNote(Ctl(IDC_IN_METER), g_off[0] ? TR(L"Отключено") : L"");
+    SetMeterNote(Ctl(IDC_OUT_METER), g_off[1] ? TR(L"Отключено") : g_micMuteShown == 1 ? TR(L"Без звука") : L"");
+}
+
+static wchar_t g_shownName[2][256];
+static int     g_shownOn[2] = { -1, -1 };   // "Enabled" shown (-1: none)     // names put into the edit boxes (current endpoint names)
 
 static void GetEditName(int id, wchar_t* out, size_t len)
 {
@@ -1737,7 +1755,10 @@ static void GetEditName(int id, wchar_t* out, size_t len)
 static bool DevDirty()
 {
     bool changed = false;
-    const int ids[2] = { IDC_SPKNAME, IDC_MICNAME };
+    const int ids[2] = { IDC_SPKNAME, IDC_MICNAME }, onIds[2] = { IDC_SPK_ON, IDC_MIC_ON };
+    for (int side = 0; side < 2; side++)
+        if (g_shownOn[side] >= 0 && (SendMessageW(Ctl(onIds[side]), BM_GETCHECK, 0, 0) == BST_CHECKED) != (g_shownOn[side] == 1))
+            changed = true;
     for (int side = 0; side < 2; side++)
     {
         if (FindCableDevice(side == 0) < 0) continue;
@@ -1783,6 +1804,30 @@ static void ShowNames()
             g_updatingControls = false;
         }
         EnableWindow(Ctl(ids[side]), i >= 0);
+        // "Enabled": the endpoint's state (an unapplied click stays)
+        const int onIds[2] = { IDC_SPK_ON, IDC_MIC_ON };
+        int on = i >= 0 ? 1 : (g_off[side] ? 0 : -1);
+        bool box = SendMessageW(Ctl(onIds[side]), BM_GETCHECK, 0, 0) == BST_CHECKED;
+        bool boxUntouched = g_shownOn[side] < 0 || box == (g_shownOn[side] == 1);
+        g_shownOn[side] = on;
+        if (boxUntouched) SendMessageW(Ctl(onIds[side]), BM_SETCHECK, on != 0 ? BST_CHECKED : BST_UNCHECKED, 0);
+        EnableWindow(Ctl(onIds[side]), on >= 0);
+        if (side == 1 && i < 0)
+        {
+            // the microphone's name shown while it is off
+            if (g_off[1] && untouched)
+            {
+                g_updatingControls = true;
+                SetWindowTextW(Ctl(ids[side]), g_offDev[1].desc[0] ? g_offDev[1].desc : kDefaultName[1]);
+                g_updatingControls = false;
+            }
+        }
+        else if (side == 0 && i < 0 && g_off[0] && untouched)
+        {
+            g_updatingControls = true;
+            SetWindowTextW(Ctl(ids[side]), g_offDev[0].desc[0] ? g_offDev[0].desc : kDefaultName[0]);
+            g_updatingControls = false;
+        }
     }
     UpdateDevApply();
 }
@@ -1881,9 +1926,100 @@ static void OnRename()
     RefreshDevices();
 }
 
-// "Apply" of the devices block: new names, then the folder and the source.
+// Switches the speaker (side 0) / microphone on or off through an elevated copy of the panel (exit code: HRESULT).
+static HRESULT SwitchElevated(int side, bool on)
+{
+    wchar_t exe[MAX_PATH], args[64];
+    GetModuleFileNameW(nullptr, exe, MAX_PATH);
+    _snwprintf(args, 64, L"--endpoint %ls %ls", side == 0 ? L"speaker" : L"mic", on ? L"on" : L"off");
+    SHELLEXECUTEINFOW sei = {};
+    sei.cbSize = sizeof(sei);
+    sei.fMask = SEE_MASK_NOCLOSEPROCESS;
+    sei.hwnd = g_wnd;
+    sei.lpVerb = L"runas";
+    sei.lpFile = exe;
+    sei.lpParameters = args;
+    sei.nShow = SW_HIDE;
+    if (!ShellExecuteExW(&sei) || !sei.hProcess) return HRESULT_FROM_WIN32(ERROR_CANCELLED);
+    WaitForSingleObject(sei.hProcess, 30000);
+    DWORD code = (DWORD)E_FAIL;
+    GetExitCodeProcess(sei.hProcess, &code);
+    CloseHandle(sei.hProcess);
+    return (HRESULT)code;
+}
+
+// The endpoint of `side` switched on / off (Windows' "Enable" / "Disable"; administrator rights asked for when
+// Windows refuses).
+static HRESULT SwitchSide(int side, bool on, bool allowElevation)
+{
+    int i = FindCableDevice(side == 0);
+    const AudioDevice* d = on ? (g_off[side] ? &g_offDev[side] : nullptr) : (i >= 0 ? &g_devs[i] : nullptr);
+    if (!d) return on == (i >= 0) ? S_FALSE : E_NOTFOUND;      // already so / nothing to switch
+    if (!on && side == 0)
+    {
+        StopTest();                         // the panel's own playback would keep the speaker busy
+        StopMusic();
+    }
+    HRESULT hr = SetEndpointEnabled(d->id, on);
+    AppLog(L"%ls \"%ls\" %ls: 0x%08lX", side == 0 ? L"speaker" : L"microphone", d->desc, on ? L"on" : L"off", (unsigned long)hr);
+    if (FAILED(hr) && allowElevation && !g_elevated)
+    {
+        hr = SwitchElevated(side, on);
+        AppLog(L"%ls %ls (elevated): 0x%08lX", side == 0 ? L"speaker" : L"microphone", on ? L"on" : L"off", (unsigned long)hr);
+    }
+    return hr;
+}
+
+// "Enabled" of the speaker / microphone applied.
+static void OnSwitchEndpoints()
+{
+    const int onIds[2] = { IDC_SPK_ON, IDC_MIC_ON };
+    bool any = false;
+    for (int side = 0; side < 2; side++)
+    {
+        if (g_shownOn[side] < 0) continue;
+        bool want = SendMessageW(Ctl(onIds[side]), BM_GETCHECK, 0, 0) == BST_CHECKED;
+        if (want == (g_shownOn[side] == 1)) continue;
+        any = true;
+        wchar_t name[256];
+        int i = FindCableDevice(side == 0);
+        wcscpy(name, i >= 0 ? g_devs[i].desc : g_offDev[side].desc);
+        HRESULT hr = SwitchSide(side, want, true);
+        wchar_t t[400];
+        if (SUCCEEDED(hr))
+            _snwprintf(t, 400, side == 0 ? (want ? TR(L"Динамик «%ls» включён.") : TR(L"Динамик «%ls» отключён."))
+                                         : (want ? TR(L"Микрофон «%ls» включён.") : TR(L"Микрофон «%ls» отключён.")), name);
+        else if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED))
+            wcscpy(t, TR(L"Нужны права администратора: запрос был отклонён."));
+        else
+            _snwprintf(t, 400, TR(L"Не удалось включить или отключить «%ls» (0x%08lX)."), name, (unsigned long)hr);
+        t[399] = 0;
+        AddEvent(t);
+        g_shownOn[side] = -1;               // the box follows Windows again
+    }
+    if (!any) return;
+    // Windows takes a moment to show the change
+    for (int t = 0; t < 20; t++)
+    {
+        Sleep(100);
+        static AudioDevice list[128];
+        int n = ListAudioDevices(list, 128);
+        bool done = true;
+        for (int side = 0; side < 2; side++)
+        {
+            bool want = SendMessageW(Ctl(onIds[side]), BM_GETCHECK, 0, 0) == BST_CHECKED;
+            if ((FindInList(list, n, side == 0) >= 0) != want) done = false;
+        }
+        if (done) break;
+    }
+    RefreshDevices();
+    UpdatePlayButton();
+}
+
+// "Apply" of the devices block: on / off, new names, then the folder and the source.
 static void OnDevApply()
 {
+    OnSwitchEndpoints();
     OnRename();
     int src = (int)ComboData(IDC_MUSICSRC);
     if (src == MusicFolderSrc)
@@ -1955,7 +2091,22 @@ static void RefreshDevices(bool startMeters)
         }
     }
 
+    // our endpoints switched off (only when that side has no active one: an old installation may leave one behind)
+    static AudioDevice off[64];
+    int nOff = ListDisabledAudioDevices(off, 64);
+    for (int side = 0; side < 2; side++)
+    {
+        bool was = g_off[side];
+        g_off[side] = false;
+        if (FindCableDevice(side == 0) >= 0) continue;
+        int k = FindInList(off, nOff, side == 0);
+        if (k < 0) continue;
+        g_off[side] = true;
+        g_offDev[side] = off[k];
+        if (!was) AppLog(L"devices: %ls \"%ls\" switched off", side == 0 ? L"speaker" : L"microphone", off[k].desc);
+    }
     ShowNames();
+    MeterNotes();
     g_micVolShown = -2;     // force a re-read
     g_micMuteShown = -2;
     SyncMicVolume();
@@ -1972,7 +2123,9 @@ static bool UpdateMeterUi(LevelMeter& m, bool found, int meterId, int dbId, int 
     {
         ClearMeter(Ctl(meterId));
         SetText(dbId, L"—");
-        SetText(fmtId, TR(L"Устройство не найдено: драйвер не установлен или перезапускается."));
+        bool off = g_off[meterId == IDC_IN_METER ? 0 : 1];
+        SetText(fmtId, off ? TR(L"Устройство отключено (флажок «Включено» в панели или параметры звука Windows).")
+                           : TR(L"Устройство не найдено: драйвер не установлен или перезапускается."));
         return false;
     }
     float level = n ? UpdateMeter(Ctl(meterId), peaks, n) : 0;
@@ -2256,7 +2409,9 @@ static void OnExport()
     for (int side = 0; side < 2; side++)
     {
         int i = FindCableDevice(side == 0);
-        put(side == 0 ? L"SpeakerName" : L"MicName", i >= 0 && g_devs[i].desc[0] ? g_devs[i].desc : kDefaultName[side]);
+        const wchar_t* desc = i >= 0 ? g_devs[i].desc : (g_off[side] ? g_offDev[side].desc : L"");
+        put(side == 0 ? L"SpeakerName" : L"MicName", desc[0] ? desc : kDefaultName[side]);
+        putNum(side == 0 ? L"SpeakerEnabled" : L"MicEnabled", g_off[side] ? 0 : 1);
     }
     int mic = FindCableDevice(false);
     float db = 0, mn = 0, mx = 0;
@@ -2302,6 +2457,7 @@ static void OnImport()
     DWORD micChannels = num(L"MicChannels");
     DWORD rate = num(L"SampleRate"), channels = num(L"Channels"), bits = num(L"BitsPerSample"),
           latency = num(L"LatencyMs"), volume = num(L"MicVolumePercent"), mute = num(L"MicMute");
+    DWORD enabled[2] = { num(L"SpeakerEnabled"), num(L"MicEnabled") };
     if (rate == none && channels == none && bits == none && latency == none && micChannels == none &&
         !names[0][0] && !names[1][0] &&
         volume == none && mute == none)
@@ -2312,7 +2468,21 @@ static void OnImport()
     AppLog(L"settings import from %ls: rate=%ld channels=%ld bits=%ld latency=%ld volume=%ld mute=%ld", path,
            (long)rate, (long)channels, (long)bits, (long)latency, (long)volume, (long)mute);
 
-    // Names and microphone volume/mute: applied right away (values that make no sense are skipped).
+    // On / off, names and microphone volume/mute: applied right away (values that make no sense are skipped).
+    bool switched = false;
+    for (int side = 0; side < 2; side++)
+        if (enabled[side] <= 1 && (enabled[side] == 1) == g_off[side])
+        {
+            HRESULT hr = SwitchSide(side, enabled[side] == 1, true);
+            AppLog(L"import: %ls %ls -> 0x%08lX", side == 0 ? L"speaker" : L"microphone", enabled[side] ? L"on" : L"off",
+                   (unsigned long)hr);
+            switched = true;
+        }
+    if (switched)
+    {
+        Sleep(1000);                        // Windows shows the change a moment later
+        RefreshDevices();
+    }
     for (int side = 0; side < 2; side++)
     {
         wchar_t* n = names[side];
@@ -2377,6 +2547,23 @@ static void OnResetAll()
                     L"Speak2Mic", MB_YESNO | MB_ICONQUESTION) != IDYES)
         return;
     AppLog(L"reset all settings requested");
+
+    // Both devices on (the default), before the names (a device switched off cannot be renamed).
+    bool switched = false;
+    for (int side = 0; side < 2; side++)
+        if (g_off[side] && SUCCEEDED(SwitchSide(side, true, true))) switched = true;
+    if (switched)
+    {
+        for (int t = 0; t < 20; t++)
+        {
+            Sleep(100);
+            static AudioDevice list[128];
+            int n = ListAudioDevices(list, 128);
+            if ((g_off[0] ? FindInList(list, n, true) >= 0 : true) && (g_off[1] ? FindInList(list, n, false) >= 0 : true)) break;
+        }
+        RefreshDevices();
+    }
+    for (int side = 0; side < 2; side++) g_shownOn[side] = -1;
 
     // Names first: the device restart below would otherwise make the panel wait for the endpoints.
     for (int side = 0; side < 2; side++)
@@ -2777,6 +2964,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             else if (id == IDC_MIXER) OnMixer();
             else if (id == IDC_CLEARLOG) ClearEvents();
             else if (id == IDC_MICMUTE) OnMicMute();
+            else if (id == IDC_SPK_ON || id == IDC_MIC_ON) UpdateDevApply();      // taken with "Apply"
             else if (id == IDC_AUTOSTART)
             {
                 bool on = SendMessageW(Ctl(IDC_AUTOSTART), BM_GETCHECK, 0, 0) == BST_CHECKED;
@@ -2953,6 +3141,21 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show)
         int i = FindInList(list, n, input);
         if (i >= 0) hr = SetEndpointName(list[i].id, argv[3]);
         AppLog(L"rename (elevated helper) %ls -> \"%ls\": 0x%08lX", argv[2], argv[3], (unsigned long)hr);
+        CoUninitialize();
+        LocalFree(argv);
+        return (int)hr;
+    }
+    // Elevated helper mode: s2mpanel --endpoint speaker|mic on|off  (exit code = HRESULT)
+    if (argv && argc == 4 && _wcsicmp(argv[1], L"--endpoint") == 0)
+    {
+        bool input = _wcsicmp(argv[2], L"speaker") == 0, on = _wcsicmp(argv[3], L"on") == 0;
+        HRESULT hr = E_NOTFOUND;
+        CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+        static AudioDevice list[128];
+        int n = on ? ListDisabledAudioDevices(list, 128) : ListAudioDevices(list, 128);
+        int i = FindInList(list, n, input);
+        if (i >= 0) hr = SetEndpointEnabled(list[i].id, on);
+        AppLog(L"endpoint (elevated helper) %ls %ls: 0x%08lX", argv[2], argv[3], (unsigned long)hr);
         CoUninitialize();
         LocalFree(argv);
         return (int)hr;

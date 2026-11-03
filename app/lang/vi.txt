@@ -268,3 +268,11 @@ Chọn vị trí cài đặt (thư mục %ls sẽ được tạo trong đó)
 Phiên Máy tính Từ xa (RDP) chuyển âm thanh về máy của bạn: trong phiên này Windows chỉ hiển thị “Âm thanh Từ xa”, các thiết bị Speak2Mic không hiện ra. Trong cửa sổ kết nối RDP: “Tài nguyên Cục bộ” → “Âm thanh từ xa” → “Cài đặt” → “Phát trên máy tính từ xa”, sau đó kết nối lại.
 Không mở được thiết bị âm thanh Speak2Mic — đã khởi động lại thiết bị, giờ chúng đã hoạt động.
 Thiết bị âm thanh Speak2Mic vẫn không mở được sau khi khởi động lại thiết bị — xem chi tiết trong nhật ký.
+Bật
+Đã tắt
+Đã bật loa “%ls”.
+Đã tắt loa “%ls”.
+Đã bật micrô “%ls”.
+Đã tắt micrô “%ls”.
+Không thể bật hoặc tắt “%ls” (0x%08lX).
+Thiết bị đã tắt (ô “Bật” trong bảng điều khiển, hoặc cài đặt âm thanh của Windows).

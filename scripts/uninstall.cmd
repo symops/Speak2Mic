@@ -6,7 +6,7 @@ cd /d "%~dp0"
 rem The installer removes without a window ("/remove"): the package root has the launcher, x64\ / x86\ and an
 rem installed copy have the installer itself. ("start /wait": cmd does not wait for a program with a window.)
 start "" /wait "Speak2Mic-Setup.exe" /remove
-if errorlevel 2 (echo Перезагрузите компьютер, чтобы закончить удаление.) else if errorlevel 1 (echo Удаление не удалось — см. %ProgramData%\Speak2Mic\logs\setup.log)
+if errorlevel 2 (echo Перезагрузите компьютер, чтобы закончить удаление.) else if errorlevel 1 (echo Удаление не удалось - см. %ProgramData%\Speak2Mic\logs\setup.log)
 
 rem Delete the driver package(s) from the driver store (they are published as oemNN.inf).
 powershell -NoProfile -Command ^

@@ -70,7 +70,8 @@ done
 
 # Windows cmd.exe reads .cmd files in the OEM code page; convert the Russian text to CP866.
 for f in $D/uninstall.cmd $D/x64/uninstall.cmd $D/x86/uninstall.cmd; do
-    iconv -f UTF-8 -t CP866 "$f" | sed 's/$/\r/' > "$f.tmp" && mv "$f.tmp" "$f"
+    iconv -f UTF-8 -t CP866 "$f" > "$f.tmp" || { echo "$f: a character CP866 does not have"; exit 1; }
+    sed 's/$/\r/' "$f.tmp" > "$f" && rm -f "$f.tmp"
 done
 
 # Two packages from this one build: the release, without the test and administration tools, and a debug package - the

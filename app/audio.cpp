@@ -189,7 +189,28 @@ static void FillDevice(IMMDevice* dev, EDataFlow flow, AudioDevice* out)
     }
 }
 
+static int ListByState(AudioDevice* out, int max, DWORD state);
+
 int ListAudioDevices(AudioDevice* out, int max)
+{
+    return ListByState(out, max, DEVICE_STATE_ACTIVE);
+}
+
+int ListDisabledAudioDevices(AudioDevice* out, int max)
+{
+    return ListByState(out, max, DEVICE_STATE_DISABLED);
+}
+
+HRESULT SetEndpointEnabled(const wchar_t* deviceId, bool on)
+{
+    IPolicyConfig* pc = OpenPolicyConfig();
+    if (!pc) return E_NOINTERFACE;
+    HRESULT hr = pc->SetEndpointVisibility(deviceId, on ? 1 : 0);
+    pc->Release();
+    return hr;
+}
+
+static int ListByState(AudioDevice* out, int max, DWORD state)
 {
     IMMDeviceEnumerator* en = nullptr;
     if (FAILED(CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
@@ -203,7 +224,7 @@ int ListAudioDevices(AudioDevice* out, int max)
     for (int f = 0; f < 2; f++)
     {
         IMMDeviceCollection* coll = nullptr;
-        if (FAILED(en->EnumAudioEndpoints(flows[f], DEVICE_STATE_ACTIVE, &coll)))
+        if (FAILED(en->EnumAudioEndpoints(flows[f], state, &coll)))
         {
             continue;
         }

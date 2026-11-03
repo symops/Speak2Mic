@@ -268,3 +268,11 @@ Choisissez l’emplacement d’installation (un dossier %ls y est créé)
 La session Bureau à distance (RDP) redirige le son vers votre ordinateur : Windows n’y affiche que « Audio à distance », les périphériques Speak2Mic ne sont pas visibles. Dans la fenêtre de connexion RDP : « Ressources locales » → « Audio à distance » → « Paramètres » → « Lire sur l’ordinateur distant », puis reconnectez-vous.
 Les périphériques audio Speak2Mic ne s’ouvraient pas — le périphérique a été redémarré, ils fonctionnent maintenant.
 Les périphériques audio Speak2Mic ne s’ouvrent toujours pas après le redémarrage du périphérique — détails dans le journal.
+Activé
+Désactivé
+Haut-parleur « %ls » activé.
+Haut-parleur « %ls » désactivé.
+Microphone « %ls » activé.
+Microphone « %ls » désactivé.
+Impossible d’activer ou de désactiver « %ls » (0x%08lX).
+L’appareil est désactivé (case « Activé » du panneau, ou paramètres de son de Windows).

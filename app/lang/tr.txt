@@ -268,3 +268,11 @@ Kurulum konumunu seçin (içinde %ls klasörü oluşturulur)
 Uzak Masaüstü (RDP) oturumu sesi bilgisayarınıza yönlendiriyor: Windows bu oturumda yalnızca “Uzak Ses” gösterir, Speak2Mic aygıtları görünmez. RDP bağlantı penceresinde: “Yerel Kaynaklar” → “Uzak ses” → “Ayarlar” → “Uzak bilgisayarda çal”, ardından yeniden bağlanın.
 Speak2Mic ses aygıtları açılmıyordu — aygıt yeniden başlatıldı, artık çalışıyorlar.
 Speak2Mic ses aygıtları aygıt yeniden başlatıldıktan sonra da açılmıyor — ayrıntılar günlükte.
+Etkin
+Kapalı
+“%ls” hoparlörü açıldı.
+“%ls” hoparlörü kapatıldı.
+“%ls” mikrofonu açıldı.
+“%ls” mikrofonu kapatıldı.
+“%ls” açılamadı veya kapatılamadı (0x%08lX).
+Aygıt kapalı (paneldeki “Etkin” kutusu veya Windows ses ayarları).

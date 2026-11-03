@@ -6,7 +6,7 @@ Signature="$WINDOWS NT$"
 Class=MEDIA
 ClassGuid={4d36e96c-e325-11ce-bfc1-08002be10318}
 Provider=%ProviderName%
-DriverVer=11/03/2026,1.0.307.16
+DriverVer=11/03/2026,1.0.307.664
 CatalogFile=Speak2Mic.cat
 PnpLockdown=1
 

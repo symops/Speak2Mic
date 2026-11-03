@@ -21,6 +21,11 @@ struct AudioDevice
 
 // Active playback and recording devices; returns the number written to `out`.
 int ListAudioDevices(AudioDevice* out, int max);
+// Playback and recording devices switched off (Sound settings "Disable": DEVICE_STATE_DISABLED).
+int ListDisabledAudioDevices(AudioDevice* out, int max);
+// Switches an endpoint on / off as Sound settings' "Enable" / "Disable" (Windows keeps it; programs no longer see a
+// device switched off).
+HRESULT SetEndpointEnabled(const wchar_t* deviceId, bool on);
 
 // Default playback device.
 bool GetDefaultRenderDevice(AudioDevice* out);

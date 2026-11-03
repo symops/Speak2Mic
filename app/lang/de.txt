@@ -268,3 +268,11 @@ Installationsort wählen (darin wird der Ordner %ls angelegt)
 Die Remotedesktop-Sitzung (RDP) leitet den Ton auf Ihren Computer um: Windows zeigt darin nur „Remoteaudio“, die Speak2Mic-Geräte sind nicht sichtbar. Im RDP-Verbindungsfenster: „Lokale Ressourcen“ → „Remoteaudio“ → „Einstellungen“ → „Auf Remotecomputer wiedergeben“, dann neu verbinden.
 Die Speak2Mic-Audiogeräte ließen sich nicht öffnen — das Gerät wurde neu gestartet, jetzt funktionieren sie.
 Die Speak2Mic-Audiogeräte lassen sich auch nach dem Neustart des Geräts nicht öffnen — Einzelheiten im Protokoll.
+Aktiviert
+Deaktiviert
+Lautsprecher „%ls“ aktiviert.
+Lautsprecher „%ls“ deaktiviert.
+Mikrofon „%ls“ aktiviert.
+Mikrofon „%ls“ deaktiviert.
+„%ls“ konnte nicht aktiviert oder deaktiviert werden (0x%08lX).
+Das Gerät ist deaktiviert (Kästchen „Aktiviert“ im Panel oder Windows-Soundeinstellungen).

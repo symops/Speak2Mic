@@ -161,6 +161,8 @@ static BOOL WINAPI CtrlHandler(DWORD)
 // ---------------------------------------------------------------------------
 // Devices
 
+static wchar_t g_offAtStart[2][256];   // our endpoints switched off before the test (on for it, off again at the end)
+
 static bool FindOurs(AudioDevice* spk, AudioDevice* mic)
 {
     static AudioDevice list[128];
@@ -1161,6 +1163,61 @@ static void ActionRename()
     }
 }
 
+// Ours among `list` for that side (speaker: render).
+static int FindOursIn(const AudioDevice* list, int n, bool speaker)
+{
+    for (int i = 0; i < n; i++)
+    {
+        bool ours = list[i].adapter[0] ? _wcsicmp(list[i].adapter, L"Speak2Mic") == 0 : wcsstr(list[i].name, L"(Speak2Mic)") != nullptr;
+        if (ours && list[i].flow == (speaker ? eRender : eCapture)) return i;
+    }
+    return -1;
+}
+
+static bool IdIn(const AudioDevice* list, int n, const wchar_t* id)
+{
+    for (int i = 0; i < n; i++)
+        if (!_wcsicmp(list[i].id, id)) return true;
+    return false;
+}
+
+// The speaker or the microphone switched off and on (the panel's "Enabled", Windows' "Disable" / "Enable"): gone
+// for programs while off, the other one untouched, back as the same endpoint with its name.
+static void ActionEndpoint()
+{
+    int side = Rand(0, 1);
+    AudioDevice d = side == 0 ? g_spk : g_mic, other = side == 0 ? g_mic : g_spk;
+    const wchar_t* what = side == 0 ? L"speaker" : L"microphone";
+    Out(L"[endpoint] %ls \"%ls\" off and on", what, d.desc);
+    HRESULT hr = SetEndpointEnabled(d.id, false);
+    if (!Check(SUCCEEDED(hr), L"%ls switched off (0x%08lX)", what, (unsigned long)hr)) return;
+    static AudioDevice list[128];
+    int n = 0;
+    bool gone = false;
+    for (int t = 0; t < 40 && !gone; t++)
+    {
+        n = ListAudioDevices(list, 128);
+        gone = !IdIn(list, n, d.id);
+        if (!gone) Sleep(100);
+    }
+    Check(gone, L"%ls no longer active (programs do not see it)", what);
+    Check(IdIn(list, n, other.id), L"the other device \"%ls\" still active", other.desc);
+    int nOff = ListDisabledAudioDevices(list, 128);
+    Check(IdIn(list, nOff, d.id), L"%ls listed as switched off", what);
+    Sleep(Rand(0, 1500));
+    hr = SetEndpointEnabled(d.id, true);
+    Check(SUCCEEDED(hr), L"%ls switched on (0x%08lX)", what, (unsigned long)hr);
+    AudioDevice s, m;
+    if (Check(WaitOurs(&s, &m, 10000), L"both devices active again"))
+    {
+        const AudioDevice& back = side == 0 ? s : m;
+        Check(!_wcsicmp(back.id, d.id), L"%ls: the same endpoint is back", what);
+        Check(!wcscmp(back.desc, d.desc), L"%ls kept its name \"%ls\"", what, back.desc);
+        g_spk = s;
+        g_mic = m;
+    }
+}
+
 static void ActionVolume()
 {
     int pct = Rand(0, 300);
@@ -1820,6 +1877,12 @@ static void Restore(const Snapshot& s)
         else RegDeleteValueW(user, L"MicVolumeCentiDb");
         RegCloseKey(user);
     }
+    for (int side = 0; side < 2; side++)
+        if (g_offAtStart[side][0])
+        {
+            HRESULT hr = SetEndpointEnabled(g_offAtStart[side], false);
+            Out(L"[restore] the %ls switched off again: 0x%08lX", side == 0 ? L"speaker" : L"microphone", (unsigned long)hr);
+        }
 }
 
 // ---------------------------------------------------------------------------
@@ -1879,6 +1942,25 @@ int wmain(int argc, wchar_t** argv)
         Sleep(1500);
     }
 
+    {
+        // a device the user switched off: on for the test, off again at the end
+        static AudioDevice off[64];
+        int nOff = ListDisabledAudioDevices(off, 64);
+        for (int side = 0; side < 2; side++)
+        {
+            int k = FindOursIn(off, nOff, side == 0);
+            AudioDevice s, m;
+            if (k < 0 || (FindOurs(&s, &m))) continue;
+            static AudioDevice act[128];
+            if (FindOursIn(act, ListAudioDevices(act, 128), side == 0) >= 0) continue;
+            wcscpy(g_offAtStart[side], off[k].id);
+            Out(L"The %ls \"%ls\" is switched off: on for the test (off again at the end).", side == 0 ? L"speaker" : L"microphone",
+                off[k].desc);
+            SetEndpointEnabled(off[k].id, true);
+        }
+        AudioDevice s, m;
+        if (g_offAtStart[0][0] || g_offAtStart[1][0]) WaitOurs(&s, &m, 10000);
+    }
     if (!FindOurs(&g_spk, &g_mic))
     {
         Out(L"FAIL Speak2Mic Speaker / Microphone not found: install Speak2Mic first.");
@@ -1915,7 +1997,7 @@ int wmain(int argc, wchar_t** argv)
         { ActionSignal, 25, L"signal" }, { ActionApply, 12, L"apply" }, { ActionRename, 15, L"rename" },
         { ActionVolume, 15, L"volume" }, { ActionFormat, 12, L"format" }, { ActionStress, 10, L"stress" },
         { ActionTestSound, 6, L"testsound" }, { ActionOrphans, 5, L"orphans" }, { ActionCli, 20, L"cli" },
-        { ActionMusic, 6, L"music" },
+        { ActionMusic, 6, L"music" }, { ActionEndpoint, 6, L"endpoint" },
     };
     int total = 0;
     for (auto& a : actions) total += a.weight;

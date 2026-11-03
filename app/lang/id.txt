@@ -268,3 +268,11 @@ Pilih lokasi instalasi (folder %ls dibuat di dalamnya)
 Sesi Desktop Jarak Jauh (RDP) mengalihkan suara ke komputer Anda: di dalamnya Windows hanya menampilkan “Audio Jarak Jauh”, perangkat Speak2Mic tidak terlihat. Di jendela koneksi RDP: “Sumber Daya Lokal” → “Audio jarak jauh” → “Pengaturan” → “Putar di komputer jarak jauh”, lalu sambungkan ulang.
 Perangkat suara Speak2Mic tidak bisa dibuka — perangkat dimulai ulang, sekarang berfungsi.
 Perangkat suara Speak2Mic tetap tidak bisa dibuka setelah perangkat dimulai ulang — rincian ada di log.
+Aktif
+Nonaktif
+Speaker “%ls” diaktifkan.
+Speaker “%ls” dinonaktifkan.
+Mikrofon “%ls” diaktifkan.
+Mikrofon “%ls” dinonaktifkan.
+Tidak dapat mengaktifkan atau menonaktifkan “%ls” (0x%08lX).
+Perangkat nonaktif (kotak “Aktif” di panel, atau pengaturan suara Windows).
