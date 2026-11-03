@@ -698,7 +698,7 @@ static SignalResult RunSignalOnce(const wchar_t* spkId, const wchar_t* micId, in
             }
         }
         // Analysis: loudest window, the tone's windows (above 1/4 of it), dropouts inside the tone, latency.
-        const int skipWin = skipMs / 10;
+        const int skipWin = skipMs > 0 ? skipMs / 10 : 0;
         float maxRms = 0;
         for (int i = skipWin; i < nWin; i++) if (winRms[i] > maxRms) maxRms = winRms[i];
         for (int c = 0; c < cch; c++) if (r.peak[c] > r.peakAll) r.peakAll = r.peak[c];

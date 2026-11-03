@@ -82,7 +82,8 @@ static void AppendLog(const wchar_t* line)
 
 static void WorkerLog(void*, const wchar_t* line)
 {
-    PostMessageW(g_wnd, WM_APP_LOG, 0, (LPARAM)_wcsdup(line));
+    wchar_t* copy = _wcsdup(line);                  // freed by the window (WM_APP_LOG)
+    if (copy && !PostMessageW(g_wnd, WM_APP_LOG, 0, (LPARAM)copy)) free(copy);
 }
 
 static void CloseRunningPanel();

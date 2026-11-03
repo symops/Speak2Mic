@@ -441,7 +441,7 @@ static HRESULT DecRead(Decoder* d, const float** data, size_t* frames)
     if (d->ogg)
     {
         const int chunk = 4096;
-        if (!DecGrow(d, (size_t)chunk * d->ch)) return E_OUTOFMEMORY;
+        if (!DecGrow(d, (size_t)chunk * d->ch) || !d->tmp) return E_OUTOFMEMORY;
         d->pos = (LONGLONG)stb_vorbis_get_sample_offset(d->ogg) * 10000000 / d->rate;
         int n = stb_vorbis_get_samples_float_interleaved(d->ogg, (int)d->ch, d->tmp, chunk * (int)d->ch);
         *data = d->tmp;
