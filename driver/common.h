@@ -5,6 +5,7 @@
 #define _NEW_DELETE_OPERATORS_
 
 #include <portcls.h>
+#include <ntstrsafe.h>
 #include <stdunk.h>
 #include <ksmedia.h>
 

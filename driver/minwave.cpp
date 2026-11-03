@@ -66,15 +66,13 @@ static const GUID kPropTypeSetGeneral = { 0x97E99BA0, 0xBDEA, 0x11CF, { 0xA5, 0x
 
 ULONG g_S2mProposeFormat = 1;
 
-extern "C" int __cdecl _vsnprintf(char* buffer, size_t count, const char* format, va_list args);
 
 static void S2mPrintf(_Out_writes_(Size) char* Out, _In_ ULONG Size, _In_z_ _Printf_format_string_ const char* Format, ...)
 {
     va_list args;
     va_start(args, Format);
-    int n = _vsnprintf(Out, Size - 1, Format, args);
+    RtlStringCchVPrintfA(Out, Size, Format, args);     // always terminated; a longer text is cut
     va_end(args);
-    Out[(n < 0 || (ULONG)n >= Size) ? Size - 1 : (ULONG)n] = 0;
 }
 
 void S2mFormatText(_In_ PKSDATAFORMAT DataFormat, _In_ ULONG BufferSize, _Out_writes_(Size) char* Out, _In_ ULONG Size)

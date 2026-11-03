@@ -243,6 +243,8 @@ static NTSTATUS NTAPI StartDevice(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Ir
     return status;
 }
 
+static DRIVER_ADD_DEVICE AddDevice;     // its role type (CodeQL / Code Analysis check it by it)
+
 static NTSTATUS NTAPI AddDevice(_In_ PDRIVER_OBJECT DriverObject, _In_ PDEVICE_OBJECT PhysicalDeviceObject)
 {
     NTSTATUS status = PcAddAdapterDevice(DriverObject, PhysicalDeviceObject, (PCPFNSTARTDEVICE)StartDevice,
@@ -251,6 +253,8 @@ static NTSTATUS NTAPI AddDevice(_In_ PDRIVER_OBJECT DriverObject, _In_ PDEVICE_O
     S2mLogFlush();
     return status;
 }
+
+extern "C" DRIVER_INITIALIZE DriverEntry;     // its role type
 
 extern "C" NTSTATUS NTAPI DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath)
 {

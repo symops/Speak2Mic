@@ -10,8 +10,6 @@ static char       g_log[S2M_LOG_SIZE];
 static ULONG      g_logLen;
 static BOOLEAN    g_logDirty;
 
-extern "C" int __cdecl _vsnprintf(char* buffer, size_t count, const char* format, va_list args);
-extern "C" int __cdecl _snprintf(char* buffer, size_t count, const char* format, ...);
 
 void S2mLogInit()
 {
@@ -31,17 +29,19 @@ void S2mLog(_In_z_ _Printf_format_string_ const char* Format, ...)
     TIME_FIELDS tf;
     RtlTimeToTimeFields(&local, &tf);
 
-    int n = _snprintf(line, sizeof(line), "%04d-%02d-%02d %02d:%02d:%02d.%03d  ",
-                      tf.Year, tf.Month, tf.Day, tf.Hour, tf.Minute, tf.Second, tf.Milliseconds);
-    if (n < 0) n = 0;
+    // ntstrsafe: always terminated, never past the buffer (a longer line is cut)
+    RtlStringCchPrintfA(line, sizeof(line), "%04d-%02d-%02d %02d:%02d:%02d.%03d  ",
+                        tf.Year, tf.Month, tf.Day, tf.Hour, tf.Minute, tf.Second, tf.Milliseconds);
+    size_t n = 0;
+    RtlStringCchLengthA(line, sizeof(line), &n);
 
     va_list args;
     va_start(args, Format);
-    int m = _vsnprintf(line + n, sizeof(line) - n - 2, Format, args);
+    RtlStringCchVPrintfA(line + n, sizeof(line) - n - 2, Format, args);     // 2 left for the line end below
     va_end(args);
-    if (m < 0) m = (int)(sizeof(line) - n - 3);     // truncated
-    ULONG len = (ULONG)(n + m);
-    line[len] = 0;
+    size_t total = 0;
+    RtlStringCchLengthA(line, sizeof(line), &total);
+    ULONG len = (ULONG)total;
 
     DbgPrintEx(DPFLTR_IHVAUDIO_ID, DPFLTR_ERROR_LEVEL, "Speak2Mic: %s\n", line + n);
 
