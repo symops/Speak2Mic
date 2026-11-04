@@ -138,6 +138,7 @@ Without a window, for scripts (administrator):
 Speak2Mic-Setup.exe /install     & rem exit code: 0 works, 1 failed, 2 restart needed,
                                  & rem 3 cannot install here (test signing off / Secure Boot on), 4 installed but not working
 Speak2Mic-Setup.exe /remove      & rem exit code: 0 removed, 1 failed, 2 restart needed
+Speak2Mic-Setup.exe /install /dir "D:\Tools"  & rem into D:\Tools\Speak2Mic (as "Browse..."; an installation stays where it is)
 ```
 
 The installed product appears in Windows' **Apps / Programs and Features**; its Uninstall opens the installer.
@@ -159,6 +160,40 @@ line, settings export / import) and restores everything at the end (also after C
 PASS / FAIL / WARN to `autotest.log`; the exit code is 1 if anything failed. Dropouts during a stall of the PC (a VM
 whose host takes its CPUs away) or with the CPUs 80 % busy or more are warnings, not failures; the summary at the
 end gives the totals.
+
+## 10. Code checks
+
+What the code is checked with besides the build, and how to repeat it (all on Linux; the results of the last run: no
+compiler warning, CodeQL must-fix clean).
+
+1. **Compiler warnings.** `./package.sh` builds everything with `-Wall -Wextra`, x64 and x86; a clean build prints no
+   `warning:` (see step 4).
+2. **Clang Static Analyzer** (the programs): for every `app/*.cpp`, with the build's flags,
+   ```sh
+   cd app
+   for f in *.cpp; do
+     clang++ --target=x86_64-w64-windows-gnu -std=c++17 -fno-exceptions -fno-rtti -municode -D_WIN32_WINNT=0x0A00 \
+       -DWINVER=0x0A00 -DUNICODE -D_UNICODE -isystem /usr/x86_64-w64-mingw32/include -I../third_party/libyuv/include \
+       --analyze -Xclang -analyzer-output=text -o /dev/null "$f"
+   done
+   ```
+   The findings left are false positives (memory freed by the window a message is posted to, a window's state freed in
+   `WM_NCDESTROY`).
+3. **CodeQL with Microsoft's driver rules** - the static analysis of the Windows Hardware Compatibility Program
+   ("Static Tools Logo"): CodeQL CLI 2.25.5 (github.com/github/codeql-cli-binaries) and the query packs
+   `microsoft/windows-drivers@1.10.0` + `microsoft/cpp-queries@0.0.5` (`codeql pack download ...`). The build command goes
+   in a script (CodeQL splits `--command` on spaces):
+   ```sh
+   printf '#!/bin/sh\nARCH=x64 exec sh driver/mingw/build.sh\n' > /tmp/drv.sh && chmod +x /tmp/drv.sh
+   codeql database create /tmp/db --overwrite --language=cpp --source-root=. --command=/tmp/drv.sh
+   codeql database analyze /tmp/db microsoft/windows-drivers:windows-driver-suites/mustfix.qls \
+     --format=sarifv2.1.0 --output=speak2mic-mustfix.sarif
+   ```
+   Expected: no result for `mustfix.qls`; `recommended.qls` reports only false positives ("AddDevice does not clear DO_DEVICE_INITIALIZING": PortCls's `PcAddAdapterDevice` does it).
+4. **InfVerif**: `./check_inf.sh` (step 7; `/w` reports only the MediaCategories pin names).
+
+Not run here: Static Driver Verifier and Code Analysis (`/analyze`) need Windows with the WDK and Visual Studio; the
+HLK tests need a physical test computer.
 
 ## Author
 

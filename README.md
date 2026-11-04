@@ -86,7 +86,7 @@ needs clang, MinGW-w64 for x86_64 and i686 (gcc, windres, dlltool), a host C com
 - **`dist/Speak2Mic/`** — the same unpacked: a launcher `Speak2Mic-Setup.exe`, full `x64\` and `x86\` sets (installer, panel, test-signed `Speak2Mic.sys`, `Speak2Mic.inf`, `Speak2Mic.cat`, certificates), `mp3\` and `uninstall.cmd`. Windows on ARM is not supported;
 - **`dist/Speak2Mic-Debug-Setup.exe`, `dist/Speak2Mic-Debug/`** — the same plus the test and administration tools `s2minstall.exe`, `s2mctl.exe` and `s2mautotest.exe`, for testing and support only (the release has none of them; installed over the debug package it removes them).
 
-`Speak2Mic-Setup.exe /install` installs and `/remove` removes without a window (the debug package's `uninstall.cmd` does the latter); the exit code tells the result.
+`Speak2Mic-Setup.exe /install [/dir "FOLDER"]` installs and `/remove` removes without a window (the debug package's `uninstall.cmd` does the latter); the exit code tells the result.
 
 Not in this repository (see `.gitignore`):
 
